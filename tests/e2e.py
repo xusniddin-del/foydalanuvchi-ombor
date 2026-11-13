@@ -21,9 +21,9 @@ with sync_playwright() as p:
     # bosh sahifa
     pg.goto(BASE + "/"); pg.wait_for_timeout(1200)
     check("landing: 3 top courses from API", pg.locator(".course").count() == 3)
-    check("landing: 3 monthly plans", pg.locator(".plan").count() == 3 and "69 000" in pg.locator("#planList").inner_text())
+    check("landing: 3 monthly plans", pg.locator(".plan").count() == 3 and "69.000" in pg.locator("#planList").inner_text())
     pg.click("#toggle [data-p='12']"); pg.wait_for_timeout(500)
-    check("landing: yearly toggle shows yearly prices", "708 000" in pg.locator("#planList").inner_text() and "828 000" in pg.locator("#planList").inner_text())
+    check("landing: yearly toggle shows yearly prices", "708.000" in pg.locator("#planList").inner_text() and "828.000" in pg.locator("#planList").inner_text())
     check("landing: language switch mounted", pg.locator("[data-vector-lang]").count() >= 1)
     pg.screenshot(path=f"{OUT}/01-landing.png", full_page=True)
 

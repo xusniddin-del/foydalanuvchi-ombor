@@ -7,28 +7,30 @@
 <meta name="theme-color" content="#1E63F0">
 <link rel="icon" href="assets/img/vector-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800;900&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
 <style>
-  .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,230px),1fr)); gap: 26px; }
-  .card { background: var(--white); border: var(--line); border-radius: 22px; box-shadow: var(--sh); padding: 12px 12px 18px; display: flex; flex-direction: column; gap: 6px; animation: vIn .4s ease-out both; }
-  .card.lead { background: var(--lime); }
-  .card .img { aspect-ratio: 3/2; border-radius: 14px; overflow: hidden; border: 2.5px solid var(--ink); background: var(--blue-l); margin-bottom: 6px; }
+  .bg { background: linear-gradient(180deg,#1E63F0 0%,#3B8DF8 100%); }
+  main { max-width: 1320px; margin: 0 auto; padding: clamp(32px,5vw,64px) clamp(16px,4vw,48px) 80px; }
+  h1 { margin: 0 0 clamp(28px,4vw,56px); text-align: center; color: #fff; font-weight: 800; font-size: clamp(30px,4vw,48px); line-height: 1.15; text-wrap: balance; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,220px),1fr)); gap: clamp(14px,2vw,28px); }
+  .card { background: #fff; border-radius: 22px; padding: 14px 14px 20px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 14px 30px rgba(11,30,79,.18); animation: vIn .5s cubic-bezier(.2,.7,.2,1) both; transition: transform .25s, box-shadow .25s; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px rgba(11,30,79,.25); }
+  .card .img { aspect-ratio: 3/2; border-radius: 16px; overflow: hidden; background: #E2E8F0; }
   .card .img img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .card h2 { margin: 4px 0 4px; font-size: 16px; line-height: 1.25; }
+  .card h2 { margin: 8px 0 2px; font-size: 18px; font-weight: 700; font-style: italic; line-height: 1.2; color: #FF8A00; text-wrap: balance; }
+  .card.lead h2 { color: #1E63F0; }
   .card .r { display: flex; align-items: center; gap: 6px; font-size: 15px; }
-  .card .r span:first-child { color: var(--muted); font-weight: 600; }
-  .card .r strong { font-weight: 800; }
-  .card.lead .r span:first-child { color: var(--ink-2); }
-  .id { align-self: flex-start; margin-top: 6px; }
+  .card .r span:first-child { color: #94A3B8; }
+  .card .r strong { font-weight: 600; }
 </style>
 </head>
 <body>
-<div class="page">
+<div class="page bg">
 <header id="vh"></header>
-<main class="inner">
-  <div class="inner-top"><div><h1>Elchilarimiz bilan tanishing</h1><p>Elchilar — maktablarida Vector haqida aytib, do'stlarini o'qishga taklif qiladigan faol o'quvchilar.</p></div></div>
+<main>
+  <h1>Elchilarimiz bilan tanishing</h1>
   <div class="grid" id="grid"></div>
 </main>
 <footer id="vf"></footer>
@@ -50,10 +52,10 @@
     return `<article class="card ${lead ? 'lead' : ''}" style="animation-delay:${i * 50}ms">
       <div class="img"><img src="assets/img/elchilar/e${id.slice(1)}.png" alt="${esc(name)}" loading="lazy"></div>
       <h2>${esc(name)}</h2>
-      <div class="r"><span>Lavozim:</span><strong>${esc(role)}</strong>${lead ? '<span class="ms" aria-label="Tasdiqlangan" style="font-size:20px;color:var(--blue)">verified</span>' : ''}</div>
+      <div class="r"><span>Lavozim:</span><strong>${esc(role)}</strong>${lead ? '<span class="ms" aria-label="Tasdiqlangan" style="font-size:20px;color:#1E90FF;font-variation-settings:\'FILL\' 1">verified</span>' : ''}</div>
       <div class="r"><span>Maktab:</span><strong>${esc(school)}</strong></div>
       <div class="r"><span>Sinf:</span><strong>${esc(grade)} sinf o'quvchisi</strong></div>
-      <span class="chip ${lead ? '' : 'blue'} id">ID ${id}</span></article>`;
+      <div class="r"><span>ID raqami:</span><strong style="font-weight:700">${id}</strong></div></article>`;
   }).join('');
 })();
 </script>
