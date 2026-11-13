@@ -210,7 +210,7 @@
   async function pCourses() {
     const r = await call('a.courses');
     content.innerHTML = head('Kurslar va darslar', "Darslar YouTube havolasi bilan qo'shiladi (videoni YouTube'ga \"Ro'yxatda yo'q / Unlisted\" qilib yuklang).", '<button class="btn btn-primary" id="addC">' + icon('plus') + ' Yangi kurs</button>') +
-      (r.courses.map(c => `<details class="card course-box" ${r.courses.length < 4 ? 'open' : ''}><summary>${safeUrl(c.image) ? `<img class="thumb" src="${esc(c.image)}" alt="">` : '<span class="thumb"></span>'}
+      (r.courses.map((c, ci) => `<details class="card course-box" ${ci === 0 || r.courses.length < 4 ? 'open' : ''}><summary>${safeUrl(c.image) ? `<img class="thumb" src="${esc(c.image)}" alt="">` : '<span class="thumb"></span>'}
         <div style="flex:1;min-width:0"><b style="font-size:17px">${esc(c.title)}</b> ${c.active ? '' : '<span class="badge gray">Yashirin</span>'}<div class="muted" style="font-size:13px">${c.lessons.length} ta dars · ${esc(c.level || '')}</div></div>
         <div class="acts"><button class="btn btn-soft btn-sm" data-ec="${esc(c.id)}">${icon('edit')}</button><button class="btn btn-primary btn-sm" data-al="${esc(c.id)}">${icon('plus')} Dars</button></div></summary>
         ${c.lessons.map((l, i) => `<div class="lrow"><span class="badge gray">${i + 1}</span><div style="flex:1;min-width:0"><b>${esc(l.title)}</b> ${l.active ? '' : '<span class="badge gray">Yashirin</span>'}<div class="muted" style="font-size:12px">${l.youtube ? '🎬 Video bor' : '⚠️ Video yo\'q'} · ${l.quiz.length} ta savol${l.duration ? ' · ' + esc(l.duration) : ''}</div></div>
@@ -225,7 +225,7 @@
       <label class="field"><span>Kurs nomi</span><input class="input" name="title" value="${esc(c.title || '')}" required></label>
       <label class="field"><span>Qisqa tavsif</span><textarea class="textarea" name="desc">${esc(c.desc || '')}</textarea></label>
       ${imageField('image', c.image)}
-      <div class="two"><label class="field"><span>Ustoz</span><input class="input" name="teacher" value="${esc(c.teacher || 'Xusniddin Sharofiddinov')}"></label><label class="field"><span>Daraja</span><input class="input" name="level" value="${esc(c.level || "Boshlang'ich")}"></label></div>
+      <div class="two"><label class="field"><span>Ustoz</span><input class="input" name="teacher" value="${esc(c.teacher || 'Xusniddin Sharofiddinov')}"></label><label class="field"><span>Oflayn kurs narxi (so'm)</span><input class="input" type="number" min="0" step="1000" name="price" value="${esc(c.price || '')}" placeholder="350000"></label></div>
       <div class="two"><label class="field"><span>Tartib raqami</span><input class="input" type="number" name="order" value="${esc(c.order || 0)}"></label><label class="row" style="margin-top:28px"><input type="checkbox" name="active" ${c.active === false ? '' : 'checked'}> Saytda ko'rinsin</label></div>
       <div class="row between" style="margin-top:8px">${c.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
     wireImage(m.el, 'image');
@@ -287,7 +287,8 @@
       <label class="field"><span>Qisqa tavsif</span><input class="input" name="desc" value="${esc(p.desc || '')}"></label>
       ${imageField('image', p.image)}
       <div class="two"><label class="field"><span>Narxi (coin)</span><input class="input" type="number" min="1" name="price" value="${esc(p.price || '')}" required></label><label class="field"><span>Qoldiq (dona)</span><input class="input" type="number" min="0" name="stock" value="${esc(p.stock != null ? p.stock : 10)}"></label></div>
-      <div class="two"><label class="field"><span>Tartib</span><input class="input" type="number" name="order" value="${esc(p.order || 0)}"></label><label class="row" style="margin-top:28px"><input type="checkbox" name="active" ${p.active === false ? '' : 'checked'}> Sotuvda</label></div>
+      <div class="two"><label class="field"><span>Bo'lim</span><select class="select" name="category">${[['sovga', "Sovg'a"], ['oshxona', 'Oshxona'], ['markaz', 'Markaz']].map(([v, t]) => `<option value="${v}" ${(p.category || 'sovga') === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label><label class="field"><span>Tartib</span><input class="input" type="number" name="order" value="${esc(p.order || 0)}"></label></div>
+      <label class="row"><input type="checkbox" name="active" ${p.active === false ? '' : 'checked'}> Sotuvda</label>
       <div class="row between" style="margin-top:8px">${p.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
     wireImage(m.el, 'image');
     m.el.querySelector('#pf2').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget); d.active = !!e.currentTarget.active.checked; d.id = p.id;
@@ -326,7 +327,7 @@
     const r = await call('a.plans');
     content.innerHTML = head('Tariflar', 'Obuna narxlari va muddatlari.', '<button class="btn btn-primary" id="addT">' + icon('plus') + ' Yangi tarif</button>') + `
       <div class="table-wrap"><table class="t"><thead><tr><th>Nomi</th><th>Muddat</th><th>Narx</th><th>Holat</th><th></th></tr></thead><tbody>
-      ${r.plans.map(p => `<tr><td><b>${esc(p.name)}</b> ${p.popular ? '<span class="badge orange">Ommabop</span>' : ''}</td><td>${p.months} oy</td><td><b>${money(p.price)}</b></td><td>${p.active ? '<span class="badge green">Faol</span>' : '<span class="badge gray">Yashirin</span>'}</td><td><button class="btn btn-soft btn-sm" data-t="${esc(p.id)}">${icon('edit')} Tahrirlash</button></td></tr>`).join('')}</tbody></table></div>`;
+      ${r.plans.map(p => `<tr><td><b>${esc(p.name)}</b> ${p.popular ? '<span class="badge orange">Ommabop</span>' : ''}</td><td>${p.months} oy</td><td><b>${money(p.price)}</b>${p.oldPrice ? ` <s class="muted">${money(p.oldPrice)}</s>` : ''}</td><td>${p.active ? '<span class="badge green">Faol</span>' : '<span class="badge gray">Yashirin</span>'}</td><td><button class="btn btn-soft btn-sm" data-t="${esc(p.id)}">${icon('edit')} Tahrirlash</button></td></tr>`).join('')}</tbody></table></div>`;
     document.getElementById('addT').onclick = () => planModal({});
     content.querySelectorAll('[data-t]').forEach(b => b.onclick = () => planModal(r.plans.find(p => p.id === b.dataset.t)));
   }
@@ -334,6 +335,8 @@
     const m = modal(`<h2>${p.id ? 'Tarifni tahrirlash' : 'Yangi tarif'}</h2><form class="stack" id="tf" style="margin-top:12px">
       <label class="field"><span>Nomi</span><input class="input" name="name" value="${esc(p.name || '')}" required></label>
       <div class="two"><label class="field"><span>Muddat (oy)</span><input class="input" type="number" min="1" name="months" value="${esc(p.months || 1)}" required></label><label class="field"><span>Narx (so'm)</span><input class="input" type="number" min="1000" step="1000" name="price" value="${esc(p.price || '')}" required></label></div>
+      <label class="field"><span>Eski narx — chizib ko'rsatiladi (ixtiyoriy, yillik tarif uchun)</span><input class="input" type="number" min="0" step="1000" name="oldPrice" value="${esc(p.oldPrice || '')}"></label>
+      <p class="hint" style="margin-top:-6px">Bosh sahifada 1 oylik tariflar "Oylik obuna", 12 oylik tariflar "Yillik obuna" bo'limida chiqadi.</p>
       <label class="field"><span>Afzalliklar (har biri yangi qatorda)</span><textarea class="textarea" name="features">${esc(p.features || '')}</textarea></label>
       <div class="two"><label class="field"><span>Tartib</span><input class="input" type="number" name="order" value="${esc(p.order || 0)}"></label><div class="stack" style="gap:6px;margin-top:22px"><label class="row"><input type="checkbox" name="popular" ${p.popular ? 'checked' : ''}> "Ommabop" belgisi</label><label class="row"><input type="checkbox" name="active" ${p.active === false ? '' : 'checked'}> Faol</label></div></div>
       <div class="row between" style="margin-top:8px">${p.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
@@ -346,7 +349,7 @@
   // ================= SOZLAMALAR =================
   async function pSettings() {
     const r = await call('a.settings');
-    const groups = [['Sayt', ['site_name', 'hero_title', 'hero_text']], ['Aloqa', ['phone', 'telegram', 'instagram', 'address']], ['Coinlar', ['coin_per_correct', 'birthday_coins']],
+    const groups = [['Sayt', ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients']], ['Aloqa va tarmoqlar', ['phone', 'telegram', 'instagram', 'youtube', 'facebook', 'address', 'app_store', 'google_play']], ['Coinlar', ['coin_per_correct', 'birthday_coins']],
       ["To'lov (Click / Payme)", ['payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url']]];
     const by = Object.fromEntries(r.settings.map(s => [s.key, s]));
     content.innerHTML = head('Sozlamalar') + `<form class="stack" id="sf" style="gap:18px;max-width:820px">${groups.map(([g, keys]) => `<div class="card pad stack"><h2 style="font-size:18px">${g}</h2>

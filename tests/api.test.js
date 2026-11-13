@@ -10,8 +10,8 @@ const t = (name, cond) => { if (cond) pass++; else fails.push(name); console.log
 
 // --- ommaviy ---
 const pub = call({ action: 'public' });
-t('public ok', pub.ok && pub.plans.length === 3 && pub.courses.length === 3 && pub.products.length === 6);
-t('public has no quiz answers / youtube', !JSON.stringify(pub).includes('"a":') && !JSON.stringify(pub).includes('youtube'));
+t('public ok', pub.ok && pub.plans.length === 6 && pub.courses.length === 7 && pub.products.length === 20 && pub.plans.some(p => p.months === 12 && p.oldPrice === 828000));
+t('public has no quiz answers / youtube', !JSON.stringify(pub.courses).includes('"a":') && !JSON.stringify(pub.courses).includes('youtube'));
 
 // --- ro'yxatdan o'tish ---
 let r = call({ action: 'register', phone: '+998 90 123 45 67', name: 'Ali Valiyev', password: '123' });
@@ -42,7 +42,7 @@ t('quiz refused without sub', !call({ action: 'quiz', token: A, id: L1, answers:
 // --- to'lov (test rejimi) + admin tasdiqlaydi ---
 const plans = call({ action: 'plans', token: A }).plans;
 r = call({ action: 'pay.create', token: A, planId: plans[0].id, provider: 'click' });
-t('payment created in test mode', r.ok && r.payment.provider === 'test' && r.payment.status === 'pending' && r.payment.amount === 149000);
+t('payment created in test mode', r.ok && r.payment.provider === 'test' && r.payment.status === 'pending' && r.payment.amount === 69000);
 const P1 = r.payment.id;
 t('same pending payment reused', call({ action: 'pay.create', token: A, planId: plans[0].id }).payment.id === P1);
 t('user cannot call admin', !call({ action: 'a.payment', token: A, id: P1, op: 'confirm' }).ok);
@@ -54,7 +54,7 @@ t('admin token cannot be used as user', !call({ action: 'me', token: AD }).ok);
 r = call({ action: 'a.payment', token: AD, id: P1, op: 'confirm' });
 t('admin confirms payment', r.ok);
 let me = call({ action: 'me', token: A }).user;
-t('subscription active ~30 days', me.active && Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 30 && me.plan === 'Oylik');
+t('subscription active ~30 days', me.active && Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 30 && me.plan === 'START');
 call({ action: 'a.payment', token: AD, id: P1, op: 'confirm' });
 me = call({ action: 'me', token: A }).user;
 t('double confirm does not double extend', Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 30);
@@ -83,14 +83,14 @@ const shop = call({ action: 'shop', token: A });
 const cap = shop.products[0];
 r = call({ action: 'buy', token: A, id: cap.id });
 t('buy refused: not enough coins', !r.ok && r.code === 'coins');
-r = call({ action: 'a.coins', token: AD, id: me.id, amount: 1000, reason: "Faol o'quvchi" });
-t('admin gives coins', r.ok && call({ action: 'me', token: A }).user.coins === 1002);
+r = call({ action: 'a.coins', token: AD, id: me.id, amount: 10000, reason: "Faol o'quvchi" });
+t('admin gives coins', r.ok && call({ action: 'me', token: A }).user.coins === 10002);
 r = call({ action: 'buy', token: A, id: cap.id, qty: 2 });
-t('buy ok: 600 coins deducted', r.ok && r.coins === 402);
+t('buy ok: 6000 coins deducted', r.ok && r.coins === 4002);
 t('stock decreased', call({ action: 'shop', token: A }).products[0].stock === 18);
 const ord = call({ action: 'a.orders', token: AD }).orders[0];
 r = call({ action: 'a.order', token: AD, id: ord.id, status: 'bekor' });
-t('cancel order refunds + restocks', r.ok && call({ action: 'me', token: A }).user.coins === 1002 && call({ action: 'shop', token: A }).products[0].stock === 20);
+t('cancel order refunds + restocks', r.ok && call({ action: 'me', token: A }).user.coins === 10002 && call({ action: 'shop', token: A }).products[0].stock === 20);
 t('cannot cancel twice', !call({ action: 'a.order', token: AD, id: ord.id, status: 'bekor' }).ok);
 
 // --- tug'ilgan kun ---
@@ -107,7 +107,7 @@ r = call({ action: 'a.lesson.save', token: AD, lesson: { courseId: course.id, ti
 t('admin adds lesson', r.ok);
 t('youtube id parsed', call({ action: 'a.courses', token: AD }).courses[0].lessons.some(l => l.title === 'Yangi dars'));
 t('bad quiz refused', !call({ action: 'a.lesson.save', token: AD, lesson: { courseId: course.id, title: 'X', quiz: [{ q: 'savol', o: ['bitta'], a: 0 }] } }).ok);
-t('public cache invalidated', call({ action: 'public' }).stats.lessons === 10);
+t('public cache invalidated', call({ action: 'public' }).stats.lessons === 22);
 
 // --- foydalanuvchi bloklash ---
 const bob = call({ action: 'a.users', token: AD, q: 'bobur' }).users[0];
@@ -121,11 +121,11 @@ t('password reset works', r.ok && call({ action: 'login', phone: '907654321', pa
 // --- to'lov serveri (worker) ---
 t('worker without secret refused', !call({ action: 'pay.get', id: P1 }).ok);
 const W = 'w'.repeat(64);
-r = call({ action: 'pay.create', token: A, planId: plans[1].id });
+r = call({ action: 'pay.create', token: A, planId: plans.find(p => p.months === 12).id });
 const P2 = r.payment.id;
 r = call({ action: 'pay.paid', secret: W, id: P2, provider: 'click', extId: 'C123' });
 me = call({ action: 'me', token: A }).user;
-t('worker marks paid → +90 days', r.ok && Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 120);
+t('worker marks paid → +360 days', r.ok && Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 390);
 r = call({ action: 'pay.cancel', secret: W, id: P2 });
 me = call({ action: 'me', token: A }).user;
 t('cancel paid revokes days', r.ok && Math.round((Date.parse(me.subEnd) - Date.now()) / 864e5) === 30);

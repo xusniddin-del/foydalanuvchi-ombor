@@ -11,27 +11,33 @@ with sync_playwright() as p:
     b = p.chromium.launch()
     ctx = b.new_context(viewport={"width": 1366, "height": 860})
     ctx.route(re.compile(r"https://(fonts\.googleapis|fonts\.gstatic|www\.youtube-nocookie).*"), lambda r: r.abort())
+    for u in ["/kurslar.html", "/dokon.html", "/elchilar.html"]:
+        pg0 = ctx.new_page(); pg0.on("pageerror", lambda e: errors.append(str(e))); pg0.goto(BASE + u); pg0.wait_for_timeout(700)
+        check("page renders: " + u, pg0.locator(".card").count() >= 3); pg0.close()
     pg = ctx.new_page()
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.on("console", lambda m: m.type == "error" and "ERR_FAILED" not in m.text and "net::" not in m.text and errors.append(m.text))
 
     # bosh sahifa
     pg.goto(BASE + "/"); pg.wait_for_timeout(1200)
-    check("landing: courses rendered from API", pg.locator(".course").count() == 3)
-    check("landing: plans rendered", pg.locator(".plan").count() == 3)
-    check("landing: login/register at top-left", pg.locator(".top-left >> text=Kirish").count() == 1)
+    check("landing: 3 top courses from API", pg.locator(".course").count() == 3)
+    check("landing: 3 monthly plans", pg.locator(".plan").count() == 3 and "69.000" in pg.locator("#planList").inner_text())
+    pg.click("#toggle [data-p='12']"); pg.wait_for_timeout(500)
+    check("landing: yearly toggle shows yearly prices", "708.000" in pg.locator("#planList").inner_text() and "828.000" in pg.locator("#planList").inner_text())
+    check("landing: language switch mounted", pg.locator("[data-vector-lang]").count() >= 1)
     pg.screenshot(path=f"{OUT}/01-landing.png", full_page=True)
 
     # ro'yxatdan o'tish
-    pg.click(".top-left >> text=Ro'yxatdan o'tish"); pg.wait_for_timeout(500)
+    pg.click(".vh-right >> text=Ro'yxatdan o'tish"); pg.wait_for_timeout(500)
     f = pg.locator("#register")
+    check("auth: only register form visible", f.is_visible() and not pg.locator("#login").is_visible())
     f.locator("[name=name]").fill("Ali Valiyev"); f.locator("[name=phone]").fill("901234567")
-    f.locator("[name=birthday]").fill("2014-03-05"); f.locator("[name=grade]").select_option("5")
-    f.locator("[name=region]").select_option(index=1); f.locator("[name=school]").fill("18-maktab")
+    f.locator("[name=birthday]").fill("2014-03-05"); f.locator("[name=grade]").select_option("5-sinf")
+    f.locator("[name=region]").select_option(index=5); f.locator("[name=city]").fill("Marg'ilon"); f.locator("[name=school]").fill("18")
     f.locator("[name=password]").fill("parol123"); f.locator("[name=password2]").fill("parol124")
     pg.screenshot(path=f"{OUT}/02-register.png")
     f.locator("[type=submit]").click(); pg.wait_for_timeout(400)
-    check("register: password mismatch shown", "bir xil emas" in f.locator(".err").inner_text())
+    check("register: password mismatch shown", "bir xil emas" in f.locator(".msg[role=alert]").inner_text())
     f.locator("[name=password2]").fill("parol123"); f.locator("[type=submit]").click()
     pg.wait_for_url("**/kabinet.html**", timeout=8000); pg.wait_for_timeout(1500)
     check("cabinet: profile name top-left", "Ali Valiyev" in pg.locator("#meSide").inner_text())
@@ -64,7 +70,7 @@ with sync_playwright() as p:
     a.goto(BASE + "/admin.html#oquvchilar"); a.wait_for_timeout(1200)
     a.screenshot(path=f"{OUT}/06-admin-users.png")
     a.locator("[data-u]").first.click(); a.wait_for_timeout(300)
-    a.fill("#fc [name=amount]", "500"); a.fill("#fc [name=reason]", "Faol o'quvchi"); a.click("#fc button"); a.wait_for_timeout(1200)
+    a.fill("#fc [name=amount]", "5000"); a.fill("#fc [name=reason]", "Faol o'quvchi"); a.click("#fc button"); a.wait_for_timeout(1200)
     # admin darsga video + test qo'shadi
     a.goto(BASE + "/admin.html#kurslar"); a.wait_for_timeout(1200)
     a.locator("[data-el]").first.click(); a.wait_for_timeout(400)
@@ -88,9 +94,9 @@ with sync_playwright() as p:
 
     # do'kon
     pg.goto(BASE + "/kabinet.html#dokon"); pg.wait_for_timeout(1200)
-    check("shop: balance 504", "504" in pg.locator(".page-h").inner_text())
+    check("shop: balance 5 004", "5 004" in pg.locator(".page-h").inner_text())
     pg.locator("[data-buy]").first.click(); pg.wait_for_timeout(300); pg.click("#okBuy"); pg.wait_for_timeout(1500)
-    check("shop: bought, coins 204", "204" in pg.locator("#meSide").inner_text() and pg.locator("text=Tayyorlanmoqda").count() == 1)
+    check("shop: bought, coins 2 004", "2 004" in pg.locator("#meSide").inner_text() and pg.locator("text=Tayyorlanmoqda").count() == 1)
     pg.screenshot(path=f"{OUT}/10-dokon.png", full_page=True)
 
     # coin tarixi va profil

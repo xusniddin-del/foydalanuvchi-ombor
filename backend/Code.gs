@@ -23,12 +23,12 @@ var MAX_PENDING_PAYMENTS = 5;
 var SHEETS = {
   Users: ['id', 'phone', 'name', 'avatar', 'birthday', 'region', 'school', 'grade', 'passHash', 'salt', 'coins', 'plan', 'subEnd', 'status', 'createdAt', 'lastLogin', 'theme', 'bdayYear'],
   Sessions: ['token', 'userId', 'role', 'expires'],
-  Plans: ['id', 'name', 'months', 'price', 'features', 'popular', 'active', 'order'],
-  Courses: ['id', 'title', 'desc', 'image', 'teacher', 'level', 'order', 'active'],
+  Plans: ['id', 'name', 'months', 'price', 'features', 'popular', 'active', 'order', 'oldPrice'],
+  Courses: ['id', 'title', 'desc', 'image', 'teacher', 'level', 'order', 'active', 'price'],
   Lessons: ['id', 'courseId', 'order', 'title', 'youtube', 'duration', 'desc', 'quiz', 'active'],
   Progress: ['key', 'userId', 'lessonId', 'courseId', 'watched', 'best', 'attempts', 'rewarded', 'updatedAt'],
   Coins: ['id', 'userId', 'amount', 'type', 'reason', 'at', 'by'],
-  Products: ['id', 'name', 'desc', 'image', 'price', 'stock', 'active', 'order'],
+  Products: ['id', 'name', 'desc', 'image', 'price', 'stock', 'active', 'order', 'category'],
   Orders: ['id', 'userId', 'userName', 'phone', 'productId', 'productName', 'qty', 'price', 'status', 'at'],
   Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason'],
   Settings: ['key', 'value', 'izoh']
@@ -36,11 +36,18 @@ var SHEETS = {
 
 var DEFAULT_SETTINGS = [
   ['site_name', 'Vector', 'Sayt nomi'],
-  ['hero_title', "Kelajak kasblarini bugundan o'rganing", 'Bosh sahifadagi katta sarlavha'],
-  ['hero_text', "Video darslar, testlar, coin va sovg'alar — bolalar uchun qiziqarli onlayn IT ta'lim.", 'Sarlavha ostidagi matn'],
+  ['hero_title', "Zamonaviy kasblarni biz bilan o'rganing va kelajagingizni bugundan quring!", 'Bosh sahifadagi katta sarlavha'],
+  ['hero_text', "Soha mutaxassisidan darslar, amaliy loyihalar va moslashuvchan grafik. Daromadli kasb egasi bo'lish endi yanada oson.", 'Sarlavha ostidagi matn'],
+  ['stat_videos', '340', 'Statistika: video kurslar soni'],
+  ['stat_schools', '10', 'Statistika: maktablar soni (+ belgisi bilan chiqadi)'],
+  ['stat_clients', '870', 'Statistika: mijozlar soni'],
   ['phone', '+998 90 000 00 00', 'Aloqa telefoni'],
   ['telegram', 'vectoradminn', 'Telegram username (@ siz)'],
   ['instagram', 'xusniddintech', 'Instagram username'],
+  ['youtube', '', 'YouTube kanal havolasi'],
+  ['facebook', '', 'Facebook sahifa havolasi'],
+  ['app_store', '', 'App Store havolasi (ilova bo\'lsa)'],
+  ['google_play', '', 'Google Play havolasi (ilova bo\'lsa)'],
   ['address', "Marg'ilon shahri", 'Manzil'],
   ['coin_per_correct', '2', "Testdagi har bir to'g'ri javob uchun coin (faqat birinchi urinishda)"],
   ['birthday_coins', '50', "Tug'ilgan kunda avtomatik beriladigan coin (0 = o'chiq)"],
@@ -50,7 +57,8 @@ var DEFAULT_SETTINGS = [
   ['payme_merchant_id', '', 'Payme merchant (kassa) ID'],
   ['return_url', '', "To'lovdan keyin qaytiladigan sahifa (masalan https://.../kabinet.html#obuna)"]
 ];
-var PUBLIC_SETTINGS = ['site_name', 'hero_title', 'hero_text', 'phone', 'telegram', 'instagram', 'address', 'coin_per_correct', 'birthday_coins',
+var PUBLIC_SETTINGS = ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients', 'phone', 'telegram', 'instagram', 'youtube', 'facebook',
+  'app_store', 'google_play', 'address', 'coin_per_correct', 'birthday_coins',
   'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url'];
 
 // ======================= KIRISH NUQTALARI =======================
@@ -482,7 +490,7 @@ function catalog() {
     .map(function (x) {
       var ls = lessons.filter(function (l) { return l.courseId === x.id; }).sort(function (a, b) { return num(a.order) - num(b.order); });
       return {
-        id: x.id, title: x.title, desc: x.desc, image: x.image, teacher: x.teacher, level: x.level,
+        id: x.id, title: x.title, desc: x.desc, image: x.image, teacher: x.teacher, level: x.level, price: num(x.price),
         lessons: ls.map(function (l) {
           var q = []; try { q = JSON.parse(l.quiz || '[]'); } catch (e) {}
           return { id: l.id, title: l.title, duration: l.duration, desc: l.desc, youtube: l.youtube, quiz: q };
@@ -496,12 +504,12 @@ function catalog() {
 
 function plansList() {
   return rows('Plans').filter(function (p) { return p.active !== '0'; }).sort(function (a, b) { return num(a.order) - num(b.order); })
-    .map(function (p) { return { id: p.id, name: p.name, months: num(p.months), price: num(p.price), features: String(p.features || '').split('\n').filter(String), popular: p.popular === '1' }; });
+    .map(function (p) { return { id: p.id, name: p.name, months: num(p.months), price: num(p.price), oldPrice: num(p.oldPrice), features: String(p.features || '').split('\n').filter(String), popular: p.popular === '1' }; });
 }
 
 function productsList() {
   return rows('Products').filter(function (p) { return p.active !== '0'; }).sort(function (a, b) { return num(a.order) - num(b.order); })
-    .map(function (p) { return { id: p.id, name: p.name, desc: p.desc, image: p.image, price: num(p.price), stock: num(p.stock) }; });
+    .map(function (p) { return { id: p.id, name: p.name, desc: p.desc, image: p.image, price: num(p.price), stock: num(p.stock), category: p.category || 'sovga' }; });
 }
 
 function apiPublic() {
@@ -512,7 +520,7 @@ function apiPublic() {
   var cat = catalog();
   c = {
     ok: true, settings: pub, plans: plansList(), products: productsList(),
-    courses: cat.courses.map(function (x) { return { id: x.id, title: x.title, desc: x.desc, image: x.image, teacher: x.teacher, level: x.level, lessons: x.lessons.length }; }),
+    courses: cat.courses.map(function (x) { return { id: x.id, title: x.title, desc: x.desc, image: x.image, teacher: x.teacher, level: x.level, price: x.price, lessons: x.lessons.length }; }),
     stats: { students: rows('Users').length, courses: cat.courses.length, lessons: cat.courses.reduce(function (n, x) { return n + x.lessons.length; }, 0) }
   };
   cachePut('pub', c);
@@ -878,7 +886,7 @@ function aCoinLog(req) {
 function aCourses() {
   var lessons = rows('Lessons');
   return { ok: true, courses: rows('Courses').sort(function (a, b) { return num(a.order) - num(b.order); }).map(function (c) {
-    return { id: c.id, title: c.title, desc: c.desc, image: c.image, teacher: c.teacher, level: c.level, order: num(c.order), active: c.active !== '0',
+    return { id: c.id, title: c.title, desc: c.desc, image: c.image, teacher: c.teacher, level: c.level, price: num(c.price), order: num(c.order), active: c.active !== '0',
       lessons: lessons.filter(function (l) { return l.courseId === c.id; }).sort(function (a, b) { return num(a.order) - num(b.order); }).map(function (l) {
         var q = []; try { q = JSON.parse(l.quiz || '[]'); } catch (e) {}
         return { id: l.id, title: l.title, youtube: l.youtube, duration: l.duration, desc: l.desc, order: num(l.order), active: l.active !== '0', quiz: q };
@@ -891,7 +899,7 @@ function aCourseSave(req) {
   if (clip(c.title, 120).length < 2) fail('Kurs nomini kiriting.');
   return withLock(function () {
     var x = c.id ? byId('Courses', c.id) : null;
-    var data = { title: clip(c.title, 120), desc: clip(c.desc, 1000), image: clip(c.image, 500), teacher: clip(c.teacher, 80), level: clip(c.level, 40), order: String(num(c.order)), active: c.active === false ? '0' : '1' };
+    var data = { title: clip(c.title, 120), desc: clip(c.desc, 1000), image: clip(c.image, 500), teacher: clip(c.teacher, 80), level: clip(c.level, 40), price: String(Math.max(0, Math.round(num(c.price)))), order: String(num(c.order)), active: c.active === false ? '0' : '1' };
     if (x) { Object.keys(data).forEach(function (k) { x[k] = data[k]; }); save('Courses', x); }
     else { data.id = newId('K'); x = insert('Courses', data); }
     cacheClear();
@@ -948,7 +956,7 @@ function aLessonDelete(req) {
 // --- do'kon ---
 function aProducts() {
   return { ok: true, products: rows('Products').sort(function (a, b) { return num(a.order) - num(b.order); })
-    .map(function (p) { return { id: p.id, name: p.name, desc: p.desc, image: p.image, price: num(p.price), stock: num(p.stock), active: p.active !== '0', order: num(p.order) }; }) };
+    .map(function (p) { return { id: p.id, name: p.name, desc: p.desc, image: p.image, price: num(p.price), stock: num(p.stock), category: p.category || 'sovga', active: p.active !== '0', order: num(p.order) }; }) };
 }
 function aProductSave(req) {
   var p = req.product || {};
@@ -956,7 +964,8 @@ function aProductSave(req) {
   if (num(p.price) <= 0) fail("Narxni (coin) kiriting.");
   return withLock(function () {
     var x = p.id ? byId('Products', p.id) : null;
-    var data = { name: clip(p.name, 120), desc: clip(p.desc, 500), image: clip(p.image, 500), price: String(Math.round(num(p.price))), stock: String(Math.max(0, Math.round(num(p.stock)))), active: p.active === false ? '0' : '1', order: String(num(p.order)) };
+    var data = { name: clip(p.name, 120), desc: clip(p.desc, 500), image: clip(p.image, 500), price: String(Math.round(num(p.price))), stock: String(Math.max(0, Math.round(num(p.stock)))), active: p.active === false ? '0' : '1', order: String(num(p.order)),
+      category: ['sovga', 'oshxona', 'markaz'].indexOf(p.category) >= 0 ? p.category : 'sovga' };
     if (x) { Object.keys(data).forEach(function (k) { x[k] = data[k]; }); save('Products', x); }
     else { data.id = newId('M'); x = insert('Products', data); }
     cacheClear();
@@ -1006,7 +1015,7 @@ function aPaymentAction(req) {
 // --- tariflar ---
 function aPlans() {
   return { ok: true, plans: rows('Plans').sort(function (a, b) { return num(a.order) - num(b.order); })
-    .map(function (p) { return { id: p.id, name: p.name, months: num(p.months), price: num(p.price), features: p.features, popular: p.popular === '1', active: p.active !== '0', order: num(p.order) }; }) };
+    .map(function (p) { return { id: p.id, name: p.name, months: num(p.months), price: num(p.price), oldPrice: num(p.oldPrice), features: p.features, popular: p.popular === '1', active: p.active !== '0', order: num(p.order) }; }) };
 }
 function aPlanSave(req) {
   var p = req.plan || {};
@@ -1014,7 +1023,7 @@ function aPlanSave(req) {
   if (num(p.months) < 1 || num(p.price) < 1000) fail("Muddat (oy) va narxni (so'm) to'g'ri kiriting.");
   return withLock(function () {
     var x = p.id ? byId('Plans', p.id) : null;
-    var data = { name: clip(p.name, 60), months: String(Math.round(num(p.months))), price: String(Math.round(num(p.price))), features: clip(p.features, 1500), popular: p.popular ? '1' : '', active: p.active === false ? '0' : '1', order: String(num(p.order)) };
+    var data = { name: clip(p.name, 60), months: String(Math.round(num(p.months))), price: String(Math.round(num(p.price))), features: clip(p.features, 1500), popular: p.popular ? '1' : '', active: p.active === false ? '0' : '1', order: String(num(p.order)), oldPrice: String(Math.max(0, Math.round(num(p.oldPrice)))) };
     if (x) { Object.keys(data).forEach(function (k) { x[k] = data[k]; }); save('Plans', x); }
     else { data.id = newId('T'); x = insert('Plans', data); }
     cacheClear();
@@ -1073,18 +1082,9 @@ function setup() {
   if (first && book.getSheets().length > 1 && first.getLastRow() === 0) book.deleteSheet(first);
   MEMO = {};
   if (!rows('Settings').length) DEFAULT_SETTINGS.forEach(function (r) { insert('Settings', { key: r[0], value: r[1], izoh: r[2] }); });
-  if (!rows('Plans').length) {
-    insert('Plans', { id: newId('T'), name: 'Oylik', months: '1', price: '149000', features: "Barcha video darslar\nTestlar va coinlar\nDo'kondan sovg'alar", popular: '', active: '1', order: '1' });
-    insert('Plans', { id: newId('T'), name: '3 oylik', months: '3', price: '399000', features: "Barcha video darslar\nTestlar va coinlar\nDo'kondan sovg'alar\n10% tejaysiz", popular: '1', active: '1', order: '2' });
-    insert('Plans', { id: newId('T'), name: 'Yillik', months: '12', price: '1399000', features: "Barcha video darslar\nTestlar va coinlar\nDo'kondan sovg'alar\n22% tejaysiz", popular: '', active: '1', order: '3' });
-  }
+  if (!rows('Plans').length) seedPlans();
   if (!rows('Courses').length) seedCourses();
-  if (!rows('Products').length) {
-    [["Vector kepkasi", 'Logotipli kepka', 'assets/img/gifts/g02.png', 300, 20], ['Termos', 'Logotipli termos', 'assets/img/gifts/g03.png', 400, 20],
-     ['Simsiz sichqoncha', 'RGB yoritgichli', 'assets/img/gifts/g04.png', 700, 15], ['Simsiz quloqchin', 'TWS quloqchin', 'assets/img/gifts/g11.png', 1500, 10],
-     ['Smart soat', 'Faollik va bildirishnomalar', 'assets/img/gifts/g10.png', 2500, 5], ['Telegram Premium', '1 oylik obuna', 'assets/img/gifts/g14.png', 800, 20]]
-      .forEach(function (g, i) { insert('Products', { id: newId('M'), name: g[0], desc: g[1], image: g[2], price: String(g[3]), stock: String(g[4]), active: '1', order: String(i + 1) }); });
-  }
+  if (!rows('Products').length) seedProducts();
   ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailyBirthdays') ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger('dailyBirthdays').timeBased().everyDays(1).atHour(7).inTimezone(TZ).create();
   imageFolder();
@@ -1092,17 +1092,49 @@ function setup() {
   try { SpreadsheetApp.getUi().alert("Tayyor! Endi Vector → \"2. Admin parolini o'rnatish\" ni bosing, so'ng saytni Veb-ilova sifatida joylang (README'ga qarang)."); } catch (e) {}
 }
 
+// ---- boshlang'ich ma'lumotlar (vectortalim saytidagi bilan bir xil) ----
+function seedPlans() {
+  var F = ["Juda oddiy - har oyda qayta to'lov", "Vector ni sinab ko'rish uchun qulay", "Barcha yo'nalish bo'yicha videodarslar.", 'Kurs yakunida sertifikat.',
+    "Shaxsiy mentor ko'magi.", "Vector loyihasiga qo'shilish imkoniyati", 'Ish topishda nazariy yordam'];
+  // [nomi, oylik narx, yillik narx, yillik eski narx, afzalliklar soni, ommabop]
+  [['START', 69000, 708000, 828000, 4, false], ['PRO', 89000, 948000, 1068000, 6, true], ['VIP', 110000, 1188000, 1320000, 7, false]].forEach(function (p, i) {
+    var f = F.slice(0, p[4]).join('\n');
+    insert('Plans', { id: newId('T'), name: p[0], months: '1', price: String(p[1]), features: f, popular: p[5] ? '1' : '', active: '1', order: String(i + 1), oldPrice: '' });
+    insert('Plans', { id: newId('T'), name: p[0], months: '12', price: String(p[2]), features: f.replace("Juda oddiy - har oyda qayta to'lov", "Bir marta to'lov — butun yil"), popular: p[5] ? '1' : '', active: '1', order: String(i + 11), oldPrice: String(p[3]) });
+  });
+}
+
 function seedCourses() {
   var q = function (a, b) { return JSON.stringify([
     { q: a, o: ['Ha', "Yo'q", 'Bilmayman'], a: 0 },
     { q: b, o: ['Klaviatura', 'Monitor', 'Sichqoncha'], a: 1 }]); };
-  [['Kompyuter savodxonligi', "Kompyuter bilan ishlash, fayllar, Word va Excel asoslari.", 'assets/img/courses/kurs-1.png', 'Boshlang\'ich'],
-   ['Grafik dizayn', 'Canva va Photoshop yordamida post, banner va logotip yaratish.', 'assets/img/courses/kurs-3.png', "O'rta"],
-   ['Scratch dasturlash', "O'yinlar va animatsiyalar orqali dasturlash mantiqini o'rganish.", 'assets/img/courses/kurs-5.png', "Boshlang'ich"]]
+  [['Kompyuter savodxonligi', "Kompyuter bilan ishlash, fayllar, Word va Excel asoslari.", 350000],
+   ['AI kontent', "Sun'iy intellekt yordamida matn, rasm va video kontent yaratish.", 450000],
+   ['Grafik dizayn', 'Canva va Photoshop yordamida post, banner va logotip yaratish.', 450000],
+   ['No Coding', 'Kod yozmasdan sayt, bot va ilovalar yaratish.', 400000],
+   ['Scratch', "O'yinlar va animatsiyalar orqali dasturlash mantiqini o'rganish.", 350000],
+   ['UI/UX dizayn', 'Figma yordamida ilova va sayt interfeyslarini loyihalash.', 400000],
+   ['Kiber xavfsizlik', "Raqamli dunyoda xavfsiz bo'lish: tarmoq xavfsizligi va zararli dasturlarni aniqlash.", 600000]]
     .forEach(function (c, i) {
-      var k = insert('Courses', { id: newId('K'), title: c[0], desc: c[1], image: c[2], teacher: 'Xusniddin Sharofiddinov', level: c[3], order: String(i + 1), active: '1' });
+      var k = insert('Courses', { id: newId('K'), title: c[0], desc: c[1], image: 'assets/img/courses/kurs-' + (i + 1) + '.png', teacher: 'Xusniddin Sharofiddinov', level: '', order: String(i + 1), active: '1', price: String(c[2]) });
       for (var n = 1; n <= 3; n++) insert('Lessons', { id: newId('D'), courseId: k.id, order: String(n), title: n + '-dars', youtube: '', duration: '10:00',
         desc: "Dars tavsifi. Admin paneldan YouTube havolasini va testni qo'shing.", quiz: q('Bu ' + n + '-dars?', "Ma'lumotni qaysi qurilmada ko'ramiz?"), active: '1' });
+    });
+}
+
+function seedProducts() {
+  [["Vector to'plami", "Futbolka, kepka, termos, sumka va stikerlar", 3000, 20], ['Kepka', 'Vector logosi tushirilgan kepka', 2000, 20],
+   ['Termos', 'Vector logosi tushirilgan termos', 2000, 20], ['Simsiz sichqoncha', 'Bluetooth, RGB yoritgichli sichqoncha', 3500, 20],
+   ['Mexanik klaviatura', 'RGB yoritgichli ixcham klaviatura', 6000, 15], ['Planshet', "Klaviatura va sichqoncha bilan to'plam", 25000, 5],
+   ['Redmi A5 smartfon', "Kundalik o'qish uchun smartfon", 30000, 5], ['Noutbuk', "O'qish va dasturlash uchun noutbuk", 80000, 3],
+   ['Soatli karnay', 'Raqamli soatli Bluetooth karnay', 5000, 15], ['Smart soat', 'Faollik va bildirishnomalar uchun', 9000, 10],
+   ['Simsiz quloqchin', 'Zaryadlovchi qutili TWS quloqchin', 7000, 15], ['Telefon tagligi', "Stol uchun yig'iladigan taglik", 1500, 20],
+   ['Quloqchin', 'Boshga kiyiladigan simsiz quloqchin', 8000, 10], ['Telegram Premium', 'Telegram Premium obunasi', 4000, 20],
+   ['Claude AI Pro', 'Claude AI Pro obunasi', 12000, 10], ['IELTS vaucheri', 'IELTS imtihoni uchun 30% chegirma', 15000, 10],
+   ['Milliy sertifikat', 'Milliy sertifikat xarajatlari qoplanadi', 20000, 10], ['Stol', "Uyda o'qish uchun ish stoli", 18000, 5],
+   ['Stul', 'Qulay ofis stuli', 12000, 5], ['Velosiped', "Tog' velosipedi", 60000, 3]]
+    .forEach(function (g, i) {
+      insert('Products', { id: newId('M'), name: g[0], desc: g[1], image: 'assets/img/gifts/g' + ('0' + (i + 1)).slice(-2) + '.png', price: String(g[2]), stock: String(g[3]), active: '1', order: String(i + 1), category: 'sovga' });
     });
 }
 

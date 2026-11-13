@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VECTOR — Do'kon</title>
+<meta name="theme-color" content="#1E63F0">
+<link rel="icon" href="assets/img/vector-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css">
+<style>
+  body { background: #ECECEC; }
+  main { max-width: 1280px; margin: 0 auto; padding: clamp(20px,3vw,32px) clamp(16px,4vw,48px) 64px; min-height: 70vh; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: clamp(20px,3vw,28px); }
+  .coins { display: flex; align-items: center; gap: 14px; font-size: 15px; }
+  .tabs { display: flex; gap: 10px; }
+  .tabs button { border: 0; cursor: pointer; min-width: 84px; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; background: #D6D6D6; color: #8A8A8A; transition: background .2s, color .2s; }
+  .tabs button[aria-selected="true"] { background: #1E63F0; color: #fff; }
+  .search { flex: 0 1 380px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #fff; border: 1.5px solid #0F172A; border-radius: 999px; }
+  .search .ms { font-size: 24px; color: #1E63F0; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: none; font-size: 15px; background: transparent; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,220px),1fr)); gap: clamp(14px,2vw,24px); }
+  .card { background: #fff; border: 1.5px solid #D4D4D4; border-radius: 16px; padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 6px; animation: vIn .5s cubic-bezier(.2,.7,.2,1) both; transition: transform .25s, box-shadow .25s; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(15,23,42,.12); }
+  .card .img { aspect-ratio: 1; border-radius: 12px; background: #EAF2FF; padding: 12px; display: grid; place-items: center; overflow: hidden; }
+  .card .img img { display: block; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transition: transform .35s; }
+  .card:hover .img img { transform: scale(1.05); }
+  .card h3 { margin: 6px 0 0; font-size: 19px; font-weight: 700; line-height: 1.25; }
+  .card p { margin: 0; font-size: 14px; line-height: 1.4; color: #8A8A8A; min-height: 39px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .row small { font-size: 11px; color: #8A8A8A; }
+  .row small b { color: #0F172A; }
+  .buy { margin-top: 6px; border: 0; cursor: pointer; height: 38px; border-radius: 10px; background: #1E63F0; color: #fff; font-weight: 700; font-size: 14px; transition: background .2s, transform .2s; }
+  .buy:hover { background: #1552cf; transform: translateY(-1px); }
+  .buy[disabled] { background: #CBD5E1; cursor: default; transform: none; }
+  .soon { padding: clamp(24px,4vw,48px) 20px 40px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+  .soon img { display: block; width: clamp(180px,22vw,260px); height: auto; }
+  .soon h2 { margin: 12px 0 0; font-weight: 800; font-size: clamp(26px,3vw,36px); text-wrap: balance; }
+  .soon p { margin: 0; max-width: 520px; color: #64748B; font-size: clamp(15px,1.4vw,18px); line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="page">
+<header id="vh"></header>
+<main aria-label="Do'kon">
+  <div class="top">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="coins"><span>Coin: <strong id="coins">0</strong></span><span class="ms" style="font-size:22px" aria-hidden="true">shopping_basket</span></div>
+      <div class="tabs" role="tablist" aria-label="Bo'limlar" id="tabs"><button role="tab" aria-selected="true" data-t="sovga">Sovg'a</button><button role="tab" aria-selected="false" data-t="oshxona">Oshxona</button><button role="tab" aria-selected="false" data-t="markaz">Markaz</button></div>
+    </div>
+    <label class="search"><span class="ms">search</span><input id="q" placeholder="Qidirish" aria-label="Sovg'alarni qidirish"></label>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="soon" id="soon" hidden><img src="assets/img/cat-empty.png" alt="Hayron mushukcha — Vector maskoti"><h2 id="soonT"></h2><p>Darslarda faol ishtirok etib coinlar to'plang va ularni do'kondagi sovg'alarga ega bo'ling</p></div>
+</main>
+<footer id="vf"></footer>
+</div>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/site.js"></script>
+<script>
+(function () {
+  const { esc, loggedIn } = VSite;
+  const fmt = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, '.');
+  const safe = u => /^(https:\/\/|assets\/)/.test(String(u || '')) ? u : '';
+  const G = [["Vector to'plami", "Futbolka, kepka, termos, sumka va stikerlar", 3000, 20], ['Kepka', 'Vector logosi tushirilgan kepka', 2000, 20], ['Termos', 'Vector logosi tushirilgan termos', 2000, 20],
+    ['Simsiz sichqoncha', 'Bluetooth, RGB yoritgichli sichqoncha', 3500, 20], ['Mexanik klaviatura', 'RGB yoritgichli ixcham klaviatura', 6000, 15], ['Planshet', "Klaviatura va sichqoncha bilan to'plam", 25000, 5],
+    ['Redmi A5 smartfon', "Kundalik o'qish uchun smartfon", 30000, 5], ['Noutbuk', "O'qish va dasturlash uchun noutbuk", 80000, 3]];
+  let ALL = G.map(([name, desc, price, stock], i) => ({ id: 'g' + i, name, desc, price, stock, category: 'sovga', image: 'assets/img/gifts/g' + String(i + 1).padStart(2, '0') + '.png' }));
+  let tab = 'sovga', coins = 0;
+  const TITLES = { oshxona: 'Oshxona', markaz: 'Markaz', sovga: "Sovg'alar" };
+  function draw() {
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const list = ALL.filter(p => (p.category || 'sovga') === tab).filter(p => !q || (p.name + ' ' + p.desc).toLowerCase().includes(q));
+    document.getElementById('grid').innerHTML = list.map((g, i) => `<article class="card" style="animation-delay:${i * 30}ms">
+      <div class="img">${safe(g.image) ? `<img src="${esc(g.image)}" alt="${esc(g.name)}" loading="lazy">` : ''}</div>
+      <h3>${esc(g.name)}</h3><p>${esc(g.desc)}</p>
+      <div class="row"><strong style="font-size:15px">Narxi: ${fmt(g.price)}</strong><small><b>${Number(g.stock) || 0} dona</b> qoldi</small></div>
+      <button class="buy" data-id="${esc(g.id)}" ${g.stock > 0 ? '' : 'disabled'}>${g.stock > 0 ? 'Harid qilish' : 'Tugagan'}</button></article>`).join('');
+    const soon = document.getElementById('soon');
+    soon.hidden = list.length > 0;
+    document.getElementById('soonT').textContent = q ? 'Hech narsa topilmadi' : TITLES[tab] + ' hali yaratilmagan';
+    document.querySelectorAll('.buy').forEach(b => b.onclick = () => {
+      if (!loggedIn) return VSite.gate("Sovg'ani olish uchun ro'yxatdan o'ting", "Sovg'alar Vector coinlari evaziga beriladi. Akkaunt oching, darslarda coin to'plang va sovg'alarni qo'lga kiriting.");
+      location.href = 'kabinet.html#dokon';
+    });
+  }
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b)); draw(); });
+  document.getElementById('q').addEventListener('input', draw);
+  const pub = VX.cachedPublic(); if (pub && pub.products && pub.products.length) ALL = pub.products;
+  draw();
+  VX.publicData().then(d => { if (d.products) { ALL = d.products; draw(); } }).catch(() => {});
+  if (loggedIn) VX.call('me').then(r => { coins = r.user.coins; document.getElementById('coins').textContent = fmt(coins); }).catch(() => {});
+})();
+</script>
+<script src="assets/js/vector-i18n.js"></script>
+<script src="assets/js/vector-i18n-dict.js"></script>
+</body>
+</html>

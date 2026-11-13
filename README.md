@@ -11,6 +11,9 @@ Bolalar uchun onlayn IT ta'lim sayti: sotuv sahifasi, ro'yxatdan o'tish, shaxsiy
 
 ```
 index.html        — sotuv (bosh) sahifasi
+kurslar.html      — barcha kurslar
+dokon.html        — sovg'alar do'koni (coin evaziga)
+elchilar.html     — elchilar
 kirish.html       — kirish / ro'yxatdan o'tish
 kabinet.html      — o'quvchi kabineti
 admin.html        — admin panel
