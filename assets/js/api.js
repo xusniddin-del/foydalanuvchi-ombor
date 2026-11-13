@@ -54,7 +54,8 @@
   const money = n => Number(n || 0).toLocaleString('ru-RU').replace(/ /g, ' ') + " so'm";
   const num = n => Number(n || 0).toLocaleString('ru-RU').replace(/ /g, ' ');
   const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
-  const date = s => { const d = new Date(s); return isNaN(d) ? '' : d.getDate() + '-' + MONTHS[d.getMonth()] + ', ' + d.getFullYear(); };
+  const lg = () => (window.vectorLang && window.vectorLang()) || 'uz';
+  const date = s => { const d = new Date(s); if (isNaN(d)) return ''; const L = lg(); return L === 'uz' ? d.getDate() + '-' + MONTHS[d.getMonth()] + ', ' + d.getFullYear() : d.toLocaleDateString(L === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); };
   const dateTime = s => { const d = new Date(s); return isNaN(d) ? '' : date(s) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
   const daysLeft = s => Math.max(0, Math.ceil((Date.parse(s) - Date.now()) / 864e5));
   const initials = n => String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();

@@ -8,6 +8,7 @@
 <link rel="icon" href="assets/img/vector-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 <style>
   body { background: var(--bg); }
@@ -182,6 +183,12 @@
   @media (max-width: 760px) { .kpis { grid-template-columns: 1fr; } }
   .kpi { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
   .kpi .big { font-size: 28px; font-weight: 800; }
+  .kpi.bal { position: relative; overflow: hidden; background: linear-gradient(180deg, #CFE3FF, #EEF6FF); border-color: #D5E4FA; color: #0D1B3E; }
+  .kpi.bal .big { font-size: 40px; display: inline-flex; align-items: center; gap: 10px; }
+  .kpi.bal .big::before { width: 34px; height: 34px; }
+  .kpi.bal .muted { color: #3A4766; }
+  .kpi.bal img { position: absolute; right: 8px; bottom: -6px; width: 110px; pointer-events: none; }
+  [data-theme="dark"] .gift-card img, [data-theme="dark"] .gchip img, [data-theme="dark"] .prod .img { mix-blend-mode: normal; background: #fff; border-radius: 14px; }
   .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 16px; }
   .prod { padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 6px; }
   .prod .img { aspect-ratio: 1; border-radius: 16px; background: #fff; overflow: hidden; display: grid; place-items: center; }
@@ -230,10 +237,10 @@
   </aside>
   <main class="content">
     <div class="mbar"><a class="me" href="#profil" id="meTop" aria-label="Profil"></a><div class="topbar"><div class="stat-pills" id="pillsTop"></div></div></div>
-    <div class="topbar" id="topbar">
+    <header class="topbar" id="topbar">
       <form class="search" id="search" role="search"><span aria-hidden="true" id="searchIc"></span><input id="q" type="search" placeholder="Kurs yoki darsni qidiring…" aria-label="Kurs yoki darsni qidirish"></form>
       <div class="stat-pills" id="pills"></div>
-    </div>
+    </header>
     <div id="view" tabindex="-1"><div class="skeleton" style="height:160px"></div></div>
   </main>
   <nav class="bnav" id="navBottom" aria-label="Kabinet menyusi"></nav>
@@ -259,17 +266,19 @@
   $('#navSide').innerHTML = NAV.map(([id, t, ic]) => `<a href="#${id}" data-nav="${id}">${icon(ic)}${t}</a>`).join('');
   $('#navBottom').innerHTML = NAV.filter(n => n[0] !== 'profil').map(([id, t, ic]) => `<a href="#${id}" data-nav="${id}">${icon(ic)}${t.split(' ')[0]}</a>`).join('');
 
+  const LG = () => (window.vectorLang && vectorLang()) || 'uz';
+  const tx = (uz, ru, en) => { const l = LG(); return l === 'ru' ? ru : l === 'en' ? en : uz; };
   let STATS = null;
   const level = () => 1 + Math.floor(((STATS && STATS.watched) || 0) / 3);
   function renderMe() {
     if (!ME) return;
     const first = esc(ME.name.split(' ')[0]);
-    $('#meSide').innerHTML = `${avatarHtml(ME)}<div style="min-width:0"><b>${esc(ME.name)}</b><small>${level()}-daraja</small></div><span class="gear">${icon('settings')}</span>`;
-    $('#meTop').innerHTML = `${avatarHtml(ME)}<div style="min-width:0"><b>${first}</b><small>${level()}-daraja</small></div>`;
+    $('#meSide').innerHTML = `${avatarHtml(ME)}<div style="min-width:0"><b>${esc(ME.name)}</b><small>${tx(level() + '-daraja', 'Уровень ' + level(), 'Level ' + level())}</small></div><span class="gear">${icon('settings')}</span>`;
+    $('#meTop').innerHTML = `${avatarHtml(ME)}<div style="min-width:0"><b>${first}</b><small>${tx(level() + '-daraja', 'Уровень ' + level(), 'Level ' + level())}</small></div>`;
     const pills = `<span class="flame" title="Ketma-ket faol kunlar">${icon('flame')}${STATS ? STATS.streak : 0}</span><span class="coin-big" title="Coinlar">${num(ME.coins)}</span>`;
     $('#pills').innerHTML = pills; $('#pillsTop').innerHTML = pills;
     $('#plusCard').innerHTML = ME.active
-      ? `<div class="h"><i>${icon('crown')}</i>${esc(ME.plan || 'Obuna')} faol</div><p>${date(ME.subEnd)} gacha · yana ${daysLeft(ME.subEnd)} kun barcha kurslar ochiq.</p><a class="btn btn-soft btn-sm" href="#obuna">Uzaytirish</a>`
+      ? `<div class="h"><i>${icon('crown')}</i>${esc(ME.plan || 'Obuna')} faol</div><p>${tx(`${date(ME.subEnd)} gacha: yana ${daysLeft(ME.subEnd)} kun barcha kurslar ochiq.`, `До ${date(ME.subEnd)}: ещё ${daysLeft(ME.subEnd)} дн. все курсы открыты.`, `Until ${date(ME.subEnd)}: all courses open for ${daysLeft(ME.subEnd)} more days.`)}</p><a class="btn btn-soft btn-sm" href="#obuna">Uzaytirish</a>`
       : `<div class="h"><i>${icon('crown')}</i>Vector obunasi</div><p>Barcha kurslar, testlar va coin bilan sovg'alar bitta obunada.</p><a class="btn btn-primary" href="#obuna">Obuna olish</a>`;
   }
   async function loadMe() {
@@ -297,13 +306,15 @@
     view.focus({ preventScroll: true });
   }
   window.addEventListener('hashchange', go);
+  window.addEventListener('vector-lang', () => { renderMe(); go(); });
 
   // ================= BOSH SAHIFA =================
   const TINTS = [['var(--violet)', 'var(--violet-50)'], ['var(--pink)', 'var(--pink-50)'], ['var(--mint)', 'var(--mint-50)'], ['var(--orange)', 'var(--orange-50)'], ['var(--blue)', 'var(--blue-50)']];
   const HILLS = `<svg class="hills" viewBox="0 0 800 140" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70 C120 30 220 40 330 72 S560 40 800 64 V140 H0Z" fill="#BFE0C8" opacity=".7"/><path d="M0 98 C160 66 300 80 430 100 S650 80 800 92 V140 H0Z" fill="#9FD3AE"/><path d="M0 124 C200 110 420 118 800 112 V140 H0Z" fill="#86C79B"/></svg>`;
   function greet() {
     const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tashkent', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
-    return h < 5 ? 'Xayrli tun' : h < 11 ? 'Xayrli tong' : h < 17 ? 'Xayrli kun' : 'Xayrli kech';
+    const k = h < 5 ? 0 : h < 11 ? 1 : h < 17 ? 2 : 3;
+    return tx(['Xayrli tun', 'Xayrli tong', 'Xayrli kun', 'Xayrli kech'][k], ['Доброй ночи', 'Доброе утро', 'Добрый день', 'Добрый вечер'][k], ['Good night', 'Good morning', 'Good afternoon', 'Good evening'][k]);
   }
   async function pHome() {
     const [m, c, sh] = await Promise.all([loadMe(), call('courses'), call('shop').catch(() => null)]);
@@ -318,10 +329,10 @@
       : `<section class="hero">${HILLS}${cur ? `<a class="pill" href="#kurs/${esc(cur.id)}">${icon('book')}${esc(cur.title)}${icon('arrowR')}</a>` : ''}<h1>${greet()},<span>${first}! 👋</span></h1><p>${active ? "Bitta dars — kelajagingiz sari yana bir qadam!" : "Darslarni boshlash uchun obunani faollashtiring."}</p>${cta}<img class="mascot" src="assets/img/cat-happy.png" alt="Vector mushukchasi"></section>`;
     const contCard = next ? `<div class="sec-h"><h2>Davom ettirish</h2><a href="#kurs/${esc(next.co.id)}">Kursni ochish</a></div>
       <a class="cont" href="#dars/${esc(next.l.id)}"><span class="thumb">${safeUrl(next.co.image) ? `<img src="${esc(next.co.image)}" alt="">` : ''}</span>
-        <span class="info"><b>${esc(next.co.title)}</b><span class="muted">${next.i + 1}-dars: ${esc(next.l.title)}</span><span class="bar"><span class="progress"><i style="width:${next.co.percent}%"></i></span>${next.co.percent}%</span></span>
+        <span class="info"><b>${esc(next.co.title)}</b><span class="muted">${tx(`${next.i + 1}-dars`, `Урок ${next.i + 1}`, `Lesson ${next.i + 1}`)}: ${esc(next.l.title)}</span><span class="bar"><span class="progress"><i style="width:${next.co.percent}%"></i></span>${next.co.percent}%</span></span>
         <span class="go">${icon('play')}${next.co.watched ? 'Davom etish' : 'Boshlash'}</span></a>` : '';
     const skills = c.courses.length ? `<div class="sec-h"><h2>Kurslarim</h2><a href="#kurslar">Barchasi</a></div>
-      <div class="skills">${c.courses.slice(0, 8).map((co, i) => { const [t, bg] = TINTS[i % TINTS.length]; return `<a class="skill" href="#kurs/${esc(co.id)}" style="--t:${t};--t-bg:${bg}"><span class="ico">${safeUrl(co.image) ? `<img src="${esc(co.image)}" alt="">` : icon('book')}</span><span style="min-width:0"><b>${esc(co.title)}</b><small>${co.lessons.length} ta dars · ${co.percent}%</small></span>${icon('arrowR')}</a>`; }).join('')}</div>` : '';
+      <div class="skills">${c.courses.slice(0, 8).map((co, i) => { const [t, bg] = TINTS[i % TINTS.length]; return `<a class="skill" href="#kurs/${esc(co.id)}" style="--t:${t};--t-bg:${bg}"><span class="ico">${safeUrl(co.image) ? `<img src="${esc(co.image)}" alt="">` : icon('book')}</span><span style="min-width:0"><b>${esc(co.title)}</b><small>${tx(co.lessons.length + ' ta dars', 'Уроков: ' + co.lessons.length, co.lessons.length + ' lessons')}, ${co.percent}%</small></span>${icon('arrowR')}</a>`; }).join('')}</div>` : '';
     const prods = (sh && sh.products || []).filter(p => p.stock > 0);
     const gifts = prods.length ? `<div class="sec-h"><h2>Sovg'alar do'koni</h2><a href="#dokon">Barchasi</a></div>
       <div class="gifts-row">${prods.slice(0, 10).map(p => `<a class="gchip" href="#dokon">${safeUrl(p.image) ? `<img src="${esc(p.image)}" alt="">` : ''}<span><b>${esc(p.name)}</b><span class="coin">${num(p.price)}</span></span></a>`).join('')}</div>` : '';
@@ -331,14 +342,14 @@
     const goalBox = `<div class="box"><h3>Kunlik maqsad</h3>
       <div class="goal"><div class="ring"><svg viewBox="0 0 132 132"><circle cx="66" cy="66" r="56" fill="none" stroke="var(--blue-50)" stroke-width="12"/><circle cx="66" cy="66" r="56" fill="none" stroke="var(--blue)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct)}"/></svg>
         <div class="v"><span class="flame" style="display:grid;place-items:center">${icon('flame')}</span><b>${Math.min(today, 99)} / ${goal}</b><small>bugun</small></div></div>
-        <p><b>${today >= goal ? "Barakalla! 🎉" : today ? 'Zo\'r ketyapsiz!' : 'Boshlaymizmi?'}</b>${today >= goal ? 'Bugungi maqsad bajarildi.' : `Yana ${goal - today} ta dars yoki test.`}${st.streak ? `<br>${st.streak} kunlik seriya 🔥` : ''}</p></div>
+        <p><b>${today >= goal ? "Barakalla! 🎉" : today ? 'Zo\'r ketyapsiz!' : 'Boshlaymizmi?'}</b>${today >= goal ? 'Bugungi maqsad bajarildi.' : tx(`Yana ${goal - today} ta dars yoki test.`, `Ещё уроков или тестов: ${goal - today}.`, `${goal - today} more lessons or tests.`)}${st.streak ? `<br>${tx(st.streak + ' kunlik seriya', 'Серия: ' + st.streak + ' дн.', st.streak + '-day streak')} 🔥` : ''}</p></div>
       <div class="week">${D.map((d, i) => `<span class="${i === todayIdx ? 'today' : ''}"><i class="${st.week && st.week[i] ? 'on' : ''}">${st.week && st.week[i] ? icon('check') : ''}</i>${d}</span>`).join('')}</div></div>`;
     const L = m.leaders || { top: [] };
     const row = x => `<div class="r ${x.me ? 'me' : ''}"><span class="n ${x.rank <= 3 ? 'g' + x.rank : ''}">${x.rank}</span>${avatarHtml(x)}<span class="nm">${x.me ? 'Siz' : esc(x.name)}${x.rank === 1 ? ' 👑' : ''}</span><span class="coin">${num(x.coins)}</span></div>`;
     const leadBox = L.top.length ? `<div class="box"><h3>Reyting</h3><div class="lead">${L.top.map(row).join('')}${L.myRank > 5 ? `<div class="r me"><span class="n">${L.myRank}</span>${avatarHtml(u)}<span class="nm">Siz</span><span class="coin">${num(u.coins)}</span></div>` : ''}</div></div>` : '';
     const target = prods.filter(p => p.price > u.coins).sort((a, b) => a.price - b.price)[0];
-    const giftBox = target ? `<a class="box gift-card" href="#dokon" style="color:var(--ink)">${safeUrl(target.image) ? `<img src="${esc(target.image)}" alt="">` : ''}<div><p>Yana <b style="display:inline;font-size:inherit;margin:0">${num(target.price - u.coins)} coin</b> to'plang va oling:</p><b>${esc(target.name)}</b>
-      <div class="progress"><i style="width:${Math.round(u.coins / target.price * 100)}%"></i></div><div class="row" style="margin-top:6px"><span>${num(u.coins)} / ${num(target.price)} coin</span></div></div></a>` : '';
+    const giftBox = target ? `<a class="box gift-card" href="#dokon" style="color:var(--ink)">${safeUrl(target.image) ? `<img src="${esc(target.image)}" alt="">` : ''}<div><p>${tx(`Yana <b style="display:inline;font-size:inherit;margin:0">${num(target.price - u.coins)} coin</b> to'plang va oling:`, `Соберите ещё <b style="display:inline;font-size:inherit;margin:0">${num(target.price - u.coins)} coin</b> и получите:`, `Collect <b style="display:inline;font-size:inherit;margin:0">${num(target.price - u.coins)}</b> more coins to get:`)}</p><b>${esc(target.name)}</b>
+      <div class="progress"><i style="width:${Math.round(u.coins / target.price * 100)}%"></i></div><div class="row" style="margin-top:6px"><span>${num(u.coins)} / ${num(target.price)}</span></div></div></a>` : '';
     view.innerHTML = `<div class="home"><div style="min-width:0">${hero}
         ${active ? '' : `<div class="notice" style="margin-top:18px">${icon('lock')}<p><b>Obuna faol emas.</b> Barcha darslar va testlarni ochish uchun tarif tanlang.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
         ${contCard}${skills}${gifts}</div>
@@ -348,7 +359,7 @@
   function courseCard(c) {
     return `<a class="card ccard" href="#kurs/${esc(c.id)}">
       <div class="img">${safeUrl(c.image) ? `<img src="${esc(c.image)}" alt="" loading="lazy">` : ''}</div>
-      <div class="body"><h3>${esc(c.title)}</h3><div class="row between muted" style="font-size:14px"><span>${c.watched}/${c.lessons.length} dars</span><span>${c.percent}%</span></div><div class="progress"><i style="width:${c.percent}%"></i></div></div></a>`;
+      <div class="body"><h3>${esc(c.title)}</h3><div class="row between muted" style="font-size:14px"><span>${c.watched}/${c.lessons.length} ${tx('dars', 'уроков', 'lessons')}</span><span>${c.percent}%</span></div><div class="progress"><i style="width:${c.percent}%"></i></div></div></a>`;
   }
 
   // ================= KURSLAR =================
@@ -368,13 +379,13 @@
         <div style="border-radius:16px;overflow:hidden;aspect-ratio:16/9;background:var(--blue-50)">${safeUrl(co.image) ? `<img src="${esc(co.image)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ''}</div>
         <div class="stack"><h1 style="font-size:clamp(22px,3vw,30px)">${esc(co.title)}</h1><p class="muted">${esc(co.desc)}</p>
           ${co.teacher ? `<span class="row muted" style="gap:8px;font-size:14px">${icon('user')} Ustoz: ${esc(co.teacher)}</span>` : ''}
-          <div><div class="row between" style="font-size:14px;margin-bottom:6px"><b>${co.watched}/${co.lessons.length} dars tugatildi</b><span class="muted">${co.percent}%</span></div><div class="progress"><i style="width:${co.percent}%"></i></div></div></div>
+          <div><div class="row between" style="font-size:14px;margin-bottom:6px"><b>${tx(`${co.watched}/${co.lessons.length} dars tugatildi`, `Пройдено уроков: ${co.watched}/${co.lessons.length}`, `${co.watched}/${co.lessons.length} lessons done`)}</b><span class="muted">${co.percent}%</span></div><div class="progress"><i style="width:${co.percent}%"></i></div></div></div>
       </div>
       ${c.active ? '' : `<div class="notice">${icon('lock')}<p>Darslarni ko'rish uchun obuna oling.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
       <div class="lessons">${co.lessons.map((l, i) => {
         const cls = l.watched ? 'done' : l.locked ? 'locked' : '';
-        const right = l.watched ? `<span class="badge green">${icon('check')} Tugatildi${l.hasQuiz ? ' · ' + l.best + '/' + l.quizSize : ''}</span>` : l.locked ? icon('lock') : `<span class="badge orange">Boshlash</span>`;
-        const inner = `<span class="n">${l.watched ? icon('check') : i + 1}</span><span class="t"><b>${esc(l.title)}</b><span class="muted" style="font-size:13px">${l.duration ? esc(l.duration) + ' · ' : ''}${l.hasQuiz ? l.quizSize + ' ta savol' : 'Test yo\'q'}</span></span>${right}`;
+        const right = l.watched ? `<span class="badge green">${icon('check')} ${tx('Tugatildi', 'Пройден', 'Done')}${l.hasQuiz ? ': ' + l.best + '/' + l.quizSize : ''}</span>` : l.locked ? icon('lock') : `<span class="badge orange">Boshlash</span>`;
+        const inner = `<span class="n">${l.watched ? icon('check') : i + 1}</span><span class="t"><b>${esc(l.title)}</b><span class="muted" style="font-size:13px">${l.duration ? esc(l.duration) + ' · ' : ''}${l.hasQuiz ? tx(l.quizSize + ' ta savol', 'Вопросов: ' + l.quizSize, l.quizSize + ' questions') : 'Test yo\'q'}</span></span>${right}`;
         return l.locked ? `<div class="lesson ${cls}" aria-disabled="true">${inner}</div>` : `<a class="lesson ${cls}" href="#dars/${esc(l.id)}">${inner}</a>`;
       }).join('') || '<div class="card empty">Bu kursda hali darslar yo\'q.</div>'}</div>`;
     if (innerWidth < 700) $('#chead').style.gridTemplateColumns = '1fr';
@@ -409,7 +420,7 @@
     }
     const rate = Number((PUB && PUB.settings && PUB.settings.coin_per_correct) || 2);
     box.innerHTML = `<div class="card pad stack" style="gap:16px">
-      <div class="row between wrap-row"><h2 style="font-size:22px">${icon('quiz')} Test · ${L.quiz.length} ta savol</h2>${L.attempts ? `<span class="badge">Eng yaxshi natija: ${L.best}/${L.quiz.length}</span>` : `<span class="badge orange">Har bir to'g'ri javob — ${rate} coin</span>`}</div>
+      <div class="row between wrap-row"><h2 style="font-size:22px">${icon('quiz')} ${tx(`Test: ${L.quiz.length} ta savol`, `Тест: ${L.quiz.length} вопр.`, `Quiz: ${L.quiz.length} questions`)}</h2>${L.attempts ? `<span class="badge">Eng yaxshi natija: ${L.best}/${L.quiz.length}</span>` : `<span class="badge orange">${tx(`Har bir to'g'ri javob: ${rate} coin`, `За каждый верный ответ: ${rate} coin`, `${rate} coins per correct answer`)}</span>`}</div>
       ${L.attempts ? '<p class="hint">Coinlar faqat birinchi urinishda beriladi. Qayta ishlab natijangizni yaxshilashingiz mumkin.</p>' : '<p class="hint">Diqqat bilan javob bering: coinlar faqat birinchi urinishdagi to\'g\'ri javoblar uchun beriladi.</p>'}
       <form id="quiz" class="stack" style="gap:12px">${L.quiz.map((q, i) => `<fieldset class="q" style="margin:0"><legend class="sr">Savol ${i + 1}</legend><h4>${i + 1}. ${esc(q.q)}</h4><div class="opts">${q.o.map((o, j) => `<label class="opt"><input type="radio" name="q${i}" value="${j}" required>${esc(o)}</label>`).join('')}</div></fieldset>`).join('')}
         <div class="err" hidden></div>
@@ -474,14 +485,14 @@
     const T = { quiz: 'Test', birthday: "Tug'ilgan kun", admin: 'Ustozdan', order: 'Xarid', refund: 'Qaytarildi' };
     view.innerHTML = `<div class="page-h"><div><h1>Coinlarim</h1><p>Coin — bilim uchun mukofot.</p></div></div>
       <div class="kpis" style="grid-template-columns:1fr 2fr">
-        <div class="card kpi" style="background:linear-gradient(135deg,#FF8A00,#F05A28);color:#fff;border:0"><span style="opacity:.85">Balans</span><span class="big" style="font-size:40px">${num(r.coins)}</span><a class="btn btn-sm" style="background:#fff;color:#E07800;align-self:flex-start" href="#dokon">Do'konga o'tish</a></div>
+        <div class="card kpi bal"><span class="muted">Balans</span><span class="big coin-big">${num(r.coins)}</span><a class="btn btn-primary btn-sm btn-pill" style="align-self:flex-start" href="#dokon">Do'konga o'tish</a><img src="assets/img/cat-happy.png" alt=""></div>
         <div class="card kpi"><b>Coin qanday to'planadi?</b><div class="stack" style="gap:8px;margin-top:4px">
           <span class="row">${icon('quiz')} Testdagi har bir to'g'ri javob — <b class="coin">${esc(s.coin_per_correct || 2)}</b> (birinchi urinishda)</span>
           <span class="row">${icon('cake')} Tug'ilgan kuningizda — <b class="coin">${esc(s.birthday_coins || 50)}</b></span>
           <span class="row">${icon('star')} Faollik uchun ustozdan qo'shimcha coinlar</span></div></div>
       </div>
       <h2 style="font-size:22px;margin:8px 0 14px">Tarix</h2>
-      <div class="card pad">${r.history.map(h => `<div class="list-row"><div><b>${esc(h.reason || T[h.type] || '')}</b><div class="muted" style="font-size:13px">${esc(T[h.type] || h.type)} · ${dateTime(h.at)}</div></div><span class="${h.amount > 0 ? 'plus' : 'minus'}">${h.amount > 0 ? '+' : ''}${num(h.amount)}</span></div>`).join('') || '<div class="empty"><img src="assets/img/cat-empty.png" alt="">Hali coin yo\'q. Birinchi testni ishlang!</div>'}</div>`;
+      <div class="card pad">${r.history.map(h => `<div class="list-row"><div><b>${esc(h.reason || T[h.type] || '')}</b><div class="muted" style="font-size:13px">${esc(T[h.type] || h.type)}, ${dateTime(h.at)}</div></div><span class="${h.amount > 0 ? 'plus' : 'minus'}">${h.amount > 0 ? '+' : ''}${num(h.amount)}</span></div>`).join('') || '<div class="empty"><img src="assets/img/cat-empty.png" alt="">Hali coin yo\'q. Birinchi testni ishlang!</div>'}</div>`;
     if (innerWidth < 760) view.querySelector('.kpis').style.gridTemplateColumns = '1fr';
   }
 
@@ -496,12 +507,12 @@
     view.innerHTML = `<div class="page-h"><div><h1>Obuna</h1><p>Barcha kurslar, testlar va do'kon — bitta obunada.</p></div></div>
       <div class="card pad" style="margin-bottom:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
         <span class="avatar" style="background:${u.active ? 'var(--green)' : 'var(--muted)'}">${icon(u.active ? 'check' : 'lock')}</span>
-        <div style="flex:1"><b style="font-size:18px">${u.active ? 'Obuna faol' : 'Obuna faol emas'}</b><div class="muted">${u.active ? `${esc(u.plan || '')} · ${date(u.subEnd)} gacha (${daysLeft(u.subEnd)} kun qoldi)` : 'Tarifni tanlang va to\'lovni amalga oshiring.'}</div></div>
+        <div style="flex:1"><b style="font-size:18px">${u.active ? 'Obuna faol' : 'Obuna faol emas'}</b><div class="muted">${u.active ? `${esc(u.plan || '')}: ${tx(`${date(u.subEnd)} gacha (${daysLeft(u.subEnd)} kun qoldi)`, `до ${date(u.subEnd)} (осталось ${daysLeft(u.subEnd)} дн.)`, `until ${date(u.subEnd)} (${daysLeft(u.subEnd)} days left)`)}` : 'Tarifni tanlang va to\'lovni amalga oshiring.'}</div></div>
       </div>
       <h2 style="font-size:20px;margin-bottom:12px">${u.active ? 'Obunani uzaytirish' : 'Tarifni tanlang'}</h2>
       <div class="plans" id="plans">${r.plans.map(p => `<button type="button" class="plan" data-plan="${esc(p.id)}" aria-pressed="${p.id === sel}">
         <div class="row between"><b style="font-size:18px">${esc(p.name)}</b>${p.popular ? '<span class="badge orange">Ommabop</span>' : ''}</div>
-        <div class="price">${money(p.price)}</div><span class="muted" style="font-size:14px">${p.months} oy${p.months > 1 ? ' · oyiga ' + money(Math.round(p.price / p.months / 1000) * 1000) : ''}</span>
+        <div class="price">${money(p.price)}</div><span class="muted" style="font-size:14px">${tx(p.months + ' oy', p.months + ' мес.', p.months + (p.months > 1 ? ' months' : ' month'))}${p.months > 1 ? ', ' + tx('oyiga ', 'в месяц ', 'per month ') + money(Math.round(p.price / p.months / 1000) * 1000) : ''}</span>
         <ul>${p.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul></button>`).join('')}</div>
       <div class="card pad" style="margin-top:20px" id="payBox"></div>
       <h2 style="font-size:20px;margin:32px 0 12px">To'lovlar tarixi</h2>
@@ -542,8 +553,8 @@
             <label class="icon-btn" style="position:absolute;right:0;bottom:0;background:var(--blue);color:#fff;cursor:pointer" title="Rasmni almashtirish">${icon('camera')}<input type="file" accept="image/*" id="avaFile" class="sr"></label></div>
           <div><b style="font-size:20px">${esc(u.name)}</b><div class="muted">+998 ${esc(u.phone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4'))}</div></div>
           <span class="coin" style="font-size:20px">${num(u.coins)}</span>
-          <span class="badge ${u.active ? 'green' : 'gray'}">${u.active ? 'Obuna: ' + date(u.subEnd) + ' gacha' : 'Obuna yo\'q'}</span>
-          <span class="muted" style="font-size:13px">A'zo: ${date(u.createdAt)}</span>
+          <span class="badge ${u.active ? 'green' : 'gray'}">${u.active ? tx('Obuna: ' + date(u.subEnd) + ' gacha', 'Подписка до ' + date(u.subEnd), 'Plan until ' + date(u.subEnd)) : 'Obuna yo\'q'}</span>
+          <span class="muted" style="font-size:13px">${tx("A'zo: ", 'С нами с ', 'Member since ')}${date(u.createdAt)}</span>
         </div>
         <div class="stack" style="gap:20px">
           <form class="card pad stack" id="pf">
@@ -561,6 +572,7 @@
           </form>
           <div class="card pad stack">
             <h2 style="font-size:20px">Ko'rinish</h2>
+            <button type="button" class="row between" id="langRow" style="border:0;background:none;padding:0;cursor:pointer;width:100%;text-align:left;color:inherit"><span>Ilova tili</span><span class="badge" id="langNow"></span></button>
             <div class="row between wrap-row"><span>Sayt mavzusi</span><div class="seg" id="theme"><button type="button" data-t="light">${icon('sun')} Yorug'</button><button type="button" data-t="dark">${icon('moon')} Qorong'i</button></div></div>
           </div>
           <form class="card pad stack" id="pw">
@@ -577,6 +589,9 @@
     const markTheme = t => th.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === t));
     markTheme(u.theme || 'light');
     th.querySelectorAll('button').forEach(b => b.onclick = () => { VX.applyTheme(b.dataset.t); markTheme(b.dataset.t); call('profile', { theme: b.dataset.t }).then(r => { ME = r.user; }).catch(() => {}); });
+    const LN = { uz: "O'zbekcha", ru: 'Русский', en: 'English' };
+    const paintLang = () => { const el = $('#langNow'); if (el) el.textContent = LN[(window.vectorLang && vectorLang()) || 'uz']; };
+    paintLang();
     $('#pf').onsubmit = e => {
       e.preventDefault(); const f = e.currentTarget;
       busy(f.querySelector('[type=submit]'), async () => {
@@ -607,5 +622,7 @@
   VX.publicData().then(d => { PUB = d; }).catch(() => {});
 })();
 </script>
+<script src="assets/js/vector-i18n.js"></script>
+<script src="assets/js/vector-i18n-dict.js"></script>
 </body>
 </html>

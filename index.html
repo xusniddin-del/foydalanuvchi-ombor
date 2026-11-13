@@ -149,7 +149,20 @@
   .scr .bar { height: 6px; border-radius: 9px; background: #EAF2FF; overflow: hidden; }
   .scr .bar i { display: block; height: 100%; background: linear-gradient(90deg,#1E63F0,#FF8A00); }
   .scr img { width: 100%; border-radius: 9px; display: block; }
-  .scr .hello { background: #1E63F0; color: #fff; border-radius: 12px; padding: 10px; font-weight: 800; font-size: 12px; }
+  .scr { background: #EEF4FD; }
+  .scr .card { border: 1px solid #E1EAF7; box-shadow: none; }
+  .scr .bar i { background: #1E63F0; }
+  .scr .hello { position: relative; overflow: hidden; background: linear-gradient(180deg,#CFE3FF,#EEF6FF); border: 1px solid #D5E4FA; color: #0D1B3E; border-radius: 14px; padding: 10px 10px 12px; font-weight: 800; font-size: 13px; line-height: 1.2; min-height: 92px; }
+  .scr .hello span { color: #1E63F0; display: block; }
+  .scr .hello small { display: block; margin-top: 4px; font-weight: 500; font-size: 8px; color: #3A4766; max-width: 60%; }
+  .scr .hello i { display: inline-block; margin-top: 6px; padding: 4px 8px; border-radius: 99px; background: #1E63F0; color: #fff; font-style: normal; font-size: 8px; }
+  .scr .hello img { position: absolute; right: -4px; bottom: -2px; width: 62px; border-radius: 0; }
+  .scr .card.goal { flex-direction: row; align-items: center; gap: 8px; text-align: left; }
+  .scr .ring { width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(#1E63F0 0 100%, #EAF2FF 0); display: grid; place-items: center; flex: none; }
+  .scr .ring b { width: 26px; height: 26px; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 8px; }
+  .scr .days { display: flex; gap: 3px; margin-top: 3px; }
+  .scr .days u { width: 11px; height: 11px; border-radius: 50%; border: 1px solid #D5E2F5; text-decoration: none; }
+  .scr .days u.on { background: #1E63F0; border-color: #1E63F0; }
   .scr .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .scr .g2 .card img { aspect-ratio: 1; object-fit: contain; background: #fff; }
   @media (max-width: 1023px) { .phones { display: none; } }
@@ -274,10 +287,10 @@
       </div>
       <div class="phones" data-reveal data-delay="200" aria-hidden="true">
         <div class="phone" style="transform:translateY(24px) rotate(-4deg)"><div class="scr">
-          <div class="top"><span class="av">AV</span><b>Ali Valiyev</b><span class="coin">🪙 1 240</span></div>
-          <div class="hello">Salom, Ali! 👋</div>
+          <div class="top"><span class="av">AV</span><b>Ali</b><span class="coin">🔥 5 &nbsp;🪙 1 240</span></div>
+          <div class="hello">Xayrli kun,<span>Ali! 👋</span><small>Bitta dars — yana bir qadam!</small><i>Davom ettirish</i><img src="assets/img/cat-happy.png" alt=""></div>
           <div class="card"><img src="assets/img/courses/kurs-1.png" alt=""><b>Kompyuter savodxonligi</b><div class="bar"><i style="width:68%"></i></div><span style="color:#64748B">14/21 dars · 68%</span></div>
-          <div class="card"><b>Test: 6/6 ✓</b><span style="color:#16A34A;font-weight:700">+12 coin</span></div>
+          <div class="card goal"><span class="ring"><b>2/2</b></span><div><b>Kunlik maqsad bajarildi</b><div class="days"><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u class="on"></u><u></u><u></u></div></div></div>
         </div></div>
         <div class="phone b" style="transform:rotate(4deg)"><div class="scr">
           <div class="top"><b style="font-size:13px">Do'kon</b><span class="coin">🪙 1 240</span></div>

@@ -78,7 +78,7 @@
       <div class="img">${safe(g.image) ? `<img src="${esc(g.image)}" alt="${esc(g.name)}" loading="lazy">` : ''}</div>
       <h3>${esc(g.name)}</h3><p>${esc(g.desc)}</p>
       <div class="row"><strong style="font-size:15px">Narxi: ${fmt(g.price)}</strong><small><b>${Number(g.stock) || 0} dona</b> qoldi</small></div>
-      <button class="buy" data-id="${esc(g.id)}" ${g.stock > 0 ? '' : 'disabled'}>${g.stock > 0 ? 'Harid qilish' : 'Tugagan'}</button></article>`).join('');
+      <button class="buy" data-id="${esc(g.id)}" ${g.stock > 0 ? '' : 'disabled'}>${g.stock > 0 ? 'Xarid qilish' : 'Tugagan'}</button></article>`).join('');
     const soon = document.getElementById('soon');
     soon.hidden = list.length > 0;
     document.getElementById('soonT').textContent = q ? 'Hech narsa topilmadi' : TITLES[tab] + ' hali yaratilmagan';

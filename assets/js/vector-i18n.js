@@ -10,6 +10,7 @@
   var RULES = [
     [/^(\d+)-sinf$/, ['$1 класс', 'Grade $1']],
     [/^(\d+)-savol$/, ['Вопрос $1', 'Question $1']],
+    [/^(\d+)-dars$/, ['Урок $1', 'Lesson $1']],
     [/^(\d+) ta kurs$/, ['Курсов: $1', '$1 courses']],
     [/^(\d+) ta sharh$/, ['Отзывов: $1', '$1 reviews']],
     [/^(\d+) ta do'stga$/, ['за $1 друзей', 'for $1 friends']],
