@@ -3,156 +3,164 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VECTOR — onlayn ta'lim platformasi</title>
-<meta name="description" content="Zamonaviy kasblarni biz bilan o'rganing: video darslar, testlar, coinlar va sovg'alar. Vector — onlayn ta'lim platformasi.">
+<title>VECTOR — 12–15 yoshlilar uchun IT darslar</title>
+<meta name="description" content="Kompyuter, dizayn, AI va dasturlash bo'yicha video darslar. Test yeching, coin to'plang va haqiqiy sovg'alarga almashtiring.">
 <meta name="theme-color" content="#1E63F0">
-<meta property="og:title" content="VECTOR — onlayn ta'lim platformasi">
-<meta property="og:description" content="Soha mutaxassisidan darslar, amaliy loyihalar va moslashuvchan grafik.">
-<meta property="og:image" content="assets/img/banners/b1.png">
+<meta property="og:title" content="VECTOR — darsni ko'r, testni yech, sovg'ani ol">
+<meta property="og:description" content="12–15 yoshlilar uchun onlayn IT darslar: video, test, coin va sovg'alar.">
+<meta property="og:image" content="assets/img/banners/b3.png">
 <link rel="icon" href="assets/img/vector-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800;900&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
 <style>
-  /* hero */
-  .hero { position: relative; overflow: hidden; background: linear-gradient(180deg,#1E63F0 0%,#3F83F7 45%,#8DBAFF 80%,#D6E6FF 100%); padding: clamp(40px,7vw,88px) clamp(20px,4vw,48px) clamp(48px,6vw,80px); }
-  .hero .cloud { position: absolute; border-radius: 50%; pointer-events: none; }
-  .hero-in { position: relative; max-width: 1080px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .pill { display: inline-flex; align-items: center; gap: 8px; background: #FF8A00; color: #fff; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; box-shadow: 0 8px 20px rgba(255,138,0,.35); }
-  .hero h1 { margin: 0; color: #fff; font-weight: 800; font-size: clamp(30px,5.2vw,64px); line-height: 1.1; letter-spacing: -.02em; text-wrap: balance; text-shadow: 0 2px 24px rgba(11,30,79,.25); }
-  .hero p { margin: 0; max-width: 620px; color: rgba(255,255,255,.95); font-size: clamp(15px,1.5vw,18px); line-height: 1.6; text-wrap: pretty; }
-  .faces { display: flex; justify-content: center; align-items: flex-start; gap: clamp(8px,2vw,28px); margin-top: clamp(12px,3vw,36px); width: 100%; }
-  .face { width: clamp(58px,15vw,170px); aspect-ratio: 1; border-radius: 50%; border: clamp(3px,.5vw,6px) solid #fff; box-shadow: 0 14px 30px rgba(11,30,79,.25); overflow: hidden; background: #9CC0FA; flex: none; }
-  .face img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  /* statistika */
-  .stats { background: #0B1E4F; padding: clamp(24px,4vw,56px) clamp(12px,4vw,48px); }
-  .stats-g { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(8px,2vw,24px); }
-  .stat { background: #1E63F0; border-radius: clamp(12px,1.6vw,20px); padding: clamp(12px,2.4vw,28px); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: clamp(6px,1.4vw,18px); box-shadow: 0 12px 30px rgba(0,0,0,.2); }
-  .stat .ic { width: clamp(32px,5vw,60px); height: clamp(32px,5vw,60px); border-radius: clamp(8px,1.2vw,16px); background: #fff; color: #1E63F0; display: grid; place-items: center; font-size: clamp(18px,3vw,34px); }
-  .stat b { display: block; color: #fff; font-weight: 800; font-size: clamp(22px,4vw,48px); line-height: 1; }
-  .stat span.l { display: block; color: rgba(255,255,255,.85); font-size: clamp(11px,1.2vw,15px); margin-top: 4px; }
-  /* umumiy bo'limlar */
-  .sec { padding: clamp(56px,8vw,112px) clamp(20px,4vw,48px); }
-  .h2 { margin: 0; font-weight: 800; font-size: clamp(26px,3.4vw,42px); line-height: 1.2; letter-spacing: -.01em; text-wrap: balance; }
-  .row3 { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(16px,2vw,28px); }
-  .row3 > * { flex: 0 1 370px; min-width: min(100%,280px); }
-  .why { height: 100%; background: #1E63F0; color: #fff; border-radius: 20px; padding: clamp(24px,2.6vw,36px); box-shadow: 0 18px 40px rgba(30,99,240,.25); display: flex; flex-direction: column; gap: 16px; transition: transform .3s, box-shadow .3s; }
-  .why:hover { transform: translateY(-6px); box-shadow: 0 26px 50px rgba(30,99,240,.35); }
-  .why .ic { width: 56px; height: 56px; border-radius: 14px; background: #FF8A00; display: grid; place-items: center; font-size: 30px; color: #fff; }
-  .why h3 { margin: 8px 0 0; font-size: clamp(19px,1.7vw,22px); font-weight: 700; line-height: 1.3; }
-  .why p { margin: 0; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.9); text-wrap: pretty; }
-  /* kurslar */
-  .courses { background: radial-gradient(60% 50% at 85% 0%,rgba(63,131,247,.35) 0%,rgba(63,131,247,0) 70%),radial-gradient(50% 45% at 0% 100%,rgba(30,99,240,.3) 0%,rgba(30,99,240,0) 70%),linear-gradient(180deg,#0B1E4F 0%,#10307A 100%); }
-  .sec-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: clamp(28px,4vw,48px); }
-  .btn-white { border: 0; cursor: pointer; background: #fff; color: #1E63F0; font-weight: 600; font-size: 15px; padding: 12px 22px; border-radius: 12px; display: inline-flex; align-items: center; gap: 6px; transition: transform .2s, background .2s; }
-  .btn-white:hover { background: #EAF2FF; color: #1E63F0; transform: translateY(-2px); }
-  .course { height: 100%; background: #fff; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 18px 40px rgba(0,0,0,.25); transition: transform .3s; }
-  .course:hover { transform: translateY(-6px); }
-  .course .img { aspect-ratio: 3/2; overflow: hidden; background: #0A1B4A; }
-  .course .img img { display: block; width: 100%; height: 100%; object-fit: contain; }
-  .course .body { padding: 22px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-  .course h3 { margin: 0; font-size: 20px; font-weight: 700; color: #1E63F0; }
-  .teacher { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #0F172A; }
-  .teacher .ms { width: 28px; height: 28px; border-radius: 50%; background: #EAF2FF; color: #1E63F0; display: grid; place-items: center; font-size: 18px; }
-  .course .price { font-size: 14px; color: #64748B; }
-  .course .price strong { color: #0F172A; }
-  .course .go { margin-top: auto; border: 0; cursor: pointer; background: #FF8A00; color: #fff; font-weight: 600; font-size: 15px; padding: 13px; border-radius: 12px; text-align: center; transition: background .2s, transform .2s; }
-  .course .go:hover { background: #f07f00; color: #fff; transform: translateY(-2px); }
-  /* obunalar */
-  .plans { background: radial-gradient(ellipse at 60% 85%,#8DBAFF 0%,rgba(141,186,255,0) 55%),linear-gradient(135deg,#1552cf 0%,#3AA0F0 45%,#1E63F0 75%,#0BA5FF 100%); }
-  .toggle { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; background: #F7F5F0; border-radius: 999px; padding: 6px; box-shadow: 0 10px 24px rgba(11,30,79,.2); }
-  .toggle .knob { position: absolute; top: 6px; bottom: 6px; left: 6px; width: calc(50% - 6px); border-radius: 999px; background: #FF7A00; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
-  .toggle.y .knob { transform: translateX(100%); }
-  .toggle button { position: relative; border: 0; background: transparent; cursor: pointer; padding: 10px clamp(14px,2.4vw,22px); font-weight: 700; font-size: clamp(15px,1.6vw,19px); color: #0F172A; transition: color .3s; }
-  .toggle button[aria-selected="true"] { color: #fff; }
-  .plan-row { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(20px,3vw,40px); align-items: center; }
-  .plan-row > * { flex: 0 1 330px; min-width: min(100%,280px); }
-  .plan { height: 100%; background: #fff; border-radius: 28px; padding: clamp(24px,2.4vw,28px) clamp(22px,2.2vw,28px); box-shadow: 0 18px 40px rgba(11,30,79,.2); display: flex; flex-direction: column; gap: 14px; transition: transform .3s; }
-  .plan:hover { transform: translateY(-6px); }
-  .plan.pop { padding-top: clamp(28px,2.6vw,36px); padding-bottom: clamp(28px,2.6vw,36px); box-shadow: 0 30px 60px rgba(11,30,79,.3); }
-  .plan .tier { align-self: center; width: min(100%,220px); text-align: center; background: #1E63F0; color: #fff; font-weight: 800; font-size: 22px; padding: 7px 0; border-radius: 999px; }
-  .plan .pr { min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: opacity .2s, transform .2s; }
-  .plan .pr .old { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; font-size: 14px; color: #94A3B8; white-space: nowrap; }
-  .plan .pr .now { color: #F25400; font-weight: 800; font-size: clamp(26px,2.6vw,34px); line-height: 1.15; white-space: nowrap; letter-spacing: -.01em; }
-  .plan ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; line-height: 1.35; }
+  .sec { padding: clamp(64px,9vw,120px) clamp(20px,4vw,40px); }
+  .h2 { margin: 0; font-size: clamp(28px,4vw,48px); font-weight: 800; line-height: 1.08; }
+  .lead { margin: 16px 0 0; font-size: clamp(17px,1.6vw,19px); color: var(--ink-2); max-width: 58ch; }
+
+  /* ---------- HERO ---------- */
+  .hero { position: relative; overflow: hidden; background: var(--blue); color: #fff; border-bottom: var(--line);
+    background-image: radial-gradient(rgba(255,255,255,.14) 1.5px, transparent 1.5px); background-size: 22px 22px; }
+  .hero-in { max-width: 1240px; margin: 0 auto; padding: clamp(40px,6vw,80px) clamp(20px,4vw,40px) clamp(56px,7vw,96px); display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(32px,5vw,64px); align-items: center; }
+  @media (max-width: 960px) { .hero-in { grid-template-columns: 1fr; } }
+  .age { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--lime); color: var(--ink); border: var(--line); border-radius: 999px; font-weight: 800; font-size: 15px; box-shadow: var(--sh-s); }
+  .hero h1 { margin: 22px 0 0; font-size: clamp(38px,5.6vw,72px); font-weight: 900; line-height: 1.02; letter-spacing: -.02em; }
+  .hero h1 span { display: block; }
+  .hero .sub { margin: 20px 0 0; font-size: clamp(17px,1.6vw,20px); line-height: 1.55; color: rgba(255,255,255,.92); max-width: 52ch; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px; }
+  .trust { display: flex; align-items: center; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+  .faces { display: flex; }
+  .faces img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 3px solid var(--ink); margin-left: -12px; background: #9CC0FA; }
+  .faces img:first-child { margin-left: 0; }
+  .trust p { margin: 0; font-weight: 700; font-size: 15px; line-height: 1.35; }
+  .trust p b { font-family: var(--display); font-size: 18px; }
+
+  /* o'yinchi kartochkasi */
+  .stage { position: relative; min-height: 470px; display: grid; place-items: center; }
+  .player { position: relative; width: min(100%, 400px); background: var(--white); color: var(--ink); border: var(--line); border-radius: 28px; box-shadow: 10px 10px 0 var(--ink); padding: 20px; display: flex; flex-direction: column; gap: 14px; transform: rotate(-2deg); }
+  .p-head { display: flex; align-items: center; gap: 12px; }
+  .p-ava { width: 54px; height: 54px; border-radius: 16px; overflow: hidden; border: 2.5px solid var(--ink); background: var(--blue-l); flex: none; }
+  .p-ava img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; transform: scale(1.6); transform-origin: 30% 35%; }
+  .p-head b { display: block; font-family: var(--display); font-size: 17px; line-height: 1.2; }
+  .p-head small { color: var(--muted); font-weight: 600; font-size: 14px; }
+  .p-coins { margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--orange-l); font-weight: 800; }
+  .p-course { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 10px; border: 2.5px solid var(--ink); border-radius: 18px; background: var(--paper); }
+  .p-course img { width: 96px; aspect-ratio: 3/2; object-fit: cover; border-radius: 10px; border: 2px solid var(--ink); }
+  .p-course b { font-size: 15px; line-height: 1.25; display: block; }
+  .bar { height: 14px; border: 2.5px solid var(--ink); border-radius: 999px; background: var(--white); overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: var(--lime); border-right: 2.5px solid var(--ink); }
+  .p-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .p-row div { border: 2.5px solid var(--ink); border-radius: 16px; padding: 10px; text-align: center; }
+  .p-row b { display: block; font-family: var(--display); font-size: 20px; }
+  .p-row span { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .sticker { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: var(--line); border-radius: 16px; box-shadow: var(--sh-s); font-weight: 800; font-size: 15px; color: var(--ink); transform: rotate(var(--r)); animation: stickIn .5s cubic-bezier(.3,1.6,.5,1) both; }
+  .sticker.s1 { --r: 6deg; top: 6%; right: -2%; background: var(--orange); animation-delay: .45s; }
+  .sticker.s2 { --r: -5deg; bottom: 12%; left: -4%; background: var(--lime); animation-delay: .65s; }
+  .sticker.s3 { --r: 4deg; bottom: -2%; right: 4%; background: var(--white); animation-delay: .85s; }
+  .sticker.s3 img { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; }
+  @media (max-width: 520px) { .stage { min-height: 0; padding: 64px 0 56px; } .sticker { font-size: 14px; padding: 8px 12px; } .sticker.s1 { top: 0; right: 0; } .sticker.s2 { top: 6px; bottom: auto; left: 0; } .sticker.s3 { bottom: 0; right: 0; } }
+
+  /* lenta */
+  .ticker { background: var(--ink); color: #fff; border-bottom: var(--line); overflow: hidden; padding: 14px 0; }
+  .ticker-row { display: flex; width: max-content; gap: 36px; animation: tick 30s linear infinite; font-family: var(--display); font-weight: 700; font-size: clamp(16px,1.8vw,22px); }
+  .ticker-row span { display: inline-flex; align-items: center; gap: 36px; white-space: nowrap; }
+  .ticker-row span::after { content: '✦'; color: var(--lime); }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  /* ---------- QANDAY ISHLAYDI ---------- */
+  .path { list-style: none; margin: clamp(36px,5vw,56px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(4,1fr); gap: 22px; position: relative; }
+  .path::before { content: ''; position: absolute; left: 6%; right: 6%; top: 38px; border-top: 4px dashed var(--ink); z-index: 0; }
+  .step { position: relative; z-index: 1; background: var(--white); border: var(--line); border-radius: 24px; box-shadow: var(--sh); padding: 22px 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+  .step:nth-child(even) { margin-top: 34px; }
+  .step .num { width: 52px; height: 52px; border-radius: 50%; border: var(--line); display: grid; place-items: center; font-family: var(--display); font-weight: 900; font-size: 20px; background: var(--blue); color: #fff; }
+  .step:nth-child(2) .num { background: var(--lime); color: var(--ink); }
+  .step:nth-child(3) .num { background: var(--orange); color: var(--ink); }
+  .step:nth-child(4) .num { background: var(--ink); }
+  .step h3 { margin: 6px 0 0; font-size: 19px; line-height: 1.2; }
+  .step p { margin: 0; color: var(--ink-2); font-size: 16px; }
+  @media (max-width: 900px) { .path { grid-template-columns: 1fr 1fr; } .path::before { display: none; } .step:nth-child(even) { margin-top: 0; } }
+  @media (max-width: 520px) { .path { grid-template-columns: 1fr; } }
+
+  /* ---------- KURSLAR ---------- */
+  .kurs-bg { background: var(--white); border-top: var(--line); border-bottom: var(--line); }
+  .sec-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+  .cgrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,320px),1fr)); gap: 26px; margin-top: clamp(32px,4vw,48px); }
+  .course { background: var(--white); border: var(--line); border-radius: 24px; box-shadow: var(--sh); overflow: hidden; display: flex; flex-direction: column; color: var(--ink); transition: transform .15s, box-shadow .15s; }
+  .course:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--ink); color: var(--ink); }
+  .course .img { aspect-ratio: 3/2; border-bottom: var(--line); background: #0A1B4A; position: relative; overflow: hidden; }
+  .course .img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .course .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .course h3 { margin: 0; font-size: 20px; line-height: 1.2; }
+  .course .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .course .price { font-size: 15px; color: var(--muted); margin-top: auto; }
+  .course .price b { color: var(--ink); }
+
+  /* ---------- DO'KON ---------- */
+  .shop { display: grid; grid-template-columns: 1fr 1.05fr; gap: clamp(32px,5vw,64px); align-items: center; }
+  @media (max-width: 900px) { .shop { grid-template-columns: 1fr; } }
+  .earn { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .earn li { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--white); border: var(--line); border-radius: 18px; font-weight: 700; }
+  .earn li .ms { width: 44px; height: 44px; border-radius: 12px; border: 2.5px solid var(--ink); display: grid; place-items: center; font-size: 24px; flex: none; }
+  .earn li .amt { margin-left: auto; display: flex; align-items: center; gap: 6px; font-family: var(--display); white-space: nowrap; }
+  .gifts { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+  .gift { background: var(--white); border: var(--line); border-radius: 20px; box-shadow: var(--sh-s); padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .gift:nth-child(odd) { transform: rotate(-2deg); } .gift:nth-child(even) { transform: rotate(2deg) translateY(10px); }
+  .gift img { aspect-ratio: 1; object-fit: contain; width: 100%; border-radius: 12px; background: #fff; mix-blend-mode: multiply; }
+  .gift b { font-size: 14px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gift span { display: flex; align-items: center; gap: 5px; font-weight: 800; font-size: 14px; }
+
+  /* ---------- TARIFLAR ---------- */
+  .plans-bg { background: var(--ink); color: #fff; border-top: var(--line); }
+  .seg { display: inline-grid; grid-template-columns: 1fr 1fr; padding: 5px; background: var(--white); border: var(--line); border-radius: 16px; margin-top: 28px; }
+  .seg button { border: 0; background: transparent; cursor: pointer; padding: 10px 20px; border-radius: 11px; font-weight: 800; font-size: 16px; color: var(--ink); }
+  .seg button[aria-selected="true"] { background: var(--lime); box-shadow: inset 0 0 0 2.5px var(--ink); }
+  .seg .save { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--orange); font-size: 12px; }
+  .pgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: clamp(32px,4vw,48px); align-items: stretch; }
+  @media (max-width: 900px) { .pgrid { grid-template-columns: 1fr; max-width: 440px; } }
+  .plan { position: relative; background: var(--white); color: var(--ink); border: var(--line); border-radius: 26px; box-shadow: 8px 8px 0 var(--blue); padding: 26px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .plan.pop { background: var(--orange); box-shadow: 8px 8px 0 var(--lime); }
+  .plan .tag { position: absolute; top: -16px; right: 20px; }
+  .plan h3 { margin: 0; font-size: 26px; font-weight: 900; }
+  .plan .price { font-family: var(--display); font-weight: 800; font-size: clamp(26px,2.6vw,32px); line-height: 1.1; white-space: nowrap; }
+  .plan .per { font-size: 14px; font-weight: 700; color: var(--ink-2); margin-top: 6px; }
+  .plan .per s { color: var(--muted); margin-right: 8px; }
+  .plan ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; flex: 1; font-size: 16px; }
   .plan li { display: flex; gap: 10px; align-items: flex-start; }
-  .plan li .ms { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #1E63F0; color: #fff; display: grid; place-items: center; font-size: 15px; box-shadow: 0 0 0 2px #EAF2FF; margin-top: 1px; }
-  .plan .buy { margin-top: auto; border: 0; cursor: pointer; background: #FF7A00; color: #fff; font-weight: 800; font-size: 18px; padding: 13px; border-radius: 999px; text-align: center; transition: background .2s, transform .2s, box-shadow .2s; }
-  .plan .buy:hover { background: #f06d00; color: #fff; transform: translateY(-2px); box-shadow: 0 12px 24px rgba(255,122,0,.4); }
-  .fade .pr { opacity: 0; transform: translateY(10px); }
-  /* bannerlar */
-  .banners { background: #1E63F0; }
-  .arrow { border: 1.5px solid rgba(255,255,255,.6); cursor: pointer; width: 48px; height: 48px; border-radius: 14px; background: transparent; color: #fff; display: grid; place-items: center; font-size: 24px; transition: background .2s, color .2s; }
-  .arrow:hover { background: #fff; color: #1E63F0; }
-  .car { position: relative; overflow: hidden; padding: 4px 0 40px; }
-  .track { display: flex; transition: transform .7s cubic-bezier(.65,0,.25,1); }
-  .slide { flex: 0 0 100%; min-width: 0; padding: 0 2px; }
-  .slide-in { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,320px),1fr)); align-items: center; gap: clamp(18px,2.6vw,32px); background: #0A66FF; border: 2px solid rgba(140,190,255,.9); border-radius: 28px; padding: clamp(14px,2vw,22px); }
-  .slide-in .pic { display: block; aspect-ratio: 4/3; border-radius: 22px; overflow: hidden; background: #1A55DD; }
-  .slide-in .pic img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: right center; }
-  .slide-in h3 { margin: 0; color: #fff; font-weight: 700; font-size: clamp(26px,3vw,40px); line-height: 1.15; text-wrap: balance; }
-  .slide-in p { margin: 0; color: #fff; font-size: clamp(15px,1.4vw,19px); line-height: 1.4; text-wrap: pretty; }
-  .slide-in .cta { margin-top: 6px; background: #fff; color: #0A3FB8; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 999px; transition: transform .2s, background .2s; }
-  .slide-in .cta:hover { background: #EAF2FF; color: #0A3FB8; transform: translateY(-1px); }
-  .dots { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; justify-content: center; gap: 8px; }
-  .dots button { border: 0; cursor: pointer; padding: 0; height: 8px; width: 8px; border-radius: 999px; background: rgba(255,255,255,.5); transition: width .35s, background .35s; }
-  .dots button[aria-selected="true"] { width: 28px; background: #fff; }
-  /* hamkorlar */
-  .marq { display: flex; flex-direction: column; gap: 20px; -webkit-mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
-  .marq-row { display: flex; width: max-content; gap: 20px; }
-  .marq-row span { display: flex; align-items: center; justify-content: center; height: 72px; min-width: 150px; padding: 0 28px; border-radius: 16px; background: #F4F7FC; font-weight: 800; font-size: 22px; color: #94A3B8; opacity: .85; transition: color .3s, background .3s; }
-  .marq-row span:hover { color: #1E63F0; background: #EAF2FF; opacity: 1; }
-  /* FAQ */
-  .faq-i { background: #1E63F0; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 20px rgba(30,99,240,.18); }
-  .faq-i button { width: 100%; border: 0; cursor: pointer; background: transparent; color: #fff; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; font-weight: 600; font-size: clamp(15px,1.4vw,17px); transition: background .2s; }
-  .faq-i button:hover { background: rgba(255,255,255,.08); }
-  .faq-i button .ms { flex: none; font-size: 26px; transition: transform .35s; }
-  .faq-i button[aria-expanded="true"] .ms { transform: rotate(180deg); }
-  .faq-i .a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+  .plan li .ms { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink); background: var(--lime); display: grid; place-items: center; font-size: 15px; flex: none; margin-top: 1px; }
+  .plan .btn { width: 100%; }
+  .pgrid.fade .plan { opacity: .3; transition: opacity .15s; }
+
+  /* ---------- OTA-ONALAR ---------- */
+  .parents { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(28px,4vw,56px); align-items: center; }
+  @media (max-width: 900px) { .parents { grid-template-columns: 1fr; } }
+  .photo-stack { position: relative; min-height: 360px; }
+  .photo-stack img { position: absolute; width: 62%; aspect-ratio: 4/3; object-fit: cover; border: var(--line); border-radius: 18px; box-shadow: var(--sh); background: #9CC0FA; }
+  .photo-stack img:nth-child(1) { left: 0; top: 0; transform: rotate(-4deg); }
+  .photo-stack img:nth-child(2) { right: 0; top: 26%; transform: rotate(3deg); }
+  .photo-stack img:nth-child(3) { left: 14%; bottom: 0; transform: rotate(-1deg); }
+  .checks { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  .checks li { display: flex; gap: 14px; align-items: flex-start; font-size: 17px; }
+  .checks .ms { width: 34px; height: 34px; border-radius: 10px; border: 2.5px solid var(--ink); background: var(--blue-l); display: grid; place-items: center; font-size: 20px; flex: none; }
+
+  /* ---------- SAVOLLAR ---------- */
+  .faq { max-width: 860px; margin: clamp(28px,4vw,44px) auto 0; display: flex; flex-direction: column; gap: 14px; }
+  .faq-i { background: var(--white); border: var(--line); border-radius: 20px; box-shadow: var(--sh-s); overflow: hidden; }
+  .faq-i button { width: 100%; border: 0; cursor: pointer; background: transparent; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; font-weight: 800; font-size: 17px; color: var(--ink); }
+  .faq-i button .ms { width: 36px; height: 36px; border-radius: 10px; border: 2.5px solid var(--ink); display: grid; place-items: center; font-size: 22px; flex: none; transition: transform .25s, background .2s; }
+  .faq-i.open button .ms { transform: rotate(45deg); background: var(--lime); }
+  .faq-i .a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
   .faq-i.open .a { grid-template-rows: 1fr; }
   .faq-i .a > div { overflow: hidden; }
-  .faq-i .a p { margin: 0; padding: 0 22px 20px; color: rgba(255,255,255,.92); font-size: 15px; line-height: 1.6; }
-  /* yo'l xaritasi */
-  .road { list-style: none; margin: 0; padding: clamp(28px,3vw,44px) clamp(16px,2vw,32px); background: #fff; border-radius: 24px; box-shadow: 0 24px 60px rgba(0,0,0,.25); display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); }
-  .road li { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; position: relative; }
-  .road li .line { position: absolute; top: 32px; left: 50%; width: 100%; height: 3px; background: #1E63F0; }
-  .road li .ic { position: relative; width: 64px; height: 64px; border-radius: 16px; background: #1E63F0; color: #fff; display: grid; place-items: center; font-size: 32px; box-shadow: 0 10px 20px rgba(30,99,240,.3); }
-  .road li:last-child .ic { background: #FF8A00; box-shadow: 0 10px 20px rgba(255,138,0,.35); }
-  .road strong { font-size: 15px; }
-  .road small { font-size: 13px; color: #64748B; }
-  @media (max-width: 767px) {
-    .road { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; background: transparent; box-shadow: none; padding: 0; gap: 0; }
-    .road li { color: #fff; gap: 6px; padding-bottom: 52px; }
-    .road li:last-child { padding-bottom: 0; }
-    .road li .line { top: 76px; left: 50%; width: 0; height: 36px; border-left: 3px dashed rgba(255,255,255,.7); background: none; transform: translateY(42px); }
-    .road li .ic { background: #fff; color: #1E63F0; box-shadow: none; }
-    .road small { color: rgba(255,255,255,.8); }
-  }
-  /* ilova */
-  .app-g { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); gap: clamp(32px,4vw,56px); align-items: center; }
-  .store { background: #1E63F0; border: 1px solid rgba(255,255,255,.3); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; box-shadow: 0 18px 40px rgba(0,0,0,.2); }
-  .store .tag { display: flex; align-items: center; gap: 8px; background: #fff; color: #0F172A; border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 15px; }
-  .store p { margin: 0; color: #fff; font-weight: 600; font-size: 15px; line-height: 1.5; }
-  .store .dl { border: 1.5px solid #fff; cursor: pointer; background: transparent; color: #fff; font-weight: 600; font-size: 14px; padding: 10px 18px; border-radius: 10px; display: flex; align-items: center; gap: 6px; transition: background .2s, color .2s; }
-  .store .dl:hover { background: #fff; color: #1E63F0; }
-  .store .dl[aria-disabled="true"] { opacity: .7; cursor: default; }
-  .store .dl[aria-disabled="true"]:hover { background: transparent; color: #fff; }
-  .phones { display: flex; justify-content: center; align-items: flex-end; gap: 24px; }
-  .phone { width: 220px; aspect-ratio: 9/19; border-radius: 36px; background: #0F172A; padding: 10px; box-shadow: 0 30px 60px rgba(0,0,0,.4); animation: vfloat 6s ease-in-out infinite; }
-  .phone.b { width: 240px; border-radius: 38px; animation-delay: 1.5s; }
-  .scr { width: 100%; height: 100%; border-radius: 28px; background: #F1F5FB; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 26px 10px 10px; font-size: 10px; color: #0F172A; }
-  .scr .top { display: flex; align-items: center; gap: 6px; }
-  .scr .av { width: 24px; height: 24px; border-radius: 50%; background: #1E63F0; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 9px; }
-  .scr .coin { margin-left: auto; color: #E07800; font-weight: 800; }
-  .scr .card { background: #fff; border-radius: 12px; padding: 8px; box-shadow: 0 4px 10px rgba(11,30,79,.06); display: flex; flex-direction: column; gap: 5px; }
-  .scr .bar { height: 6px; border-radius: 9px; background: #EAF2FF; overflow: hidden; }
-  .scr .bar i { display: block; height: 100%; background: linear-gradient(90deg,#1E63F0,#FF8A00); }
-  .scr img { width: 100%; border-radius: 9px; display: block; }
-  .scr .hello { background: #1E63F0; color: #fff; border-radius: 12px; padding: 10px; font-weight: 800; font-size: 12px; }
-  .scr .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .scr .g2 .card img { aspect-ratio: 1; object-fit: contain; background: #fff; }
-  @media (max-width: 1023px) { .phones { display: none; } }
+  .faq-i .a p { margin: 0; padding: 0 20px 20px; color: var(--ink-2); font-size: 16px; line-height: 1.6; }
+
+  /* ---------- YAKUN ---------- */
+  .final { position: relative; max-width: 1200px; margin: 0 auto; background: var(--orange); border: var(--line); border-radius: 32px; box-shadow: 12px 12px 0 var(--ink); padding: clamp(32px,5vw,64px); display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; overflow: hidden; }
+  @media (max-width: 760px) { .final { grid-template-columns: 1fr; } }
+  .final h2 { margin: 0; font-size: clamp(28px,4vw,48px); font-weight: 900; line-height: 1.05; }
+  .final p { margin: 12px 0 0; font-size: 18px; font-weight: 600; }
+  .partners { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 36px; }
+  .partners span { padding: 10px 18px; border: 2.5px solid var(--ink); border-radius: 14px; font-weight: 800; color: var(--ink-2); background: var(--white); }
 </style>
 </head>
 <body>
@@ -160,136 +168,118 @@
 <header id="vh"></header>
 <main>
   <!-- HERO -->
-  <section class="hero" id="asosiy">
-    <div class="cloud" aria-hidden="true" style="left:-8%;top:18%;width:46%;height:34%;background:radial-gradient(closest-side,rgba(255,255,255,.55),rgba(255,255,255,0));filter:blur(8px)"></div>
-    <div class="cloud" aria-hidden="true" style="right:-10%;top:8%;width:50%;height:30%;background:radial-gradient(closest-side,rgba(255,255,255,.45),rgba(255,255,255,0));filter:blur(10px)"></div>
-    <div class="cloud" aria-hidden="true" style="left:10%;right:10%;bottom:-12%;height:40%;background:radial-gradient(closest-side,rgba(255,255,255,.8),rgba(255,255,255,0));filter:blur(12px)"></div>
+  <section class="hero">
     <div class="hero-in">
-      <span class="pill" data-reveal><span class="ms" style="font-size:18px">auto_awesome</span>Keling birga o'rganamiz</span>
-      <h1 id="heroTitle" data-reveal data-delay="80">Zamonaviy kasblarni biz bilan o'rganing va kelajagingizni bugundan quring!</h1>
-      <p id="heroText" data-reveal data-delay="160">Soha mutaxassisidan darslar, amaliy loyihalar va moslashuvchan grafik. Daromadli kasb egasi bo'lish endi yanada oson.</p>
-      <div class="faces" data-reveal data-delay="220">
-        <div class="face" style="transform:translateY(clamp(8px,3vw,48px)) rotate(-6deg)"><img src="assets/img/students/s4.jpg" alt="Sertifikat topshirish" style="object-position:50% 35%"></div>
-        <div class="face" style="transform:translateY(clamp(2px,1vw,14px)) rotate(-3deg)"><img src="assets/img/students/s2.jpg" alt="O'quvchilar sertifikat bilan" style="object-position:50% 55%;transform:scale(1.35);transform-origin:50% 55%"></div>
-        <div class="face"><img src="assets/img/students/s1.jpg" alt="Sinfdagi o'quvchilar" style="object-position:50% 62%;transform:scale(1.9);transform-origin:50% 62%"></div>
-        <div class="face" style="transform:translateY(clamp(2px,1vw,14px)) rotate(3deg)"><img src="assets/img/students/s3.jpg" alt="O'quvchi qizlar sertifikat bilan" style="object-position:50% 45%;transform:scale(1.35);transform-origin:50% 45%"></div>
-        <div class="face" style="transform:translateY(clamp(8px,3vw,48px)) rotate(6deg)"><img src="assets/img/students/s5.jpg" alt="Sertifikat topshirish" style="object-position:50% 35%"></div>
+      <div>
+        <span class="age"><span class="ms" style="font-size:20px">sports_esports</span>12–15 yoshlilar uchun</span>
+        <h1 id="heroTitle"><span>Darsni ko'r.</span><span>Testni yech.</span><span>Sovg'ani ol.</span></h1>
+        <p class="sub" id="heroText">Kompyuter, dizayn, AI va dasturlash bo'yicha video darslar. Har bir to'g'ri javob — coin, coinlar esa do'konda haqiqiy sovg'aga almashadi.</p>
+        <div class="hero-cta">
+          <a class="btn btn-orange btn-lg" href="kirish.html?mode=register" data-guest-cta>Bepul ro'yxatdan o'tish</a>
+          <a class="btn btn-out btn-lg" href="#kurslar">Kurslarni ko'rish</a>
+        </div>
+        <div class="trust">
+          <div class="faces"><img src="assets/img/students/s4.jpg" alt=""><img src="assets/img/students/s2.jpg" alt=""><img src="assets/img/students/s3.jpg" alt=""><img src="assets/img/students/s5.jpg" alt=""></div>
+          <p><b id="stClients">870</b>+ o'quvchi Vector bilan o'qiyapti<br><span style="opacity:.85"><b id="stVideos" style="font-size:15px">340</b> video dars, <b id="stSchools" style="font-size:15px">10</b>+ maktab</span></p>
+        </div>
       </div>
-      <a class="btn-orange" data-reveal data-delay="280" style="margin-top:clamp(24px,5vw,64px)" href="kirish.html?mode=register" data-guest-cta>Ro'yxatdan o'tish</a>
+      <div class="stage" aria-label="Kabinet namunasi: o'quvchi kartochkasi">
+        <div class="player">
+          <div class="p-head"><span class="p-ava"><img src="assets/img/students/s5.jpg" alt=""></span><div><b>Ali Valiyev</b><small>7-sinf, 18-maktab</small></div><span class="p-coins"><i class="coin-i"></i>1 240</span></div>
+          <div class="p-course"><img src="assets/img/courses/kurs-1.png" alt=""><div><b>Kompyuter savodxonligi</b><small style="color:var(--muted);font-weight:700">14 / 21 dars</small><div class="bar"><i style="width:67%"></i></div></div></div>
+          <div class="p-row"><div><b>18</b><span>test yechildi</span></div><div><b>2</b><span>kurs</span></div><div><b>1</b><span>sovg'a olindi</span></div></div>
+        </div>
+        <div class="sticker s1"><i class="coin-i"></i>+12 coin</div>
+        <div class="sticker s2"><span class="ms" style="font-size:22px">cake</span>Tug'ilgan kun: +50 coin</div>
+        <div class="sticker s3"><img src="assets/img/gifts/g11.png" alt="">Quloqchin olindi!</div>
+      </div>
     </div>
   </section>
 
-  <!-- STATISTIKA -->
-  <section class="stats" aria-label="Statistika">
-    <div class="stats-g" data-reveal id="stats">
-      <div class="stat"><span class="ic ms">smart_display</span><div><b data-count="stat_videos">340</b><span class="l">Video kurslar</span></div></div>
-      <div class="stat"><span class="ic ms">school</span><div><b data-count="stat_schools" data-plus>10+</b><span class="l">Maktablar soni</span></div></div>
-      <div class="stat"><span class="ic ms">groups</span><div><b data-count="stat_clients">870</b><span class="l">Mijozlar soni</span></div></div>
-    </div>
-  </section>
+  <div class="ticker" aria-hidden="true"><div class="ticker-row" id="ticker"></div></div>
 
-  <!-- NEGA BIZ -->
-  <section class="sec" aria-labelledby="nega-h">
+  <!-- QANDAY ISHLAYDI -->
+  <section class="sec" aria-labelledby="how-h">
     <div class="container">
-      <h2 id="nega-h" class="h2" data-reveal style="margin:0 auto clamp(32px,4vw,56px);max-width:720px;text-align:center">Nega aynan bizning platformamizda o'qishingiz kerak?</h2>
-      <div class="row3">
-        <div data-reveal><article class="why"><span class="ic ms">location_on</span><h3>Istalgan joyda turib ta'lim olish!</h3><p>Uydan chiqmasdan, qahvaxonada yoki sayohatda — qayerda bo'lsangiz ham bilim olishda davom eting. Geografik chegaralar va masofa endi to'siq emas!</p></article></div>
-        <div data-reveal data-delay="100"><article class="why"><span class="ic ms">savings</span><h3>Xarajatlaringizni 5X–10X tejab qoling</h3><p>Boshqa shaharlarga qatnash, yo'lkira va ijara xarajatlariga chek qo'ying. Sifatli ta'limni uyingizda turib hamda bir necha barobar arzonroq oling!</p></article></div>
-        <div data-reveal data-delay="200"><article class="why"><span class="ic ms">schedule</span><h3>O'zingizga mos vaqtni tanlang</h3><p>Qat'iy grafiklarni unuting. Darslarni kunning xohlagan soatida, o'zingizga qulay tempda ko'rib boring.</p></article></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- KURSLAR -->
-  <section class="sec courses" id="kurslar" aria-labelledby="kurs-h">
-    <div class="container">
-      <div class="sec-top" data-reveal>
-        <div style="max-width:560px"><h2 id="kurs-h" class="h2" style="color:#fff;margin-bottom:10px">Eng sara kurslarimiz</h2><p style="margin:0;color:rgba(255,255,255,.8);font-size:16px;line-height:1.6">Sohaning yetakchi mutaxassisi tomonidan tayyorlangan tizimli ta'lim dasturlari.</p></div>
-        <a class="btn-white" href="kurslar.html">Barcha kurslar<span class="ms" style="font-size:20px">arrow_forward</span></a>
-      </div>
-      <div class="row3" id="courseList"></div>
-    </div>
-  </section>
-
-  <!-- OBUNALAR -->
-  <section class="sec plans" id="obunalar" aria-labelledby="ob-h">
-    <div style="max-width:1080px;margin:0 auto">
-      <div data-reveal style="text-align:center;max-width:640px;margin:0 auto clamp(32px,5vw,64px)">
-        <h2 id="ob-h" class="h2" style="color:#fff;margin-bottom:12px">Obunalar bilan tanishing</h2>
-        <p style="margin:0 0 28px;color:#fff;font-size:16px;line-height:1.6;text-wrap:pretty">O'zingizga qulay obuna muddatini tanlang. Oylik to'lov qiling yoki yillik obuna bilan mablag'ingizni tejab qoling!</p>
-        <div class="toggle" role="tablist" aria-label="Obuna muddati" id="toggle"><span class="knob" aria-hidden="true"></span><button role="tab" aria-selected="true" data-p="1">Oylik obuna</button><button role="tab" aria-selected="false" data-p="12">Yillik obuna</button></div>
-      </div>
-      <div class="plan-row" id="planList"></div>
-    </div>
-  </section>
-
-  <!-- BANNERLAR -->
-  <section class="sec banners" aria-labelledby="ban-h" aria-roledescription="karusel">
-    <div class="container">
-      <div class="sec-top" data-reveal style="margin-bottom:clamp(24px,3vw,36px)">
-        <div><h2 id="ban-h" class="h2" style="color:#fff;margin-bottom:10px">Bannerlar</h2><p style="margin:0;color:rgba(255,255,255,.85);font-size:16px">Sifatli video darslar orqali yangi bilim va ko'nikmalarni o'rganing.</p></div>
-        <div style="display:flex;gap:10px"><button class="arrow ms" id="bPrev" aria-label="Oldingi banner">arrow_back</button><button class="arrow ms" id="bNext" aria-label="Keyingi banner">arrow_forward</button></div>
-      </div>
-      <div class="car" data-reveal id="car"><div class="track" id="track"></div><div class="dots" role="tablist" aria-label="Bannerni tanlash" id="dots"></div></div>
-    </div>
-  </section>
-
-  <!-- HAMKORLAR -->
-  <section aria-labelledby="ham-h" style="background:#fff;padding:clamp(56px,7vw,96px) 0">
-    <h2 id="ham-h" class="h2" data-reveal style="margin:0 auto clamp(28px,4vw,48px);padding:0 clamp(20px,4vw,48px);max-width:1200px">Biz bilan hamkorlik qilganlar</h2>
-    <div class="marq" aria-label="Hamkorlar: Hamkor Bank, Click, IT Park, Payme"><div class="marq-row" id="mA" style="animation:vmarq 24s linear infinite"></div><div class="marq-row" id="mB" style="animation:vmarqR 28s linear infinite"></div></div>
-  </section>
-
-  <!-- FAQ -->
-  <section class="sec" id="savollar" aria-labelledby="faq-h" style="background:#EAF2FF">
-    <div style="max-width:920px;margin:0 auto">
-      <h2 id="faq-h" class="h2" data-reveal style="margin-bottom:clamp(24px,3vw,40px)">Ko'p beriladigan savollar</h2>
-      <div data-reveal style="display:flex;flex-direction:column;gap:12px" id="faq"></div>
-    </div>
-  </section>
-
-  <!-- MUVAFFAQIYAT SARI YO'L -->
-  <section class="sec" aria-labelledby="yol-h" style="background:linear-gradient(180deg,#1E63F0,#0B1E4F)">
-    <div class="container">
-      <div data-reveal style="text-align:center;margin-bottom:clamp(28px,4vw,48px)"><h2 id="yol-h" class="h2" style="color:#fff;margin-bottom:10px">Muvaffaqiyat sari yo'l</h2><p style="margin:0;color:rgba(255,255,255,.85);font-size:16px">Boshlovchidan professional mutaxassisgacha bo'lgan rivojlanish xaritangiz.</p></div>
-      <ol class="road" data-reveal>
-        <li><span class="line" aria-hidden="true"></span><span class="ic ms">rocket_launch</span><strong>Boshlang</strong><small>Start</small></li>
-        <li><span class="line" aria-hidden="true"></span><span class="ic ms">menu_book</span><strong>Ko'nikma egallang</strong><small>Ta'lim</small></li>
-        <li><span class="line" aria-hidden="true"></span><span class="ic ms">work</span><strong>Tajriba to'plang</strong><small>Sabr qiling</small></li>
-        <li><span class="line" aria-hidden="true"></span><span class="ic ms">folder_open</span><strong>Portfolio yarating</strong><small>Loyihalar</small></li>
-        <li><span class="ic ms">workspace_premium</span><strong>Mutaxassis bo'ling</strong><small>Natija</small></li>
+      <h2 id="how-h" class="h2">Vector'da o'qish qanday ishlaydi</h2>
+      <p class="lead">To'rt qadam — va birinchi coiningiz cho'ntakda.</p>
+      <ol class="path">
+        <li class="step"><span class="num">1</span><h3>Akkaunt oching</h3><p>Telefon raqam va parol bilan bir daqiqada ro'yxatdan o'ting.</p></li>
+        <li class="step"><span class="num">2</span><h3>Darsni ko'ring</h3><p>Qisqa video darslar — telefon yoki kompyuterdan, o'zingizga qulay vaqtda.</p></li>
+        <li class="step"><span class="num">3</span><h3>Testni yeching</h3><p>Har bir to'g'ri javob uchun coin oling. Birinchi urinish muhim!</p></li>
+        <li class="step"><span class="num">4</span><h3>Sovg'ani oling</h3><p>To'plagan coinlarni do'konda quloqchin, soat yoki noutbukka almashtiring.</p></li>
       </ol>
     </div>
   </section>
 
-  <!-- ILOVA -->
-  <section class="sec" id="ilova" aria-labelledby="app-h" style="background:linear-gradient(180deg,#0B1E4F,#1E63F0)">
-    <div class="app-g">
-      <div style="display:flex;flex-direction:column;gap:20px">
-        <div data-reveal><h2 id="app-h" class="h2" style="color:#fff;margin-bottom:12px">Istalgan joyda, istalgan vaqtda o'rganing</h2><p style="margin:0;color:rgba(255,255,255,.85);font-size:16px;line-height:1.6;max-width:520px">Vector'da telefon, planshet yoki kompyuterdan o'qing, natijalaringizni kuzating va yangi ko'nikmalarni egallang.</p></div>
-        <div data-reveal data-delay="100" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
-          <article class="store"><span class="tag"><span class="ms" style="font-size:22px">phone_iphone</span>App Store</span><p>Apple gadjetlari uchun ilovani App Store'dan yuklab oling</p><a class="dl" id="appStore" href="kirish.html?mode=register"><span class="ms" style="font-size:18px">download</span>Yuklab olish</a></article>
-          <article class="store"><span class="tag"><span class="ms" style="font-size:22px">android</span>Google Play</span><p>Android gadjetlari uchun ilovani Play Market'dan yuklab oling</p><a class="dl" id="googlePlay" href="kirish.html?mode=register"><span class="ms" style="font-size:18px">download</span>Yuklab olish</a></article>
-        </div>
+  <!-- KURSLAR -->
+  <section class="sec kurs-bg" id="kurslar" aria-labelledby="kurs-h">
+    <div class="container">
+      <div class="sec-top">
+        <div><h2 id="kurs-h" class="h2">Qaysi yo'nalish sizga yoqadi?</h2><p class="lead">Har bir kurs noldan boshlanadi — oldindan bilim shart emas.</p></div>
+        <a class="btn btn-out" href="kurslar.html">Barcha kurslar <span id="courseCount"></span></a>
       </div>
-      <div class="phones" data-reveal data-delay="200" aria-hidden="true">
-        <div class="phone" style="transform:translateY(24px) rotate(-4deg)"><div class="scr">
-          <div class="top"><span class="av">AV</span><b>Ali Valiyev</b><span class="coin">🪙 1 240</span></div>
-          <div class="hello">Salom, Ali! 👋</div>
-          <div class="card"><img src="assets/img/courses/kurs-1.png" alt=""><b>Kompyuter savodxonligi</b><div class="bar"><i style="width:68%"></i></div><span style="color:#64748B">14/21 dars · 68%</span></div>
-          <div class="card"><b>Test: 6/6 ✓</b><span style="color:#16A34A;font-weight:700">+12 coin</span></div>
-        </div></div>
-        <div class="phone b" style="transform:rotate(4deg)"><div class="scr">
-          <div class="top"><b style="font-size:13px">Do'kon</b><span class="coin">🪙 1 240</span></div>
-          <div class="g2">
-            <div class="card"><img src="assets/img/gifts/g02.png" alt=""><b>Kepka</b><span class="coin" style="margin:0">2 000</span></div>
-            <div class="card"><img src="assets/img/gifts/g11.png" alt=""><b>Quloqchin</b><span class="coin" style="margin:0">7 000</span></div>
-            <div class="card"><img src="assets/img/gifts/g04.png" alt=""><b>Sichqoncha</b><span class="coin" style="margin:0">3 500</span></div>
-            <div class="card"><img src="assets/img/gifts/g10.png" alt=""><b>Smart soat</b><span class="coin" style="margin:0">9 000</span></div>
-          </div>
-        </div></div>
+      <div class="cgrid" id="courseList"></div>
+    </div>
+  </section>
+
+  <!-- DO'KON -->
+  <section class="sec" id="dokon" aria-labelledby="shop-h">
+    <div class="container shop">
+      <div>
+        <h2 id="shop-h" class="h2">Coinlaringizni haqiqiy sovg'aga almashtiring</h2>
+        <p class="lead">Coin faqat bilim uchun beriladi. Uni sotib olib bo'lmaydi — faqat ishlab topiladi.</p>
+        <ul class="earn">
+          <li><span class="ms" style="background:var(--blue-l)">quiz</span>Testdagi har bir to'g'ri javob<span class="amt"><i class="coin-i"></i>+<span id="rate">2</span></span></li>
+          <li><span class="ms" style="background:var(--orange-l)">cake</span>Tug'ilgan kuningizda<span class="amt"><i class="coin-i"></i>+<span id="bday">50</span></span></li>
+          <li><span class="ms" style="background:#EAF9D2">military_tech</span>Faollik uchun ustozdan bonus<span class="amt"><i class="coin-i"></i>bonus</span></li>
+        </ul>
+        <a class="btn btn-blue btn-lg" style="margin-top:28px" href="dokon.html">Do'konni ko'rish</a>
+      </div>
+      <div class="gifts" id="giftList"></div>
+    </div>
+  </section>
+
+  <!-- TARIFLAR -->
+  <section class="sec plans-bg" id="obunalar" aria-labelledby="ob-h">
+    <div class="container">
+      <h2 id="ob-h" class="h2" style="color:#fff">Bitta obuna — barcha kurslar</h2>
+      <p class="lead" style="color:rgba(255,255,255,.8)">Ro'yxatdan o'tish bepul. Darslarni ko'rish va coin to'plash uchun tarif tanlang.</p>
+      <div class="seg" role="tablist" aria-label="Obuna muddati" id="toggle"><button role="tab" aria-selected="true" data-p="1">Oylik</button><button role="tab" aria-selected="false" data-p="12">Yillik<span class="save">tejamkor</span></button></div>
+      <div class="pgrid" id="planList"></div>
+    </div>
+  </section>
+
+  <!-- OTA-ONALAR -->
+  <section class="sec" aria-labelledby="par-h">
+    <div class="container parents">
+      <div class="photo-stack" aria-hidden="true"><img src="assets/img/students/s2.jpg" alt=""><img src="assets/img/students/s3.jpg" alt=""><img src="assets/img/students/s4.jpg" alt=""></div>
+      <div>
+        <h2 id="par-h" class="h2">Ota-onalar uchun</h2>
+        <p class="lead">Farzandingiz ekran oldida vaqtini foydali o'tkazadi — siz esa natijani ko'rib turasiz.</p>
+        <ul class="checks">
+          <li><span class="ms">insights</span><span>Ko'rilgan darslar, test natijalari va coinlar kabinetda ko'rinadi.</span></li>
+          <li><span class="ms">school</span><span>Darslarni Xusniddin Sharofiddinov — 2018 yildan IT sohasida, 1000 dan ortiq o'quvchiga dars bergan ustoz tayyorlagan.</span></li>
+          <li><span class="ms">credit_card</span><span>To'lov Click yoki Payme orqali, obuna to'lovdan so'ng darhol ochiladi.</span></li>
+        </ul>
       </div>
     </div>
+  </section>
+
+  <!-- SAVOLLAR -->
+  <section class="sec" id="savollar" aria-labelledby="faq-h" style="background:var(--white);border-top:var(--line)">
+    <div class="container">
+      <h2 id="faq-h" class="h2" style="text-align:center">Ko'p beriladigan savollar</h2>
+      <div class="faq" id="faq"></div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0;background:var(--white)">
+    <div class="final">
+      <div><h2>Birinchi coiningiz bitta dars uzoqlikda</h2><p>Ro'yxatdan o'tish bepul va bir daqiqa vaqt oladi.</p></div>
+      <a class="btn btn-out btn-lg" href="kirish.html?mode=register" data-guest-cta>Ro'yxatdan o'tish</a>
+    </div>
+    <div class="partners" aria-label="Hamkorlar"><span>IT PARK</span><span>Hamkor Bank</span><span>click</span><span>Payme</span></div>
   </section>
 </main>
 <footer id="vf"></footer>
@@ -301,134 +291,93 @@
 <script>
 (function () {
   const { esc } = VSite, logged = VSite.loggedIn;
-  const fmt = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, '.') + " so'm";
+  const fmt = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, ' ') + " so'm";
+  const num = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, ' ');
   const safe = u => /^(https:\/\/|assets\/)/.test(String(u || '')) ? u : '';
   if (logged) document.querySelectorAll('[data-guest-cta]').forEach(a => { a.href = 'kabinet.html'; a.textContent = "Kabinetga o'tish"; });
 
-  // ---------- namunaviy ma'lumot (server ulanmagan bo'lsa ham sahifa to'liq ko'rinadi) ----------
+  document.getElementById('ticker').innerHTML = Array(2).fill(['Video darslar', 'Testlar', 'Coinlar', "Sovg'alar", 'Sertifikat', 'Kompyuter savodxonligi', 'AI kontent', 'Grafik dizayn', 'Scratch', 'UI/UX', 'Kiber xavfsizlik']).flat().map(t => `<span>${esc(t)}</span>`).join('');
+
   const F = ["Juda oddiy - har oyda qayta to'lov", "Vector ni sinab ko'rish uchun qulay", "Barcha yo'nalish bo'yicha videodarslar.", 'Kurs yakunida sertifikat.', "Shaxsiy mentor ko'magi.", "Vector loyihasiga qo'shilish imkoniyati", 'Ish topishda nazariy yordam'];
   const SAMPLE = {
     settings: {},
-    courses: [['Kompyuter savodxonligi', 350000], ['AI kontent', 450000], ['Grafik dizayn', 450000]].map(([title, price], i) => ({ id: 'k' + i, title, price, image: 'assets/img/courses/kurs-' + (i + 1) + '.png', teacher: 'Xusniddin Sharofiddinov' })),
+    courses: [['Kompyuter savodxonligi', 350000], ['AI kontent', 450000], ['Grafik dizayn', 450000], ['No Coding', 400000], ['Scratch', 350000], ['UI/UX dizayn', 400000], ['Kiber xavfsizlik', 600000]]
+      .map(([title, price], i) => ({ title, price, lessons: 3, image: 'assets/img/courses/kurs-' + (i + 1) + '.png', teacher: 'Xusniddin Sharofiddinov' })),
     plans: [['START', 69000, 708000, 828000, 4], ['PRO', 89000, 948000, 1068000, 6, 1], ['VIP', 110000, 1188000, 1320000, 7]].flatMap(([name, m, y, o, n, pop]) => [
       { name, months: 1, price: m, features: F.slice(0, n), popular: !!pop },
-      { name, months: 12, price: y, oldPrice: o, features: [ "Bir marta to'lov — butun yil", ...F.slice(1, n)], popular: !!pop }])
+      { name, months: 12, price: y, oldPrice: o, features: ["Bir marta to'lov — butun yil", ...F.slice(1, n)], popular: !!pop }]),
+    products: [['Kepka', 2000, 'g02'], ['Simsiz quloqchin', 7000, 'g11'], ['Smart soat', 9000, 'g10'], ['Mexanik klaviatura', 6000, 'g05'], ['Redmi A5 smartfon', 30000, 'g07'], ['Noutbuk', 80000, 'g08']]
+      .map(([name, price, g]) => ({ name, price, image: 'assets/img/gifts/' + g + '.png' }))
   };
 
-  // ---------- kurslar ----------
   function courses(list) {
-    document.getElementById('courseList').innerHTML = list.slice(0, 3).map((c, i) => `
-      <div data-reveal data-delay="${i * 100}"><article class="course">
+    document.getElementById('courseCount').textContent = '(' + list.length + ')';
+    document.getElementById('courseList').innerHTML = list.slice(0, 3).map(c => `
+      <a class="course" href="${logged ? 'kabinet.html#kurslar' : 'kirish.html?mode=register'}">
         <div class="img">${safe(c.image) ? `<img src="${esc(c.image)}" alt="${esc(c.title)} kursi muqovasi" loading="lazy">` : ''}</div>
-        <div class="body"><h3>${esc(c.title)}</h3>
-          <div class="teacher"><span class="ms">person</span>Ustoz: ${esc(c.teacher || 'Xusniddin Sharofiddinov')}</div>
-          ${c.price ? `<div class="price">Oflayn kurs narxi <strong>${fmt(c.price)}</strong></div>` : ''}
-          <a class="go" href="${logged ? 'kabinet.html#kurslar' : 'kirish.html?mode=register'}">Kursga yozilish</a></div></article></div>`).join('');
+        <div class="body"><div class="meta"><span class="chip blue">${Number(c.lessons) || 0} ta dars</span><span class="chip lime">Test + coin</span></div>
+          <h3>${esc(c.title)}</h3><span style="font-size:15px;color:var(--ink-2)">Ustoz: ${esc(c.teacher || 'Xusniddin Sharofiddinov')}</span>
+          ${c.price ? `<div class="price">Oflayn kurs narxi: <b>${fmt(c.price)}</b></div>` : ''}</div></a>`).join('');
+  }
+  function gifts(list) {
+    const pick = list.filter(p => (p.category || 'sovga') === 'sovga');
+    const order = [1, 10, 9, 4, 6, 7].map(i => pick[i]).filter(Boolean);
+    document.getElementById('giftList').innerHTML = (order.length >= 6 ? order : pick.slice(0, 6)).map(p => `
+      <div class="gift">${safe(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : ''}<b>${esc(p.name)}</b><span><i class="coin-i"></i>${num(p.price)}</span></div>`).join('');
   }
 
-  // ---------- obunalar (oylik / yillik) ----------
   let period = 1, PLANS = SAMPLE.plans;
   function plans() {
-    const list = PLANS.filter(p => p.months === period);
-    const show = list.length ? list : PLANS.filter(p => p.months === 1);
-    document.getElementById('planList').innerHTML = show.map((p, i) => `
-      <div data-reveal class="in" style="height:100%"><article class="plan ${p.popular ? 'pop' : ''}">
-        <span class="tier">${esc(p.name)}</span>
-        <div class="pr">${p.months > 1 ? `<div class="old">${p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : ''}<span>${fmt(Math.round(p.price / p.months / 1000) * 1000)} / oy</span></div>` : ''}<div class="now">${fmt(p.price)}</div></div>
+    let list = PLANS.filter(p => p.months === period);
+    if (!list.length) list = PLANS.filter(p => p.months === 1);
+    document.getElementById('planList').innerHTML = list.map(p => `
+      <article class="plan ${p.popular ? 'pop' : ''}">
+        ${p.popular ? '<span class="chip lime tag">Eng ko\'p tanlanadi</span>' : ''}
+        <h3>${esc(p.name)}</h3>
+        <div><div class="price">${fmt(p.price)}</div><div class="per">${p.months > 1 ? `${p.oldPrice ? `<s>${fmt(p.oldPrice)}</s>` : ''}oyiga ${fmt(Math.round(p.price / p.months / 1000) * 1000)}` : 'har oy'}</div></div>
         <ul>${(p.features || []).map(f => `<li><span class="ms">check</span><span>${esc(f)}</span></li>`).join('')}</ul>
-        <a class="buy" href="${logged ? 'kabinet.html#obuna' : 'kirish.html?mode=register'}">Sotib olish</a></article></div>`).join('');
-    // yillik tarif yo'q bo'lsa — almashtirgich yashiriladi
+        <a class="btn ${p.popular ? 'btn-out' : 'btn-orange'}" href="${logged ? 'kabinet.html#obuna' : 'kirish.html?mode=register'}">Tanlash</a></article>`).join('');
     document.getElementById('toggle').style.display = PLANS.some(p => p.months > 1) ? '' : 'none';
   }
   document.querySelectorAll('#toggle button').forEach(b => b.onclick = () => {
     const p = Number(b.dataset.p); if (p === period) return;
     period = p;
-    document.getElementById('toggle').classList.toggle('y', p !== 1);
     document.querySelectorAll('#toggle button').forEach(x => x.setAttribute('aria-selected', x === b));
-    const row = document.getElementById('planList'); row.classList.add('fade');
-    setTimeout(() => { plans(); requestAnimationFrame(() => row.classList.remove('fade')); }, 200);
+    const g = document.getElementById('planList'); g.classList.add('fade');
+    setTimeout(() => { plans(); g.classList.remove('fade'); }, 150);
   });
 
-  // ---------- statistika (0 dan sanab ko'tariladi) ----------
-  let STATS = { stat_videos: 340, stat_schools: 10, stat_clients: 870 }, counted = false;
-  function countUp() {
-    if (counted) return; counted = true;
-    const els = document.querySelectorAll('[data-count]'), t0 = performance.now();
-    const step = now => {
-      const p = Math.min(1, (now - t0) / 1600), k = 1 - Math.pow(1 - p, 3);
-      els.forEach(e => { e.textContent = Math.round((Number(STATS[e.dataset.count]) || 0) * k) + (e.hasAttribute('data-plus') ? '+' : ''); });
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-  if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { countUp(); io.disconnect(); } }, { threshold: .4 }); io.observe(document.getElementById('stats')); } else countUp();
-
-  // ---------- bannerlar ----------
-  const BANNERS = [
-    { title: "Targ'ibotchilar", text: "Do'stlaringizni Vector'ga taklif qiling va Premium obunani bepul qo'lga kiriting! Qancha ko'p do'st taklif qilsangiz, shuncha uzoq muddat Premium imkoniyatlardan foydalaning.", cta: "Ma'lumot olish", href: '#savollar', img: 'assets/img/banners/b1.png', alt: 'Elchilar dasturi banneri' },
-    { title: '60% gacha tejang', text: "Yillik obunani tanlang va oylik to'lovga nisbatan sezilarli mablag' tejang. Barcha kurslar bir yil davomida ochiq.", cta: "Tariflarni ko'rish", href: '#obunalar', img: 'assets/img/banners/b2.png', alt: 'Yillik obuna banneri' },
-    { title: "Coin to'plang — sovg'a oling", text: "Darslarni tugatib coin yig'ing va ularni Vector do'konida noutbuk, smartfon, quloqchin kabi sovg'alarga almashtiring.", cta: "Do'konga o'tish", href: 'dokon.html', img: 'assets/img/banners/b3.png', alt: "Do'kon banneri" },
-    { title: 'Kiber xavfsizlik', text: "Raqamli dunyoda xavfsiz bo'lishni o'rganing: tarmoq xavfsizligi, zararli dasturlarni aniqlash va amaliy loyihalar.", cta: "Kursni ko'rish", href: 'kurslar.html', img: 'assets/img/banners/b4.png', alt: 'Kiber xavfsizlik kursi banneri' },
-    { title: "Telefoningizda o'qing", text: 'Vector saytini telefoningizda oching va darslarni istalgan joyda, istalgan vaqtda ko\'ring.', cta: 'Batafsil', href: '#ilova', img: 'assets/img/banners/b5.png', alt: 'Mobil ilova banneri' }
-  ];
-  let bi = 0, timer = 0;
-  const track = document.getElementById('track'), dots = document.getElementById('dots');
-  track.innerHTML = BANNERS.map((s, i) => `<div class="slide" role="group" aria-roledescription="slayd" aria-label="${i + 1} / ${BANNERS.length}"><div class="slide-in">
-      <a class="pic" href="${s.href}" aria-label="${esc(s.title)}"><img src="${s.img}" alt="${esc(s.alt)}" loading="lazy"></a>
-      <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start;padding-right:clamp(0px,1.5vw,20px)"><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p><a class="cta" href="${s.href}">${esc(s.cta)}</a></div></div></div>`).join('');
-  dots.innerHTML = BANNERS.map((_, i) => `<button role="tab" aria-label="${i + 1}-banner" aria-selected="${i === 0}"></button>`).join('');
-  const goB = i => { bi = (i + BANNERS.length) % BANNERS.length; track.style.transform = `translateX(-${bi * 100}%)`; dots.querySelectorAll('button').forEach((d, j) => d.setAttribute('aria-selected', j === bi)); };
-  const auto = () => { clearInterval(timer); timer = setInterval(() => goB(bi + 1), 6000); };
-  document.getElementById('bPrev').onclick = () => { goB(bi - 1); auto(); };
-  document.getElementById('bNext').onclick = () => { goB(bi + 1); auto(); };
-  dots.querySelectorAll('button').forEach((d, j) => d.onclick = () => { goB(j); auto(); });
-  const car = document.getElementById('car');
-  car.addEventListener('mouseenter', () => clearInterval(timer)); car.addEventListener('mouseleave', auto);
-  let tx = 0; car.addEventListener('touchstart', e => { tx = e.touches[0].clientX; clearInterval(timer); }, { passive: true });
-  car.addEventListener('touchend', e => { const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 40) goB(bi + (d < 0 ? 1 : -1)); auto(); });
-  auto();
-
-  // ---------- hamkorlar ----------
-  const P = ['Hamkor Bank', 'click', 'IT PARK', 'Payme'], row = a => [...a, ...a, ...a, ...a, ...a, ...a].map(n => `<span aria-hidden="true">${esc(n)}</span>`).join('');
-  document.getElementById('mA').innerHTML = row(P); document.getElementById('mB').innerHTML = row([...P.slice(1), P[0]].reverse());
-
-  // ---------- savollar ----------
   const FAQ = [
-    ['Vector — qanday loyiha?', "Vector — maktab davridayoq zamonaviy kasb egallashga yordam beruvchi loyiha."],
-    ["Qaysi sohalarni o'rganishim mumkin?", "Kompyuter savodxonligi, AI kontent yaratish, grafik dizayn va dasturlash hamda boshqa zamonaviy IT yo'nalishlarini o'rganishingiz mumkin. Yo'nalishlar ro'yxati muntazam kengayib boradi."],
-    ["Kurslarni tugatgandan so'ng sertifikat beriladimi?", "Ha. Kursni to'liq yakunlab, yakuniy topshiriqni bajarganingizdan so'ng Vector sertifikati beriladi."],
-    ["Kasb o'rganish uchun oldindan bilim talab qilinadimi?", "Yo'q. Kurslar noldan boshlanadi — kompyuterdan foydalana olsangiz kifoya. Har bir mavzu bosqichma-bosqich tushuntiriladi."],
-    ["Darslarni qaysi vaqtda ko'rishim mumkin?", "Istalgan vaqtda. Videodarslar 24/7 ochiq, ularni o'zingizga qulay soatda va tempda ko'rishingiz mumkin."],
-    ["Coinlar nima va ular bilan nima qilaman?", "Har bir dars oxiridagi testda to'g'ri javoblar uchun coin beriladi. Coinlarni do'konda haqiqiy sovg'alarga almashtirishingiz mumkin. Tug'ilgan kuningizda ham sovg'a coin olasiz!"],
-    ["Savollarim bo'lsa kimga murojaat qilsam bo'ladi?", "Telegram orqali qo'llab-quvvatlash xizmatimizga yozing. PRO va VIP obunachilarga shaxsiy mentor ham yordam beradi."],
-    ['Kurslarni tugatish uchun muddat bormi?', "Qat'iy muddat yo'q. Obunangiz faol bo'lgan davrda barcha darslardan cheklovsiz foydalanasiz."],
-    ["Kurslar davomida amaliy mashg'ulotlar bo'ladimi?", "Ha. Har bir moduldan so'ng amaliy topshiriqlar va real loyihalar beriladi — ular portfoliongizni shakllantirishga yordam beradi."]
+    ['Vector kimlar uchun?', "Asosan 12–15 yoshli o'quvchilar uchun. Darslar oddiy tilda, noldan tushuntiriladi — kompyuterdan foydalana olsangiz kifoya."],
+    ["Qaysi yo'nalishlarni o'rganish mumkin?", "Kompyuter savodxonligi, AI kontent, grafik dizayn, No Coding, Scratch, UI/UX dizayn va kiber xavfsizlik. Yo'nalishlar ro'yxati kengayib boradi."],
+    ['Coin qanday to\'planadi va nima qilaman?', "Har bir dars oxiridagi testda to'g'ri javoblar uchun coin beriladi (birinchi urinishda). Tug'ilgan kuningizda va faollik uchun ham coin olasiz. Coinlarni do'konda sovg'alarga almashtirasiz."],
+    ["Sovg'ani qanday olaman?", "Kabinetdagi do'kondan sovg'ani tanlaysiz, coinlar yechiladi. Admin siz bilan bog'lanib, sovg'ani topshiradi."],
+    ['Telefonda o\'qisa bo\'ladimi?', "Ha. Sayt telefon, planshet va kompyuterda bir xil ishlaydi."],
+    ["Kursni tugatsam sertifikat beriladimi?", "Ha. Kursni to'liq yakunlaganingizdan so'ng Vector sertifikati beriladi."],
+    ["To'lov qanday qilinadi?", "Kabinetdagi \"Obuna\" bo'limidan tarifni tanlab, Click yoki Payme orqali to'laysiz."],
+    ['Savollarim bo\'lsa kimga yozaman?', "Telegram orqali qo'llab-quvvatlash xizmatiga yozing. PRO va VIP obunachilarga shaxsiy mentor ham yordam beradi."]
   ];
   const faq = document.getElementById('faq');
-  faq.innerHTML = FAQ.map(([q, a], i) => `<div class="faq-i${i === 0 ? ' open' : ''}"><button type="button" aria-expanded="${i === 0}" aria-controls="faq-${i}"><span>${esc(q)}</span><span class="ms">expand_more</span></button><div class="a" id="faq-${i}"><div><p>${esc(a)}</p></div></div></div>`).join('');
+  faq.innerHTML = FAQ.map(([q, a], i) => `<div class="faq-i${i === 0 ? ' open' : ''}"><button type="button" aria-expanded="${i === 0}" aria-controls="faq-${i}"><span>${esc(q)}</span><span class="ms" aria-hidden="true">add</span></button><div class="a" id="faq-${i}"><div><p>${esc(a)}</p></div></div></div>`).join('');
   faq.querySelectorAll('.faq-i > button').forEach(b => b.onclick = () => {
     const it = b.parentElement, open = !it.classList.contains('open');
     faq.querySelectorAll('.faq-i').forEach(x => { x.classList.remove('open'); x.firstElementChild.setAttribute('aria-expanded', 'false'); });
     if (open) { it.classList.add('open'); b.setAttribute('aria-expanded', 'true'); }
   });
 
-  // ---------- server ma'lumotlari ----------
   function render(d) {
     const s = d.settings || {};
-    if (s.hero_title) document.getElementById('heroTitle').textContent = s.hero_title;
-    if (s.hero_text) document.getElementById('heroText').textContent = s.hero_text;
-    ['stat_videos', 'stat_schools', 'stat_clients'].forEach(k => { if (s[k]) STATS[k] = Number(s[k]) || STATS[k]; });
-    if (counted) document.querySelectorAll('[data-count]').forEach(e => { e.textContent = STATS[e.dataset.count] + (e.hasAttribute('data-plus') ? '+' : ''); });
-    [['appStore', s.app_store], ['googlePlay', s.google_play]].forEach(([id, u]) => {
-      const a = document.getElementById(id);
-      if (/^https:\/\//.test(u || '')) { a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.removeAttribute('aria-disabled'); }
-      else { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.innerHTML = '<span class="ms" style="font-size:18px">schedule</span>Tez orada'; }
-    });
+    if (s.hero_text && s.hero_text !== "Soha mutaxassisidan darslar, amaliy loyihalar va moslashuvchan grafik. Daromadli kasb egasi bo'lish endi yanada oson.") document.getElementById('heroText').textContent = s.hero_text;
+    if (s.stat_clients) document.getElementById('stClients').textContent = num(s.stat_clients);
+    if (s.stat_videos) document.getElementById('stVideos').textContent = num(s.stat_videos);
+    if (s.stat_schools) document.getElementById('stSchools').textContent = num(s.stat_schools);
+    if (s.coin_per_correct) document.getElementById('rate').textContent = s.coin_per_correct;
+    if (s.birthday_coins) document.getElementById('bday').textContent = s.birthday_coins;
     if (d.courses && d.courses.length) courses(d.courses);
+    if (d.products && d.products.length) gifts(d.products);
     if (d.plans && d.plans.length) { PLANS = d.plans; plans(); }
-    VSite.reveal();
   }
-  courses(SAMPLE.courses); plans(); render(VX.cachedPublic() || SAMPLE);
+  courses(SAMPLE.courses); gifts(SAMPLE.products); plans(); render(VX.cachedPublic() || SAMPLE);
   VX.publicData().then(render).catch(() => {});
 })();
 </script>

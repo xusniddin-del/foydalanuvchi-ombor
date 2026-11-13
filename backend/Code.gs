@@ -51,6 +51,7 @@ var DEFAULT_SETTINGS = [
   ['address', "Marg'ilon shahri", 'Manzil'],
   ['coin_per_correct', '2', "Testdagi har bir to'g'ri javob uchun coin (faqat birinchi urinishda)"],
   ['birthday_coins', '50', "Tug'ilgan kunda avtomatik beriladigan coin (0 = o'chiq)"],
+  ['daily_goal', '2', "Kunlik maqsad: kuniga nechta dars yoki test (kabinetda ko'rinadi)"],
   ['payment_mode', 'test', "test — to'lovni admin tasdiqlaydi; live — Click/Payme avtomatik"],
   ['click_service_id', '', 'Click service_id'],
   ['click_merchant_id', '', 'Click merchant_id'],
@@ -58,7 +59,7 @@ var DEFAULT_SETTINGS = [
   ['return_url', '', "To'lovdan keyin qaytiladigan sahifa (masalan https://.../kabinet.html#obuna)"]
 ];
 var PUBLIC_SETTINGS = ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients', 'phone', 'telegram', 'instagram', 'youtube', 'facebook',
-  'app_store', 'google_play', 'address', 'coin_per_correct', 'birthday_coins',
+  'app_store', 'google_play', 'address', 'coin_per_correct', 'birthday_coins', 'daily_goal',
   'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url'];
 
 // ======================= KIRISH NUQTALARI =======================
@@ -416,14 +417,46 @@ function apiMe(req, u) {
   u = findUserFresh(u.id);
   var prog = rows('Progress').filter(function (p) { return p.userId === u.id; });
   var today = Utilities.formatDate(now(), TZ, 'MM-dd');
+  // faollik kunlari (dars ko'rish, test ishlash, coin olish)
+  var day = function (s) { var d = new Date(s); return isNaN(d) ? '' : Utilities.formatDate(d, TZ, 'yyyy-MM-dd'); };
+  var days = {};
+  prog.forEach(function (p) { if (p.updatedAt) days[day(p.updatedAt)] = (days[day(p.updatedAt)] || 0) + 1; });
+  rows('Coins').forEach(function (c) { if (c.userId === u.id && c.type === 'quiz') days[day(c.at)] = days[day(c.at)] || 1; });
+  var t0 = now(), todayKey = Utilities.formatDate(t0, TZ, 'yyyy-MM-dd');
+  var dow = (new Date(todayKey + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0 = dushanba
+  var week = [];
+  for (var i = 0; i < 7; i++) week.push(!!days[Utilities.formatDate(new Date(t0.getTime() + (i - dow) * 86400000), TZ, 'yyyy-MM-dd')]);
+  var streak = 0, k = days[todayKey] ? 0 : 1;
+  while (days[Utilities.formatDate(new Date(t0.getTime() - k * 86400000), TZ, 'yyyy-MM-dd')]) { streak++; k++; }
   return {
     ok: true, user: publicUser(u),
     birthdayToday: !!(u.birthday && u.birthday.slice(5) === today),
     stats: {
       watched: prog.filter(function (p) { return p.watched === '1'; }).length,
-      quizzes: prog.filter(function (p) { return num(p.attempts) > 0; }).length
-    }
+      quizzes: prog.filter(function (p) { return num(p.attempts) > 0; }).length,
+      today: days[todayKey] || 0, goal: num(settings().daily_goal, 2) || 2, week: week, streak: streak
+    },
+    leaders: leaders(u.id, num(u.coins))
   };
+}
+
+/** Coin bo'yicha reyting: eng yaxshi 5 o'quvchi + o'quvchining o'z o'rni. 5 daqiqa keshda. */
+function leaders(myId, myCoins) {
+  var b = cacheGet('lead');
+  if (!b) {
+    var short = function (n) { var p = String(n || '').trim().split(/\s+/); return p[0] + (p[1] ? ' ' + p[1].charAt(0) + '.' : ''); };
+    b = rows('Users').filter(function (x) { return x.status !== 'blocked'; })
+      .map(function (x) { return { id: x.id, name: short(x.name), avatar: x.avatar, coins: num(x.coins) }; })
+      .sort(function (a, c) { return c.coins - a.coins; }).slice(0, 200);
+    cachePut('lead', b, 300);
+  }
+  // o'quvchining o'z coinlari doim yangi bo'lsin
+  b = b.map(function (x) { return x.id === myId ? { id: x.id, name: x.name, avatar: x.avatar, coins: myCoins } : x; })
+    .sort(function (a, c) { return c.coins - a.coins; });
+  var top = b.slice(0, 5).map(function (x, i) { return { rank: i + 1, name: x.name, avatar: x.avatar, coins: x.coins, me: x.id === myId }; });
+  var idx = -1;
+  for (var i = 0; i < b.length; i++) if (b[i].id === myId) { idx = i; break; }
+  return { top: top, myRank: idx >= 0 ? idx + 1 : null };
 }
 
 function apiProfile(req, u) {

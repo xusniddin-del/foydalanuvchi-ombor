@@ -11,8 +11,8 @@
     if (!el) return;
     const nav = NAV.map(([h, t]) => `<a href="${h}"${h === here ? ' aria-current="page"' : ''}>${t}</a>`).join('');
     const auth = loggedIn
-      ? `<a class="btn-blue vh-auth" href="kabinet.html"><span class="ms" style="font-size:20px">person</span>Kabinet</a>`
-      : `<a class="btn-out vh-auth" href="kirish.html">Kirish</a><a class="btn-blue vh-auth" href="kirish.html?mode=register">Ro'yxatdan o'tish</a>`;
+      ? `<a class="btn btn-blue vh-auth" href="kabinet.html"><span class="ms" style="font-size:20px">sports_esports</span>Kabinet</a>`
+      : `<a class="btn btn-out vh-auth" href="kirish.html">Kirish</a><a class="btn btn-orange vh-auth" href="kirish.html?mode=register">Ro'yxatdan o'tish</a>`;
     el.className = 'vh';
     el.innerHTML = `<div class="vh-in">
         <a class="vh-logo" href="index.html" aria-label="VECTOR bosh sahifa"><img src="assets/img/vector-logo.png" alt="" width="36" height="36"><span>VECTOR</span></a>
@@ -22,9 +22,9 @@
     const dr = document.createElement('div');
     dr.className = 'vh-drawer';
     dr.innerHTML = `<div class="ov"></div><div class="panel" role="dialog" aria-label="Menyu">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><a class="vh-logo" href="index.html"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a><button type="button" class="vh-burger ms" data-x aria-label="Yopish" style="display:grid">close</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><a class="vh-logo" href="index.html"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a><button type="button" class="vh-burger ms" data-x aria-label="Yopish" style="display:grid;box-shadow:none">close</button></div>
         ${NAV.map(([h, t]) => `<a class="lnk" href="${h}"${h === here ? ' aria-current="page"' : ''}>${t}</a>`).join('')}
-        <div class="acts">${loggedIn ? '<a class="btn-blue" href="kabinet.html">Kabinetga o\'tish</a>' : '<a class="btn-out" href="kirish.html">Kirish</a><a class="btn-blue" href="kirish.html?mode=register">Ro\'yxatdan o\'tish</a>'}</div></div>`;
+        <div class="acts">${loggedIn ? '<a class="btn btn-blue" href="kabinet.html">Kabinetga o\'tish</a>' : '<a class="btn btn-out" href="kirish.html">Kirish</a><a class="btn btn-orange" href="kirish.html?mode=register">Ro\'yxatdan o\'tish</a>'}</div></div>`;
     document.body.appendChild(dr);
     const b = el.querySelector('.vh-burger');
     const set = o => { dr.classList.toggle('open', o); b.setAttribute('aria-expanded', o); };
@@ -47,7 +47,7 @@
     el.className = 'vf';
     el.innerHTML = `<div class="vf-grid">
         <div class="col" style="gap:14px"><span class="vh-logo" style="color:#fff"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></span>
-          <p style="margin:0;color:rgba(255,255,255,.75);font-size:14px;line-height:1.6;max-width:260px">IT sohasini noldan boshlab, professionallik sari qadam qo'ying.</p></div>
+          <p style="margin:0;color:rgba(255,255,255,.75);font-size:15px;line-height:1.6;max-width:280px">12–15 yoshlilar uchun IT darslar: video, test, coin va haqiqiy sovg'alar.</p></div>
         <nav class="col" aria-label="Sayt xaritasi"><h3>Sayt xaritasi</h3>${NAV.map(([h, t]) => `<a href="${h}">${t}</a>`).join('')}</nav>
         <div class="col"><h3>Aloqa</h3>
           ${s.phone ? `<a href="tel:${esc(String(s.phone).replace(/[^+\d]/g, ''))}"><span class="ms" style="font-size:18px">call</span>${esc(s.phone)}</a>` : ''}
@@ -72,7 +72,7 @@
     bg.innerHTML = `<div class="vm" role="dialog" aria-modal="true" aria-labelledby="gate-h"><button class="x ms" type="button" aria-label="Yopish">close</button>
       <img src="assets/img/vector-logo.png" alt="" width="64" height="64" style="width:64px;height:64px;border-radius:18px">
       <h2 id="gate-h">${esc(title)}</h2><p>${esc(text)}</p>
-      <a class="btn-orange" style="width:100%;margin-top:8px;font-size:16px;padding:14px" href="kirish.html?mode=register">Ro'yxatdan o'tish</a>
+      <a class="btn btn-orange" style="margin-top:8px" href="kirish.html?mode=register">Ro'yxatdan o'tish</a>
       <p style="font-size:14px">Akkauntingiz bormi? <a href="kirish.html" style="font-weight:600">Kirish</a></p></div>`;
     const close = () => bg.remove();
     bg.addEventListener('click', e => { if (e.target === bg) close(); });

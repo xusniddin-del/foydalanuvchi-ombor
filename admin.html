@@ -349,7 +349,7 @@
   // ================= SOZLAMALAR =================
   async function pSettings() {
     const r = await call('a.settings');
-    const groups = [['Sayt', ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients']], ['Aloqa va tarmoqlar', ['phone', 'telegram', 'instagram', 'youtube', 'facebook', 'address', 'app_store', 'google_play']], ['Coinlar', ['coin_per_correct', 'birthday_coins']],
+    const groups = [['Sayt', ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients']], ['Aloqa va tarmoqlar', ['phone', 'telegram', 'instagram', 'youtube', 'facebook', 'address', 'app_store', 'google_play']], ['Coinlar', ['coin_per_correct', 'birthday_coins', 'daily_goal']],
       ["To'lov (Click / Payme)", ['payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url']]];
     const by = Object.fromEntries(r.settings.map(s => [s.key, s]));
     content.innerHTML = head('Sozlamalar') + `<form class="stack" id="sf" style="gap:18px;max-width:820px">${groups.map(([g, keys]) => `<div class="card pad stack"><h2 style="font-size:18px">${g}</h2>

@@ -1,22 +1,24 @@
 /* VECTOR — umumiy dizayn tizimi */
 :root {
-  --blue: #1E63F0; --blue-600: #1552CF; --blue-50: #EAF2FF; --blue-100: #D6E5FF;
-  --orange: #FF8A00; --orange-600: #E07800; --orange-50: #FFF4E5;
-  --green: #16A34A; --green-50: #E9F9EF; --red: #DC2626; --red-50: #FDECEC;
-  --ink: #0F172A; --ink-2: #334155; --muted: #64748B; --line: #E2E8F0;
-  --bg: #F4F7FC; --card: #FFFFFF; --soft: #F1F5FB;
-  --shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
-  --shadow-lg: 0 24px 60px rgba(11,30,79,.16);
-  --r: 16px; --r-lg: 24px;
+  --blue: #1570EF; --blue-600: #0F5FD6; --blue-50: #EAF2FF; --blue-100: #D3E4FF;
+  --orange: #FF8A00; --orange-600: #E07800; --orange-50: #FFF2E2;
+  --green: #12A150; --green-50: #E6F7EC; --red: #E5484D; --red-50: #FDECEC;
+  --violet: #7A5AF8; --violet-50: #F0EBFF; --pink: #F0506E; --pink-50: #FFE9EE; --mint: #12B76A; --mint-50: #E3F8EC;
+  --ink: #0D1B3E; --ink-2: #3A4766; --muted: #6B7896; --line: #E1EAF7;
+  --bg: #EEF4FD; --card: #FFFFFF; --soft: #F4F8FE; --side: #F8FBFF;
+  --shadow: 0 1px 2px rgba(21,62,140,.04), 0 6px 20px rgba(21,62,140,.06);
+  --shadow-lg: 0 24px 60px rgba(13,40,100,.16);
+  --r: 16px; --r-lg: 22px;
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
 }
 [data-theme="dark"] {
-  --blue: #4C8DFF; --blue-600: #3A7BF0; --blue-50: #172440; --blue-100: #1E3157;
+  --blue: #4C8DFF; --blue-600: #3A7BF0; --blue-50: #16233E; --blue-100: #1E3157;
   --orange: #FF9A2E; --orange-600: #F08A1E; --orange-50: #3A2610;
   --green: #34D399; --green-50: #0F2E22; --red: #F87171; --red-50: #3A1616;
-  --ink: #E8EEF8; --ink-2: #C3CEDF; --muted: #94A3B8; --line: #263248;
-  --bg: #0B1220; --card: #121B2E; --soft: #18233A;
+  --violet: #A48BFF; --violet-50: #241D45; --pink: #FF7A93; --pink-50: #3D1A24; --mint: #3DDC97; --mint-50: #12301F;
+  --ink: #E8EEF8; --ink-2: #C3CEDF; --muted: #94A3B8; --line: #22304A;
+  --bg: #0A1120; --card: #111B2F; --soft: #16223A; --side: #0E1729;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
   --shadow-lg: 0 24px 60px rgba(0,0,0,.45);
   color-scheme: dark;
@@ -84,7 +86,7 @@ p { margin: 0; text-wrap: pretty; }
 .wrap-row { flex-wrap: wrap; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
 .progress { height: 10px; border-radius: 999px; background: var(--blue-50); overflow: hidden; }
-.progress > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--orange)); transition: width .6s ease; }
+.progress > i { display: block; height: 100%; border-radius: inherit; background: var(--blue); transition: width .6s ease; }
 .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 800; overflow: hidden; flex: none; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }
 .empty { padding: 40px 16px; text-align: center; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }

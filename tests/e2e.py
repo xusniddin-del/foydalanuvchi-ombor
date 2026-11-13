@@ -21,9 +21,9 @@ with sync_playwright() as p:
     # bosh sahifa
     pg.goto(BASE + "/"); pg.wait_for_timeout(1200)
     check("landing: 3 top courses from API", pg.locator(".course").count() == 3)
-    check("landing: 3 monthly plans", pg.locator(".plan").count() == 3 and "69.000" in pg.locator("#planList").inner_text())
+    check("landing: 3 monthly plans", pg.locator(".plan").count() == 3 and "69 000" in pg.locator("#planList").inner_text())
     pg.click("#toggle [data-p='12']"); pg.wait_for_timeout(500)
-    check("landing: yearly toggle shows yearly prices", "708.000" in pg.locator("#planList").inner_text() and "828.000" in pg.locator("#planList").inner_text())
+    check("landing: yearly toggle shows yearly prices", "708 000" in pg.locator("#planList").inner_text() and "828 000" in pg.locator("#planList").inner_text())
     check("landing: language switch mounted", pg.locator("[data-vector-lang]").count() >= 1)
     pg.screenshot(path=f"{OUT}/01-landing.png", full_page=True)
 
@@ -96,7 +96,7 @@ with sync_playwright() as p:
     pg.goto(BASE + "/kabinet.html#dokon"); pg.wait_for_timeout(1200)
     check("shop: balance 5 004", "5 004" in pg.locator(".page-h").inner_text())
     pg.locator("[data-buy]").first.click(); pg.wait_for_timeout(300); pg.click("#okBuy"); pg.wait_for_timeout(1500)
-    check("shop: bought, coins 2 004", "2 004" in pg.locator("#meSide").inner_text() and pg.locator("text=Tayyorlanmoqda").count() == 1)
+    check("shop: bought, coins 2 004", "2 004" in pg.locator("#pills").inner_text() and pg.locator("text=Tayyorlanmoqda").count() == 1)
     pg.screenshot(path=f"{OUT}/10-dokon.png", full_page=True)
 
     # coin tarixi va profil

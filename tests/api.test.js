@@ -138,6 +138,11 @@ t('settings saved, mode sanitized, unknown ignored', st.coin_per_correct === '5'
 r = call({ action: 'a.stats', token: AD });
 t('stats', r.ok && r.users === 2 && r.active === 1);
 
+// --- faollik va reyting ---
+r = call({ action: 'me', token: A });
+t('me has week/streak/goal', Array.isArray(r.stats.week) && r.stats.week.length === 7 && r.stats.week.some(Boolean) && r.stats.streak >= 1 && r.stats.today >= 1 && r.stats.goal === 2);
+t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r.leaders.top[0].coins >= r.leaders.top[1].coins && r.leaders.top.some(x => x.me) && r.leaders.myRank >= 1 && !('id' in r.leaders.top[0]) && !('phone' in r.leaders.top[0]));
+
 // --- parol almashtirish ---
 r = call({ action: 'password', token: A, old: 'parol123', password: 'yangiparol1' });
 t('password change gives new token, old invalid', r.ok && !call({ action: 'me', token: A }).ok && call({ action: 'me', token: r.token }).ok);

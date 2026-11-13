@@ -7,38 +7,31 @@
 <meta name="theme-color" content="#1E63F0">
 <link rel="icon" href="assets/img/vector-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800;900&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
 <style>
-  body { background: #ECECEC; }
-  main { max-width: 1280px; margin: 0 auto; padding: clamp(24px,3vw,40px) clamp(16px,4vw,48px) 72px; min-height: 70vh; }
-  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: clamp(20px,3vw,32px); }
-  h1 { margin: 0; font-size: clamp(24px,2.6vw,32px); font-weight: 700; }
-  .search { flex: 0 1 360px; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #fff; border: 1.5px solid #0F172A; border-radius: 999px; }
-  .search .ms { font-size: 24px; color: #1E63F0; }
-  .search input { flex: 1; min-width: 0; border: 0; outline: none; font-size: 15px; background: transparent; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: clamp(16px,2vw,28px); }
-  .card { background: #fff; border: 1.5px solid #D4D4D4; border-radius: 18px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px; animation: vIn .5s cubic-bezier(.2,.7,.2,1) both; transition: transform .25s, box-shadow .25s; }
-  .card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(15,23,42,.12); }
-  .card .img { aspect-ratio: 3/2; border-radius: 12px; overflow: hidden; background: #EAF2FF; border: 1.5px solid #CFD9EA; box-shadow: 0 4px 12px rgba(15,23,42,.08); }
-  .card .img img { display: block; width: 100%; height: 100%; object-fit: contain; }
-  .card h2 { margin: 4px 0 0; font-size: 19px; font-weight: 700; padding-bottom: 10px; border-bottom: 1.5px solid #E2E2E2; }
-  .t { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-  .t .ms { width: 28px; height: 28px; border-radius: 50%; background: #EAF2FF; color: #1E63F0; display: grid; place-items: center; font-size: 17px; flex: none; }
-  .pr { font-size: 14px; color: #8A8A8A; }
-  .pr strong { color: #0F172A; }
-  .go { margin-top: 4px; display: grid; place-items: center; height: 42px; border-radius: 12px; background: #1E63F0; color: #fff; font-weight: 700; font-size: 15px; transition: background .2s, transform .2s; }
-  .go:hover { background: #1552cf; color: #fff; transform: translateY(-1px); }
-  .empty { padding: 60px 0; text-align: center; color: #64748B; font-size: 16px; margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,310px),1fr)); gap: 26px; }
+  .card { background: var(--white); border: var(--line); border-radius: 24px; box-shadow: var(--sh); overflow: hidden; display: flex; flex-direction: column; animation: vIn .4s ease-out both; transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translate(-3px,-3px); box-shadow: 9px 9px 0 var(--ink); }
+  .card .img { aspect-ratio: 3/2; border-bottom: var(--line); background: #0A1B4A; overflow: hidden; }
+  .card .img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .card .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .card h2 { margin: 0; font-size: 20px; line-height: 1.2; }
+  .t { font-size: 15px; color: var(--ink-2); }
+  .pr { font-size: 15px; color: var(--muted); margin-top: auto; }
+  .pr strong { color: var(--ink); }
+  .card .btn { width: 100%; margin-top: 6px; }
+  .empty { padding: 60px 20px; text-align: center; font-weight: 700; color: var(--ink-2); margin: 0; border: 3px dashed var(--ink); border-radius: 24px; }
 </style>
 </head>
 <body>
 <div class="page">
 <header id="vh"></header>
-<main>
-  <div class="top">
-    <h1>Barcha kurslar</h1>
+<main class="inner">
+  <div class="inner-top">
+    <div><h1>Barcha kurslar</h1><p>Har bir kurs noldan boshlanadi. Darsni ko'ring, testni yeching, coin to'plang.</p></div>
     <label class="search"><span class="ms">search</span><input id="q" placeholder="Kurs qidirish" aria-label="Kurs qidirish"></label>
   </div>
   <div class="grid" id="grid"></div>
@@ -52,7 +45,7 @@
 <script>
 (function () {
   const { esc, loggedIn } = VSite;
-  const fmt = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, '.') + " so'm";
+  const fmt = n => Number(n || 0).toLocaleString('en-US').replace(/,/g, ' ') + " so'm";
   const safe = u => /^(https:\/\/|assets\/)/.test(String(u || '')) ? u : '';
   const SAMPLE = [['Kompyuter savodxonligi', 350000], ['AI kontent', 450000], ['Grafik dizayn', 450000], ['No Coding', 400000], ['Scratch', 350000], ['UI/UX dizayn', 400000], ['Kiber xavfsizlik', 600000]]
     .map(([title, price], i) => ({ title, price, image: 'assets/img/courses/kurs-' + (i + 1) + '.png', teacher: 'Xusniddin Sharofiddinov' }));
@@ -62,10 +55,11 @@
     const list = q ? ALL.filter(c => c.title.toLowerCase().includes(q)) : ALL;
     document.getElementById('grid').innerHTML = list.map((c, i) => `<article class="card" style="animation-delay:${i * 40}ms">
       <div class="img">${safe(c.image) ? `<img src="${esc(c.image)}" alt="${esc(c.title)} kursi muqovasi" loading="lazy">` : ''}</div>
+       <div class="body"><div class="meta">${c.lessons ? `<span class="chip blue">${Number(c.lessons)} ta dars</span>` : ''}<span class="chip lime">Test + coin</span></div>
       <h2>${esc(c.title)}</h2>
-      <div class="t"><span class="ms" aria-hidden="true">person</span>Ustoz: ${esc(c.teacher || 'Xusniddin Sharofiddinov')}</div>
+      <div class="t">Ustoz: ${esc(c.teacher || 'Xusniddin Sharofiddinov')}</div>
       ${c.price ? `<div class="pr">Oflayn kurs narxi: <strong>${fmt(c.price)}</strong></div>` : ''}
-      <a class="go" href="${loggedIn ? 'kabinet.html#kurslar' : 'kirish.html?mode=register'}">Kursga yozilish</a></article>`).join('');
+      <a class="btn btn-orange" href="${loggedIn ? 'kabinet.html#kurslar' : 'kirish.html?mode=register'}">Kursga yozilish</a></div></article>`).join('');
     document.getElementById('empty').hidden = list.length > 0;
   }
   document.getElementById('q').addEventListener('input', draw);
