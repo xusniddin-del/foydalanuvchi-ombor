@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kabinet — Vector</title>
+<meta name="theme-color" content="#1E63F0">
+<link rel="icon" href="assets/img/vector-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  .app { display: grid; grid-template-columns: 272px 1fr; min-height: 100vh; background: linear-gradient(to right, var(--card) 272px, var(--line) 272px 273px, transparent 273px); }
+  .side { position: sticky; top: 0; height: 100vh; background: var(--card); border-right: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+  .me { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 18px; background: var(--soft); color: var(--ink); margin-bottom: 10px; transition: background .2s; }
+  .me:hover { background: var(--blue-50); color: var(--ink); }
+  .me .avatar { width: 52px; height: 52px; font-size: 19px; box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--blue-100); }
+  .me b { display: block; font-size: 16px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+  .me .coin { font-size: 14px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px; color: var(--ink-2); font-weight: 500; }
+  .nav a:hover { background: var(--soft); color: var(--ink); }
+  .nav a[aria-current="page"] { background: var(--blue); color: #fff; font-weight: 600; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
+  .content { min-width: 0; padding: clamp(16px, 3vw, 36px); padding-bottom: 100px; max-width: 1200px; width: 100%; }
+  .mtop, .bnav { display: none; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; background: none; }
+    .side { display: none; }
+    .mtop { display: flex; position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding: 10px 16px; align-items: center; justify-content: space-between; gap: 12px; }
+    .mtop .me { margin: 0; padding: 4px 12px 4px 4px; background: transparent; }
+    .mtop .me .avatar { width: 40px; height: 40px; font-size: 15px; }
+    .bnav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; background: var(--card); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+    .bnav a { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; font-weight: 600; color: var(--muted); padding: 6px 0; border-radius: 12px; }
+    .bnav a[aria-current="page"] { color: var(--blue); }
+  }
+  .page-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .page-h h1 { font-size: clamp(24px, 3vw, 32px); font-weight: 800; }
+  .page-h p { color: var(--muted); margin-top: 4px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 760px) { .kpis { grid-template-columns: 1fr; } }
+  .kpi { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .kpi .big { font-size: 28px; font-weight: 800; }
+  .hello { padding: clamp(20px, 3vw, 28px); background: linear-gradient(135deg, #1E63F0, #1243B8); color: #fff; border: 0; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; margin-bottom: 20px; overflow: hidden; position: relative; }
+  .hello h1 { font-size: clamp(24px, 3vw, 32px); font-weight: 800; }
+  .hello p { color: rgba(255,255,255,.85); margin-top: 6px; }
+  .hello img { width: 120px; margin: -20px -6px -34px 0; }
+  .hello.bday { background: linear-gradient(135deg, #FF8A00, #F05A28); }
+  .cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+  .ccard { overflow: hidden; display: flex; flex-direction: column; color: var(--ink); transition: transform .2s, box-shadow .2s; }
+  .ccard:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); color: var(--ink); }
+  .ccard .img { aspect-ratio: 16/9; background: var(--blue-50); position: relative; overflow: hidden; }
+  .ccard .img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ccard .body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .ccard h3 { font-size: 18px; }
+  .lessons { display: flex; flex-direction: column; gap: 10px; }
+  .lesson { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--ink); transition: border-color .2s, background .2s; }
+  a.lesson:hover { border-color: var(--blue); color: var(--ink); }
+  .lesson .n { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; background: var(--blue-50); color: var(--blue); flex: none; }
+  .lesson.done .n { background: var(--green-50); color: var(--green); }
+  .lesson.locked { opacity: .65; }
+  .lesson.locked .n { background: var(--soft); color: var(--muted); }
+  .lesson .t { flex: 1; min-width: 0; }
+  .lesson .t b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .video { aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; background: #0B1430; display: grid; place-items: center; color: #9fb3d9; }
+  .video iframe { width: 100%; height: 100%; border: 0; }
+  .q { padding: 18px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); }
+  .q h4 { font-size: 16px; margin-bottom: 12px; }
+  .opts { display: flex; flex-direction: column; gap: 8px; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); cursor: pointer; transition: border-color .2s, background .2s; }
+  .opt:hover { border-color: var(--blue); }
+  .opt input { width: 18px; height: 18px; accent-color: var(--blue); }
+  .opt:has(input:checked) { border-color: var(--blue); background: var(--blue-50); }
+  .q.good { border-color: var(--green); background: var(--green-50); }
+  .q.bad { border-color: var(--red); background: var(--red-50); }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 16px; }
+  .prod { padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .prod .img { aspect-ratio: 1; border-radius: 14px; background: #fff; overflow: hidden; display: grid; place-items: center; }
+  .prod .img img { width: 100%; height: 100%; object-fit: contain; }
+  .prod h3 { font-size: 16px; margin-top: 6px; }
+  .prod p { font-size: 13px; color: var(--muted); min-height: 36px; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+  .plan { padding: 22px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; border: 2px solid var(--line); text-align: left; background: var(--card); border-radius: var(--r-lg); transition: border-color .2s, box-shadow .2s; }
+  .plan:hover { border-color: var(--blue-100); }
+  .plan[aria-pressed="true"] { border-color: var(--blue); box-shadow: 0 16px 40px color-mix(in srgb, var(--blue) 20%, transparent); }
+  .plan .price { font-size: 26px; font-weight: 900; }
+  .plan ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+  .pay-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .pay-btn { flex: 1 1 200px; min-height: 60px; border-radius: 16px; border: 2px solid var(--line); background: var(--card); font-weight: 800; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: border-color .2s, transform .15s; }
+  .pay-btn:hover { transform: translateY(-2px); }
+  .pay-btn.click { color: #0A6CFF; } .pay-btn.click:hover { border-color: #0A6CFF; }
+  .pay-btn.payme { color: #00BAC1; } .pay-btn.payme:hover { border-color: #00BAC1; }
+  .prof { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .prof { grid-template-columns: 1fr; } }
+  .ava-big { width: 128px; height: 128px; font-size: 44px; box-shadow: 0 0 0 4px var(--card), 0 0 0 7px var(--blue-100); }
+  .seg { display: inline-grid; grid-auto-flow: column; background: var(--soft); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { border: 0; background: transparent; padding: 8px 14px; border-radius: 9px; cursor: pointer; font-weight: 600; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--blue); box-shadow: var(--shadow); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .two { grid-template-columns: 1fr; } }
+  .list-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 4px; border-top: 1px solid var(--line); }
+  .list-row:first-child { border-top: 0; }
+  .plus { color: var(--green); font-weight: 800; } .minus { color: var(--red); font-weight: 800; }
+  .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
+  .notice { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 18px; background: var(--orange-50); color: var(--ink); border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent); margin-bottom: 18px; flex-wrap: wrap; }
+  .notice p { flex: 1 1 240px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Kabinet menyusi">
+    <a class="me" href="#profil" id="meSide" aria-label="Profil"></a>
+    <nav class="nav" id="navSide"></nav>
+    <div class="side-foot">
+      <a class="btn btn-plain" href="index.html" style="justify-content:flex-start">← Bosh sahifa</a>
+      <button class="btn btn-plain" id="logout1" style="justify-content:flex-start"></button>
+    </div>
+  </aside>
+  <header class="mtop"><a class="me" href="#profil" id="meTop" aria-label="Profil"></a><span class="coin" id="coinTop"></span></header>
+  <main class="content" id="view" tabindex="-1"><div class="skeleton" style="height:160px"></div></main>
+  <nav class="bnav" id="navBottom" aria-label="Kabinet menyusi"></nav>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!VX.token()) { location.replace('kirish.html'); return; }
+  const { esc, money, num, icon, date, dateTime, daysLeft, safeUrl, avatarHtml, toast, modal, busy, call } = VX;
+  const $ = s => document.querySelector(s);
+  const view = $('#view');
+  let ME = null, PUB = VX.cachedPublic();
+  $('#logout1').innerHTML = icon('logout') + ' Chiqish';
+  $('#logout1').onclick = logout;
+
+  const NAV = [['bosh', 'Bosh sahifa', 'home'], ['kurslar', 'Kurslarim', 'book'], ['dokon', "Do'kon", 'shop'], ['coin', 'Coinlarim', 'coin'], ['obuna', 'Obuna', 'card'], ['profil', 'Profil', 'user']];
+  $('#navSide').innerHTML = NAV.map(([id, t, ic]) => `<a href="#${id}" data-nav="${id}">${icon(ic)}${t}</a>`).join('');
+  $('#navBottom').innerHTML = NAV.filter(n => n[0] !== 'profil').map(([id, t, ic]) => `<a href="#${id}" data-nav="${id}">${icon(ic)}${t.split(' ')[0]}</a>`).join('');
+
+  function renderMe() {
+    if (!ME) return;
+    const html = `${avatarHtml(ME)}<div style="min-width:0"><b>${esc(ME.name)}</b><span class="coin">${num(ME.coins)}</span></div>`;
+    $('#meSide').innerHTML = html;
+    $('#meTop').innerHTML = `${avatarHtml(ME)}<b style="font-size:15px">${esc(ME.name.split(' ')[0])}</b>`;
+    $('#coinTop').textContent = num(ME.coins);
+  }
+  async function loadMe() {
+    const r = await call('me');
+    ME = r.user; VX.applyTheme(ME.theme); renderMe();
+    return r;
+  }
+  function setCoins(c) { if (ME && c !== undefined) { ME.coins = c; renderMe(); } }
+  async function logout() { try { await call('logout'); } catch (_) {} VX.setToken(null); location.replace('index.html'); }
+  function authFail(e) { if (e && (e.code === 'auth' || e.code === 'blocked')) { VX.setToken(null); toast(e.message, 'error'); setTimeout(() => location.replace('kirish.html'), 1200); return true; } return false; }
+
+  // ================= MARSHRUTLAR =================
+  const routes = { bosh: pHome, kurslar: pCourses, kurs: pCourse, dars: pLesson, dokon: pShop, coin: pCoins, obuna: pSub, profil: pProfile };
+  async function go() {
+    const [name, id] = (location.hash.replace('#', '') || 'bosh').split('/');
+    const fn = routes[name] || pHome;
+    const top = name === 'kurs' || name === 'dars' ? 'kurslar' : name;
+    document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === (routes[name] ? top : 'bosh')) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    view.innerHTML = '<div class="skeleton" style="height:140px;margin-bottom:16px"></div><div class="skeleton" style="height:240px"></div>';
+    window.scrollTo(0, 0);
+    try { await fn(id); } catch (e) {
+      if (authFail(e)) return;
+      view.innerHTML = `<div class="card empty"><img src="assets/img/cat-sad.png" alt=""><b>${esc(e.message)}</b><button class="btn btn-primary" onclick="location.reload()">Qayta urinish</button></div>`;
+    }
+    view.focus({ preventScroll: true });
+  }
+  window.addEventListener('hashchange', go);
+
+  // ================= BOSH SAHIFA =================
+  async function pHome() {
+    const [m, c] = await Promise.all([loadMe(), call('courses')]);
+    const u = m.user, active = u.active;
+    let next = null;
+    for (const co of c.courses) { const l = co.lessons.find(l => !l.watched); if (l && !l.locked) { next = { co, l }; break; } }
+    const totalL = c.courses.reduce((n, x) => n + x.lessons.length, 0);
+    view.innerHTML = `
+      ${m.birthdayToday ? `<div class="card hello bday"><div><h1>Tug'ilgan kuningiz bilan, ${esc(u.name.split(' ')[0])}! 🎂</h1><p>Sizga sovg'a coinlar berildi. Coinlarim bo'limida ko'ring!</p></div><img src="assets/img/cat-happy.png" alt=""></div>`
+        : `<div class="card hello"><div><h1>Salom, ${esc(u.name.split(' ')[0])}! 👋</h1><p>${active ? 'Bugun ham yangi narsa o\'rganamizmi?' : "Darslarni boshlash uchun obunani faollashtiring."}</p></div><img src="assets/img/cat-happy.png" alt=""></div>`}
+      ${active ? '' : `<div class="notice">${icon('lock')}<p><b>Obuna faol emas.</b> Barcha darslar va testlarni ochish uchun tarif tanlang.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
+      <div class="kpis">
+        <div class="card kpi"><span class="muted">Obuna</span>${active ? `<span class="big">${daysLeft(u.subEnd)} kun</span><span class="badge green" style="align-self:flex-start">${esc(u.plan || 'Faol')} · ${date(u.subEnd)} gacha</span>` : `<span class="big">Yo'q</span><a class="btn btn-soft btn-sm" style="align-self:flex-start" href="#obuna">Tarif tanlash</a>`}</div>
+        <div class="card kpi"><span class="muted">Coinlarim</span><span class="big coin" style="font-size:28px">${num(u.coins)}</span><a class="btn btn-soft btn-sm" style="align-self:flex-start" href="#dokon">Do'konga o'tish</a></div>
+        <div class="card kpi"><span class="muted">Tugatilgan darslar</span><span class="big">${m.stats.watched} <span class="muted" style="font-size:18px">/ ${totalL}</span></span><div class="progress"><i style="width:${totalL ? Math.round(m.stats.watched / totalL * 100) : 0}%"></i></div></div>
+      </div>
+      ${next ? `<a class="card lesson" href="#dars/${esc(next.l.id)}" style="margin-bottom:24px;padding:18px"><span class="n" style="background:var(--orange);color:#fff">${icon('play')}</span><span class="t"><span class="muted" style="font-size:13px">Davom ettirish · ${esc(next.co.title)}</span><b>${esc(next.l.title)}</b></span>${icon('arrowR')}</a>` : ''}
+      <div class="page-h"><div><h1 style="font-size:22px">Kurslarim</h1></div><a href="#kurslar">Barchasi →</a></div>
+      <div class="cgrid">${c.courses.slice(0, 3).map(courseCard).join('')}</div>`;
+  }
+
+  function courseCard(c) {
+    return `<a class="card ccard" href="#kurs/${esc(c.id)}">
+      <div class="img">${safeUrl(c.image) ? `<img src="${esc(c.image)}" alt="" loading="lazy">` : ''}</div>
+      <div class="body"><h3>${esc(c.title)}</h3><div class="row between muted" style="font-size:14px"><span>${c.watched}/${c.lessons.length} dars</span><span>${c.percent}%</span></div><div class="progress"><i style="width:${c.percent}%"></i></div></div></a>`;
+  }
+
+  // ================= KURSLAR =================
+  async function pCourses() {
+    const c = await call('courses');
+    view.innerHTML = `<div class="page-h"><div><h1>Kurslarim</h1><p>Darslarni ketma-ket ko'ring va testlarni ishlang.</p></div></div>
+      ${c.active ? '' : `<div class="notice">${icon('lock')}<p><b>Darslar yopiq.</b> Obuna olganingizdan so'ng barcha kurslar ochiladi.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
+      <div class="cgrid">${c.courses.map(courseCard).join('') || '<div class="card empty"><img src="assets/img/cat-empty.png" alt="">Kurslar hali qo\'shilmagan.</div>'}</div>`;
+  }
+
+  async function pCourse(id) {
+    const c = await call('courses'), co = c.courses.find(x => x.id === id);
+    if (!co) { location.hash = '#kurslar'; return; }
+    view.innerHTML = `<a class="back" href="#kurslar">${icon('arrowL')} Kurslarim</a>
+      <div class="card" style="display:grid;grid-template-columns:minmax(0,320px) 1fr;gap:20px;padding:16px;margin-bottom:20px;align-items:center" id="chead">
+        <div style="border-radius:16px;overflow:hidden;aspect-ratio:16/9;background:var(--blue-50)">${safeUrl(co.image) ? `<img src="${esc(co.image)}" alt="" style="width:100%;height:100%;object-fit:cover">` : ''}</div>
+        <div class="stack"><h1 style="font-size:clamp(22px,3vw,30px)">${esc(co.title)}</h1><p class="muted">${esc(co.desc)}</p>
+          ${co.teacher ? `<span class="row muted" style="gap:8px;font-size:14px">${icon('user')} Ustoz: ${esc(co.teacher)}</span>` : ''}
+          <div><div class="row between" style="font-size:14px;margin-bottom:6px"><b>${co.watched}/${co.lessons.length} dars tugatildi</b><span class="muted">${co.percent}%</span></div><div class="progress"><i style="width:${co.percent}%"></i></div></div></div>
+      </div>
+      ${c.active ? '' : `<div class="notice">${icon('lock')}<p>Darslarni ko'rish uchun obuna oling.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
+      <div class="lessons">${co.lessons.map((l, i) => {
+        const cls = l.watched ? 'done' : l.locked ? 'locked' : '';
+        const right = l.watched ? `<span class="badge green">${icon('check')} Tugatildi${l.hasQuiz ? ' · ' + l.best + '/' + l.quizSize : ''}</span>` : l.locked ? icon('lock') : `<span class="badge orange">Boshlash</span>`;
+        const inner = `<span class="n">${l.watched ? icon('check') : i + 1}</span><span class="t"><b>${esc(l.title)}</b><span class="muted" style="font-size:13px">${l.duration ? esc(l.duration) + ' · ' : ''}${l.hasQuiz ? l.quizSize + ' ta savol' : 'Test yo\'q'}</span></span>${right}`;
+        return l.locked ? `<div class="lesson ${cls}" aria-disabled="true">${inner}</div>` : `<a class="lesson ${cls}" href="#dars/${esc(l.id)}">${inner}</a>`;
+      }).join('') || '<div class="card empty">Bu kursda hali darslar yo\'q.</div>'}</div>`;
+    if (innerWidth < 700) $('#chead').style.gridTemplateColumns = '1fr';
+  }
+
+  // ================= DARS =================
+  async function pLesson(id) {
+    let r;
+    try { r = await call('lesson', { id }); } catch (e) {
+      if (e.code === 'nosub') { location.hash = '#obuna'; toast(e.message); return; }
+      if (e.code === 'locked') { toast(e.message, 'error'); history.back(); return; }
+      throw e;
+    }
+    const L = r.lesson;
+    view.innerHTML = `<a class="back" href="#kurs/${esc(r.course.id)}">${icon('arrowL')} ${esc(r.course.title)}</a>
+      <div class="page-h"><div><h1>${esc(L.title)}</h1>${L.duration ? `<p>${esc(L.duration)}</p>` : ''}</div>${L.watched ? '<span class="badge green">✓ Tugatilgan</span>' : ''}</div>
+      <div class="video">${L.youtube ? `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(L.youtube)}?rel=0&modestbranding=1" title="${esc(L.title)}" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>` : '<div class="stack" style="align-items:center">' + icon('video') + 'Video tez orada qo\'shiladi</div>'}</div>
+      ${L.desc ? `<div class="card pad" style="margin-top:16px;white-space:pre-line">${esc(L.desc)}</div>` : ''}
+      <div id="quizBox" style="margin-top:20px"></div>
+      <div class="row between" style="margin-top:24px">
+        ${r.prev ? `<a class="btn btn-plain" href="#dars/${esc(r.prev)}">${icon('arrowL')} Oldingi dars</a>` : '<span></span>'}
+        ${r.next ? `<a class="btn btn-primary" href="#dars/${esc(r.next)}" id="nextBtn" ${L.watched ? '' : 'hidden'}>Keyingi dars ${icon('arrowR')}</a>` : ''}
+      </div>`;
+    const box = $('#quizBox');
+    const showNext = () => { const n = $('#nextBtn'); if (n) n.hidden = false; };
+    if (!L.quiz.length) {
+      if (!L.watched) {
+        box.innerHTML = `<button class="btn btn-accent btn-lg" id="doneBtn">${icon('check')} Darsni tugatdim</button>`;
+        $('#doneBtn').onclick = e => busy(e.currentTarget, async () => { await call('watched', { id }); toast('Ajoyib! Dars tugatildi.', 'success'); box.innerHTML = '<span class="badge green">✓ Tugatilgan</span>'; showNext(); }).catch(err => toast(err.message, 'error'));
+      }
+      return;
+    }
+    const rate = Number((PUB && PUB.settings && PUB.settings.coin_per_correct) || 2);
+    box.innerHTML = `<div class="card pad stack" style="gap:16px">
+      <div class="row between wrap-row"><h2 style="font-size:22px">${icon('quiz')} Test · ${L.quiz.length} ta savol</h2>${L.attempts ? `<span class="badge">Eng yaxshi natija: ${L.best}/${L.quiz.length}</span>` : `<span class="badge orange">Har bir to'g'ri javob — ${rate} coin</span>`}</div>
+      ${L.attempts ? '<p class="hint">Coinlar faqat birinchi urinishda beriladi. Qayta ishlab natijangizni yaxshilashingiz mumkin.</p>' : '<p class="hint">Diqqat bilan javob bering: coinlar faqat birinchi urinishdagi to\'g\'ri javoblar uchun beriladi.</p>'}
+      <form id="quiz" class="stack" style="gap:12px">${L.quiz.map((q, i) => `<fieldset class="q" style="margin:0"><legend class="sr">Savol ${i + 1}</legend><h4>${i + 1}. ${esc(q.q)}</h4><div class="opts">${q.o.map((o, j) => `<label class="opt"><input type="radio" name="q${i}" value="${j}" required>${esc(o)}</label>`).join('')}</div></fieldset>`).join('')}
+        <div class="err" hidden></div>
+        <button class="btn btn-primary btn-lg" type="submit">Javoblarni yuborish</button></form></div>`;
+    $('#quiz').addEventListener('submit', e => {
+      e.preventDefault();
+      const f = e.currentTarget, answers = L.quiz.map((_, i) => { const c = f.querySelector(`input[name=q${i}]:checked`); return c ? Number(c.value) : null; });
+      if (answers.some(a => a === null)) { const er = f.querySelector('.err'); er.textContent = 'Barcha savollarga javob bering.'; er.hidden = false; return; }
+      busy(f.querySelector('[type=submit]'), async () => {
+        const res = await call('quiz', { id, answers });
+        setCoins(res.coins);
+        f.querySelectorAll('fieldset').forEach((fs, i) => fs.classList.add(res.result[i] ? 'good' : 'bad'));
+        const perfect = res.correct === res.total;
+        modal(`<div class="stack" style="align-items:center;text-align:center"><img src="assets/img/${perfect || res.correct / res.total >= .6 ? 'cat-happy' : 'cat-sad'}.png" alt="" style="width:150px">
+          <h2>${res.correct}/${res.total} to'g'ri</h2>
+          ${res.earned ? `<p class="coin" style="font-size:22px">+${res.earned} coin</p>` : `<p class="muted">${res.first ? "Bu safar coin yo'q — keyingi darsda omad!" : 'Qayta urinishda coin berilmaydi.'}</p>`}
+          <p class="muted">${perfect ? "Barakalla! Hammasi to'g'ri!" : "Qizil belgilangan savollarni qayta ko'rib chiqing."}</p>
+          <div class="row" style="margin-top:8px"><button class="btn btn-plain" data-close>Yopish</button>${r.next ? `<a class="btn btn-primary" href="#dars/${esc(r.next)}" data-close>Keyingi dars</a>` : `<a class="btn btn-primary" href="#kurs/${esc(r.course.id)}" data-close>Kursga qaytish</a>`}</div></div>`);
+        showNext();
+        const b = f.querySelector('[type=submit]'); setTimeout(() => { b.textContent = 'Qayta ishlash'; }, 0);
+        f.addEventListener('change', () => f.querySelectorAll('fieldset').forEach(fs => fs.classList.remove('good', 'bad')), { once: true });
+      }).catch(err => toast(err.message, 'error'));
+    });
+  }
+
+  // ================= DO'KON =================
+  async function pShop() {
+    const [s, o] = await Promise.all([call('shop'), call('orders')]);
+    setCoins(s.coins);
+    const ST = { yangi: ['orange', 'Tayyorlanmoqda'], berildi: ['green', 'Topshirildi'], bekor: ['red', 'Bekor qilindi'] };
+    view.innerHTML = `<div class="page-h"><div><h1>Do'kon</h1><p>Coinlaringizni sovg'alarga almashtiring.</p></div><div class="card" style="padding:12px 18px"><span class="muted" style="font-size:13px;display:block">Balans</span><div class="coin" style="font-size:22px">${num(s.coins)}</div></div></div>
+      <div class="pgrid">${s.products.map(p => {
+        const need = p.price - s.coins;
+        return `<article class="card prod"><div class="img">${safeUrl(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : icon('gift')}</div>
+          <h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p>
+          <div class="row between"><span class="coin">${num(p.price)}</span><span class="muted" style="font-size:12px">${p.stock > 0 ? p.stock + ' dona qoldi' : 'Tugagan'}</span></div>
+          <button class="btn ${need > 0 || p.stock < 1 ? 'btn-soft' : 'btn-primary'} btn-sm" data-buy="${esc(p.id)}" ${p.stock < 1 ? 'disabled' : ''}>${p.stock < 1 ? 'Tugagan' : need > 0 ? 'Yana ' + num(need) + ' coin kerak' : 'Sotib olish'}</button></article>`;
+      }).join('') || '<div class="card empty"><img src="assets/img/cat-empty.png" alt="">Do\'konda hozircha mahsulot yo\'q.</div>'}</div>
+      <h2 style="font-size:22px;margin:32px 0 14px">Buyurtmalarim</h2>
+      <div class="card pad">${o.orders.map(x => `<div class="list-row"><div><b>${esc(x.product)} × ${x.qty}</b><div class="muted" style="font-size:13px">${dateTime(x.at)}</div></div><div class="row"><span class="coin">${num(x.price)}</span><span class="badge ${(ST[x.status] || ST.yangi)[0]}">${(ST[x.status] || ST.yangi)[1]}</span></div></div>`).join('') || '<p class="muted">Hali buyurtma yo\'q.</p>'}</div>`;
+    view.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
+      const p = s.products.find(x => x.id === b.dataset.buy);
+      if (p.price > s.coins) { toast("Coin yetarli emas. Testlarni ishlab coin to'plang!", 'error'); return; }
+      const m = modal(`<h2>${esc(p.name)}</h2><p class="muted">Sotib olishni tasdiqlaysizmi?</p>
+        <div class="row between" style="margin:18px 0"><label class="field" style="width:120px"><span>Soni</span><input class="input" type="number" min="1" max="${Math.min(10, p.stock, Math.floor(s.coins / p.price))}" value="1" id="qty"></label><div style="text-align:right"><span class="muted" style="font-size:13px">Jami</span><div class="coin" style="font-size:22px" id="tot">${num(p.price)}</div></div></div>
+        <p class="hint">Sovg'ani topshirish uchun admin siz bilan bog'lanadi.</p>
+        <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn btn-plain" data-close>Bekor qilish</button><button class="btn btn-accent" id="okBuy">Sotib olish</button></div>`);
+      const q = m.el.querySelector('#qty');
+      q.oninput = () => { m.el.querySelector('#tot').textContent = num(p.price * Math.max(1, Number(q.value) || 1)); };
+      m.el.querySelector('#okBuy').onclick = e => busy(e.currentTarget, async () => {
+        const r = await call('buy', { id: p.id, qty: Math.max(1, Number(q.value) || 1) });
+        setCoins(r.coins); m.close(); toast("Tabriklaymiz! Buyurtma qabul qilindi 🎁", 'success'); pShop();
+      }).catch(err => toast(err.message, 'error'));
+    });
+  }
+
+  // ================= COINLAR =================
+  async function pCoins() {
+    const r = await call('coins');
+    setCoins(r.coins);
+    const s = (PUB && PUB.settings) || {};
+    const T = { quiz: 'Test', birthday: "Tug'ilgan kun", admin: 'Ustozdan', order: 'Xarid', refund: 'Qaytarildi' };
+    view.innerHTML = `<div class="page-h"><div><h1>Coinlarim</h1><p>Coin — bilim uchun mukofot.</p></div></div>
+      <div class="kpis" style="grid-template-columns:1fr 2fr">
+        <div class="card kpi" style="background:linear-gradient(135deg,#FF8A00,#F05A28);color:#fff;border:0"><span style="opacity:.85">Balans</span><span class="big" style="font-size:40px">${num(r.coins)}</span><a class="btn btn-sm" style="background:#fff;color:#E07800;align-self:flex-start" href="#dokon">Do'konga o'tish</a></div>
+        <div class="card kpi"><b>Coin qanday to'planadi?</b><div class="stack" style="gap:8px;margin-top:4px">
+          <span class="row">${icon('quiz')} Testdagi har bir to'g'ri javob — <b class="coin">${esc(s.coin_per_correct || 2)}</b> (birinchi urinishda)</span>
+          <span class="row">${icon('cake')} Tug'ilgan kuningizda — <b class="coin">${esc(s.birthday_coins || 50)}</b></span>
+          <span class="row">${icon('star')} Faollik uchun ustozdan qo'shimcha coinlar</span></div></div>
+      </div>
+      <h2 style="font-size:22px;margin:8px 0 14px">Tarix</h2>
+      <div class="card pad">${r.history.map(h => `<div class="list-row"><div><b>${esc(h.reason || T[h.type] || '')}</b><div class="muted" style="font-size:13px">${esc(T[h.type] || h.type)} · ${dateTime(h.at)}</div></div><span class="${h.amount > 0 ? 'plus' : 'minus'}">${h.amount > 0 ? '+' : ''}${num(h.amount)}</span></div>`).join('') || '<div class="empty"><img src="assets/img/cat-empty.png" alt="">Hali coin yo\'q. Birinchi testni ishlang!</div>'}</div>`;
+    if (innerWidth < 760) view.querySelector('.kpis').style.gridTemplateColumns = '1fr';
+  }
+
+  // ================= OBUNA =================
+  async function pSub() {
+    const [r, pays] = await Promise.all([call('plans'), call('payments')]);
+    const pub = await VX.publicData().catch(() => PUB) || {}; PUB = pub;
+    const st = pub.settings || {}, u = r.user, live = r.mode === 'live';
+    let sel = (r.plans.find(p => p.popular) || r.plans[0] || {}).id;
+    const PS = { pending: ['orange', 'Kutilmoqda'], paid: ['green', "To'langan"], cancelled: ['gray', 'Bekor qilingan'] };
+    const PV = { click: 'Click', payme: 'Payme', test: 'Admin tasdiqlaydi', manual: 'Admin' };
+    view.innerHTML = `<div class="page-h"><div><h1>Obuna</h1><p>Barcha kurslar, testlar va do'kon — bitta obunada.</p></div></div>
+      <div class="card pad" style="margin-bottom:22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span class="avatar" style="background:${u.active ? 'var(--green)' : 'var(--muted)'}">${icon(u.active ? 'check' : 'lock')}</span>
+        <div style="flex:1"><b style="font-size:18px">${u.active ? 'Obuna faol' : 'Obuna faol emas'}</b><div class="muted">${u.active ? `${esc(u.plan || '')} · ${date(u.subEnd)} gacha (${daysLeft(u.subEnd)} kun qoldi)` : 'Tarifni tanlang va to\'lovni amalga oshiring.'}</div></div>
+      </div>
+      <h2 style="font-size:20px;margin-bottom:12px">${u.active ? 'Obunani uzaytirish' : 'Tarifni tanlang'}</h2>
+      <div class="plans" id="plans">${r.plans.map(p => `<button type="button" class="plan" data-plan="${esc(p.id)}" aria-pressed="${p.id === sel}">
+        <div class="row between"><b style="font-size:18px">${esc(p.name)}</b>${p.popular ? '<span class="badge orange">Ommabop</span>' : ''}</div>
+        <div class="price">${money(p.price)}</div><span class="muted" style="font-size:14px">${p.months} oy${p.months > 1 ? ' · oyiga ' + money(Math.round(p.price / p.months / 1000) * 1000) : ''}</span>
+        <ul>${p.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul></button>`).join('')}</div>
+      <div class="card pad" style="margin-top:20px" id="payBox"></div>
+      <h2 style="font-size:20px;margin:32px 0 12px">To'lovlar tarixi</h2>
+      <div class="card pad">${pays.payments.map(p => `<div class="list-row"><div><b>${esc(p.plan)} · ${money(p.amount)}</b><div class="muted" style="font-size:13px">${dateTime(p.createdAt)} · ${PV[p.provider] || esc(p.provider)} · ID: ${esc(p.id)}</div></div><span class="badge ${(PS[p.status] || PS.pending)[0]}">${(PS[p.status] || PS.pending)[1]}</span></div>`).join('') || '<p class="muted">Hali to\'lov yo\'q.</p>'}</div>`;
+    const payBox = $('#payBox');
+    function drawPay() {
+      const p = r.plans.find(x => x.id === sel);
+      if (!p) { payBox.innerHTML = '<p class="muted">Tariflar hali qo\'shilmagan.</p>'; return; }
+      payBox.innerHTML = live
+        ? `<div class="row between wrap-row" style="margin-bottom:14px"><b style="font-size:18px">To'lov usuli</b><span class="muted">Jami: <b style="color:var(--ink)">${money(p.price)}</b></span></div>
+           <div class="pay-btns">${st.click_service_id ? '<button class="pay-btn click" data-pv="click">click</button>' : ''}${st.payme_merchant_id ? '<button class="pay-btn payme" data-pv="payme">payme</button>' : ''}</div>
+           <p class="hint" style="margin-top:12px">To'lovdan so'ng obuna avtomatik ochiladi. Sahifaga qaytib, yangilang.</p>`
+        : `<div class="row between wrap-row" style="gap:16px"><div><b style="font-size:18px">${esc(p.name)} — ${money(p.price)}</b><p class="muted" style="margin-top:4px">To'lov so'rovini yuboring. Admin to'lovni tasdiqlagach obuna darhol ochiladi.</p></div><button class="btn btn-accent btn-lg" data-pv="test">To'lov so'rovini yuborish</button></div>
+           <p class="hint" style="margin-top:12px">To'lov bo'yicha savollar uchun: <a href="https://t.me/${esc((st.telegram || 'vectoradminn').replace(/^@/, ''))}" target="_blank" rel="noopener">@${esc((st.telegram || 'vectoradminn').replace(/^@/, ''))}</a></p>`;
+      payBox.querySelectorAll('[data-pv]').forEach(b => b.onclick = () => busy(b, async () => {
+        const res = await call('pay.create', { planId: sel, provider: b.dataset.pv });
+        const pay = res.payment;
+        if (res.mode !== 'live') { toast("So'rov yuborildi. Admin tasdiqlashini kuting.", 'success'); pSub(); return; }
+        const ret = st.return_url || (location.origin + location.pathname + '#obuna');
+        if (pay.provider === 'click') location.href = `https://my.click.uz/services/pay?service_id=${encodeURIComponent(st.click_service_id)}&merchant_id=${encodeURIComponent(st.click_merchant_id)}&amount=${pay.amount}&transaction_param=${encodeURIComponent(pay.id)}&return_url=${encodeURIComponent(ret)}`;
+        else location.href = 'https://checkout.paycom.uz/' + btoa(`m=${st.payme_merchant_id};ac.order_id=${pay.id};a=${pay.amount * 100};c=${ret}`);
+      }).catch(err => toast(err.message, 'error')));
+    }
+    view.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => { sel = b.dataset.plan; view.querySelectorAll('[data-plan]').forEach(x => x.setAttribute('aria-pressed', x === b)); drawPay(); });
+    drawPay();
+  }
+
+  // ================= PROFIL =================
+  async function pProfile() {
+    const m = await loadMe(), u = m.user;
+    const REGIONS = ["Farg'ona", 'Andijon', 'Namangan', 'Toshkent shahri', 'Toshkent viloyati', 'Samarqand', 'Buxoro', 'Navoiy', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Xorazm', "Qoraqalpog'iston"];
+    const grades = Array.from({ length: 11 }, (_, i) => [String(i + 1), (i + 1) + '-sinf']).concat([['talaba', 'Talaba'], ['boshqa', 'Boshqa']]);
+    view.innerHTML = `<div class="page-h"><div><h1>Profil</h1><p>Ma'lumotlaringiz va sayt sozlamalari.</p></div></div>
+      <div class="prof">
+        <div class="card pad stack" style="align-items:center;text-align:center">
+          <div style="position:relative">${avatarHtml(u, 128).replace('class="avatar"', 'class="avatar ava-big"')}
+            <label class="icon-btn" style="position:absolute;right:0;bottom:0;background:var(--blue);color:#fff;cursor:pointer" title="Rasmni almashtirish">${icon('camera')}<input type="file" accept="image/*" id="avaFile" class="sr"></label></div>
+          <div><b style="font-size:20px">${esc(u.name)}</b><div class="muted">+998 ${esc(u.phone.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4'))}</div></div>
+          <span class="coin" style="font-size:20px">${num(u.coins)}</span>
+          <span class="badge ${u.active ? 'green' : 'gray'}">${u.active ? 'Obuna: ' + date(u.subEnd) + ' gacha' : 'Obuna yo\'q'}</span>
+          <span class="muted" style="font-size:13px">A'zo: ${date(u.createdAt)}</span>
+        </div>
+        <div class="stack" style="gap:20px">
+          <form class="card pad stack" id="pf">
+            <h2 style="font-size:20px">Shaxsiy ma'lumotlar</h2>
+            <label class="field"><span>Ism va familiya</span><input class="input" name="name" value="${esc(u.name)}" required></label>
+            <div class="two">
+              <label class="field"><span>Tug'ilgan sana</span><input class="input" type="date" name="birthday" value="${esc(u.birthday)}" max="${new Date().toISOString().slice(0, 10)}"></label>
+              <label class="field"><span>Sinf</span><select class="select" name="grade"><option value="">Tanlang</option>${grades.map(([v, t]) => `<option value="${v}" ${u.grade === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+            </div>
+            <div class="two">
+              <label class="field"><span>Viloyat</span><select class="select" name="region"><option value="">Tanlang</option>${REGIONS.map(r => `<option ${u.region === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
+              <label class="field"><span>Maktab</span><input class="input" name="school" value="${esc(u.school)}"></label>
+            </div>
+            <div><button class="btn btn-primary" type="submit">Saqlash</button></div>
+          </form>
+          <div class="card pad stack">
+            <h2 style="font-size:20px">Ko'rinish</h2>
+            <div class="row between wrap-row"><span>Sayt mavzusi</span><div class="seg" id="theme"><button type="button" data-t="light">${icon('sun')} Yorug'</button><button type="button" data-t="dark">${icon('moon')} Qorong'i</button></div></div>
+          </div>
+          <form class="card pad stack" id="pw">
+            <h2 style="font-size:20px">Parolni almashtirish</h2>
+            <label class="field"><span>Joriy parol</span><input class="input" type="password" name="old" autocomplete="current-password" required></label>
+            <div class="two"><label class="field"><span>Yangi parol</span><input class="input" type="password" name="password" autocomplete="new-password" minlength="6" required></label>
+            <label class="field"><span>Yangi parolni takrorlang</span><input class="input" type="password" name="password2" autocomplete="new-password" required></label></div>
+            <div><button class="btn btn-ghost" type="submit">Parolni yangilash</button></div>
+          </form>
+          <button class="btn btn-danger" id="logout2" style="align-self:flex-start">${icon('logout')} Akkauntdan chiqish</button>
+        </div>
+      </div>`;
+    const th = $('#theme');
+    const markTheme = t => th.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === t));
+    markTheme(u.theme || 'light');
+    th.querySelectorAll('button').forEach(b => b.onclick = () => { VX.applyTheme(b.dataset.t); markTheme(b.dataset.t); call('profile', { theme: b.dataset.t }).then(r => { ME = r.user; }).catch(() => {}); });
+    $('#pf').onsubmit = e => {
+      e.preventDefault(); const f = e.currentTarget;
+      busy(f.querySelector('[type=submit]'), async () => {
+        const r = await call('profile', { name: f.name.value, birthday: f.birthday.value, grade: f.grade.value, region: f.region.value, school: f.school.value });
+        ME = r.user; renderMe(); toast('Saqlandi', 'success');
+      }).catch(err => toast(err.message, 'error'));
+    };
+    $('#pw').onsubmit = e => {
+      e.preventDefault(); const f = e.currentTarget;
+      if (f.password.value !== f.password2.value) return toast('Yangi parollar bir xil emas.', 'error');
+      busy(f.querySelector('[type=submit]'), async () => { const r = await call('password', { old: f.old.value, password: f.password.value }); VX.setToken(r.token); f.reset(); toast('Parol yangilandi', 'success'); })
+        .catch(err => toast(err.message, 'error'));
+    };
+    $('#avaFile').onchange = async e => {
+      const file = e.target.files[0]; if (!file) return;
+      try {
+        toast('Rasm yuklanmoqda…');
+        const data = await VX.resizeImage(file, 320, 0.85);
+        const r = await call('avatar', { image: data });
+        ME.avatar = r.avatar; renderMe(); toast('Rasm yangilandi', 'success'); pProfile();
+      } catch (err) { toast(err.message, 'error'); }
+    };
+    $('#logout2').onclick = logout;
+  }
+
+  // ishga tushirish
+  loadMe().then(() => go()).catch(e => { if (!authFail(e)) go(); });
+  VX.publicData().then(d => { PUB = d; }).catch(() => {});
+})();
+</script>
+</body>
+</html>

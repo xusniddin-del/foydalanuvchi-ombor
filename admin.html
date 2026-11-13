@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin — Vector</title>
+<link rel="icon" href="assets/img/vector-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+  .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: #0B1430; color: #C7D2E6; padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .side .logo { color: #fff; padding: 4px 8px 18px; }
+  .side a.nv { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #C7D2E6; font-weight: 500; font-size: 15px; }
+  .side a.nv:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .side a.nv[aria-current="page"] { background: var(--blue); color: #fff; }
+  .side .cnt { margin-left: auto; background: var(--orange); color: #fff; border-radius: 999px; font-size: 12px; padding: 1px 8px; font-weight: 700; }
+  .content { padding: clamp(16px, 3vw, 32px); min-width: 0; }
+  .mbar { display: none; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .side { position: fixed; inset: 0 auto 0 0; width: 260px; z-index: 60; transform: translateX(-100%); transition: transform .25s; }
+    .side.open { transform: none; box-shadow: var(--shadow-lg); }
+    .mbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #0B1430; color: #fff; position: sticky; top: 0; z-index: 50; }
+    .mbar .icon-btn { background: rgba(255,255,255,.1); color: #fff; }
+  }
+  .page-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-h h1 { font-size: clamp(22px, 2.6vw, 28px); font-weight: 800; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat { padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  .stat b { font-size: 26px; font-weight: 800; }
+  .tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tools .input, .tools .select { min-height: 42px; width: auto; flex: 1 1 200px; }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: radial-gradient(800px 400px at 80% 0%, color-mix(in srgb, var(--blue) 20%, transparent), transparent 60%), var(--bg); }
+  .login form { width: min(400px, 100%); display: flex; flex-direction: column; gap: 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+  .qed { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: var(--soft); }
+  .qed .o { display: flex; gap: 8px; align-items: center; }
+  .qed .o input[type=radio] { width: 18px; height: 18px; accent-color: var(--green); flex: none; }
+  .thumb { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: var(--soft); }
+  .course-box { margin-bottom: 18px; }
+  .course-box summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+  .course-box summary::-webkit-details-marker { display: none; }
+  .lrow { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+(function () {
+  'use strict';
+  const { esc, money, num, icon, date, dateTime, safeUrl, avatarHtml, toast, modal, busy, confirmBox } = VX;
+  const call = (a, d) => VX.call(a, d, { admin: true });
+  const root = document.getElementById('root');
+  let content;
+
+  // ================= KIRISH =================
+  function loginScreen(msg) {
+    root.innerHTML = `<div class="login"><form class="card pad" id="lf">
+      <a class="logo" href="index.html"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a>
+      <h1 style="font-size:24px;margin-top:8px">Admin panel</h1>
+      <label class="field"><span>Admin paroli</span><input class="input" type="password" name="p" autocomplete="current-password" required></label>
+      <div class="err" ${msg ? '' : 'hidden'}>${esc(msg || '')}</div>
+      <button class="btn btn-primary btn-lg" type="submit">Kirish</button>
+      <p class="hint">Parol Google Sheets'dagi "Vector → Admin parolini o'rnatish" menyusida o'rnatiladi.</p></form></div>`;
+    document.getElementById('lf').onsubmit = e => {
+      e.preventDefault(); const f = e.currentTarget;
+      busy(f.querySelector('[type=submit]'), async () => { const r = await VX.call('admin.login', { password: f.p.value }); VX.setAdminToken(r.token); shell(); })
+        .catch(err => { const er = f.querySelector('.err'); er.textContent = err.message; er.hidden = false; });
+    };
+  }
+
+  // ================= QOBIQ =================
+  const NAV = [['panel', 'Bosh panel', 'chart'], ['oquvchilar', "O'quvchilar", 'users'], ['tolovlar', "To'lovlar", 'card'], ['kurslar', 'Kurslar va darslar', 'book'],
+    ['dokon', "Do'kon", 'shop'], ['buyurtmalar', 'Buyurtmalar', 'box'], ['coinlar', 'Coinlar tarixi', 'coin'], ['tariflar', 'Tariflar', 'star'], ['sozlamalar', 'Sozlamalar', 'settings']];
+  function shell() {
+    root.innerHTML = `<div class="mbar"><button class="icon-btn" id="mb" aria-label="Menyu">${icon('menu')}</button><b>Vector Admin</b></div>
+      <div class="app"><aside class="side" id="side"><a class="logo" href="index.html" target="_blank"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a>
+      ${NAV.map(([id, t, ic]) => `<a class="nv" href="#${id}" data-nav="${id}">${icon(ic)}<span>${t}</span><span class="cnt" data-cnt="${id}" hidden></span></a>`).join('')}
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px"><a class="nv" href="kabinet.html" target="_blank">${icon('user')} O'quvchi kabineti</a><a class="nv" href="#" id="out">${icon('logout')} Chiqish</a></div></aside>
+      <main class="content" id="content"></main></div>`;
+    content = document.getElementById('content');
+    document.getElementById('mb').onclick = () => document.getElementById('side').classList.toggle('open');
+    document.getElementById('out').onclick = async e => { e.preventDefault(); try { await call('logout', { token: VX.adminToken() }); } catch (_) {} VX.setAdminToken(null); loginScreen(); };
+    window.onhashchange = go; go();
+  }
+  const pages = { panel: pPanel, oquvchilar: pUsers, tolovlar: pPayments, kurslar: pCourses, dokon: pProducts, buyurtmalar: pOrders, coinlar: pCoinLog, tariflar: pPlans, sozlamalar: pSettings };
+  async function go() {
+    const name = (location.hash.slice(1) || 'panel').split('/')[0], fn = pages[name] || pPanel;
+    document.querySelectorAll('[data-nav]').forEach(a => a.dataset.nav === (pages[name] ? name : 'panel') ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+    document.getElementById('side').classList.remove('open');
+    content.innerHTML = '<div class="skeleton" style="height:120px;margin-bottom:14px"></div><div class="skeleton" style="height:320px"></div>';
+    try { await fn(); } catch (e) {
+      if (e.code === 'auth') return loginScreen(e.message);
+      content.innerHTML = `<div class="card empty"><b>${esc(e.message)}</b><button class="btn btn-primary" onclick="location.reload()">Qayta urinish</button></div>`;
+    }
+  }
+  function counts(s) {
+    const set = (k, v) => { const el = document.querySelector(`[data-cnt="${k}"]`); if (el) { el.textContent = v; el.hidden = !v; } };
+    set('tolovlar', s.pendingPayments); set('buyurtmalar', s.newOrders);
+  }
+  const head = (t, sub, right) => `<div class="page-h"><div><h1>${t}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div>${right || ''}</div>`;
+  const form2obj = f => Object.fromEntries(new FormData(f).entries());
+
+  // ================= BOSH PANEL =================
+  async function pPanel() {
+    const s = await call('a.stats'); counts(s);
+    content.innerHTML = head('Bosh panel', 'Bugun: ' + date(new Date().toISOString())) + `
+      <div class="stats">
+        <div class="card stat"><span>Jami o'quvchilar</span><b>${num(s.users)}</b><span>Bugun: +${s.todayUsers}</span></div>
+        <div class="card stat"><span>Faol obunachilar</span><b style="color:var(--green)">${num(s.active)}</b></div>
+        <div class="card stat"><span>Shu oy tushum</span><b>${money(s.revenueMonth)}</b><span>${s.paymentsMonth} ta to'lov</span></div>
+        <div class="card stat"><span>Kutilayotgan to'lovlar</span><b style="color:var(--orange-600)">${s.pendingPayments}</b><a href="#tolovlar">Ko'rish →</a></div>
+        <div class="card stat"><span>Yangi buyurtmalar</span><b style="color:var(--orange-600)">${s.newOrders}</b><a href="#buyurtmalar">Ko'rish →</a></div>
+        <div class="card stat"><span>O'quvchilardagi coinlar</span><b class="coin" style="font-size:26px">${num(s.coinsTotal)}</b></div>
+      </div>
+      <div class="card pad"><h2 style="font-size:18px;margin-bottom:10px">🎂 Bugun tug'ilgan kun</h2>${s.birthdaysToday.length ? s.birthdaysToday.map(b => `<span class="badge orange" style="margin:0 6px 6px 0">${esc(b.name)}</span>`).join('') + '<p class="hint" style="margin-top:8px">Ularga sozlamalardagi tug\'ilgan kun coini avtomatik beriladi.</p>' : '<p class="muted">Bugun tug\'ilgan kun yo\'q.</p>'}</div>`;
+  }
+
+  // ================= O'QUVCHILAR =================
+  let uq = { q: '', filter: 'all', page: 0 };
+  async function pUsers() {
+    const r = await call('a.users', uq);
+    content.innerHTML = head("O'quvchilar", `Jami: ${r.total}`) + `
+      <div class="tools"><input class="input" id="uq" placeholder="Ism, telefon yoki maktab bo'yicha qidirish" value="${esc(uq.q)}">
+        <select class="select" id="uf" style="flex:0 1 200px">${[['all', 'Hammasi'], ['active', 'Obunasi faol'], ['inactive', 'Obunasiz'], ['blocked', 'Bloklangan']].map(([v, t]) => `<option value="${v}" ${uq.filter === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="table-wrap"><table class="t"><thead><tr><th>O'quvchi</th><th>Telefon</th><th>Maktab / sinf</th><th>Coin</th><th>Obuna</th><th>Ro'yxatdan</th><th></th></tr></thead><tbody>
+      ${r.users.map(u => `<tr><td><div class="row" style="gap:10px">${avatarHtml(u, 34)}<div><b>${esc(u.name)}</b>${u.status === 'blocked' ? ' <span class="badge red">Bloklangan</span>' : ''}${u.birthday ? `<div class="muted" style="font-size:12px">🎂 ${esc(u.birthday)}</div>` : ''}</div></div></td>
+        <td>+998 ${esc(u.phone)}</td><td>${esc(u.school || '—')}${u.grade ? ' · ' + esc(u.grade) : ''}</td><td><span class="coin">${num(u.coins)}</span></td>
+        <td>${u.active ? `<span class="badge green">${date(u.subEnd)} gacha</span>` : '<span class="badge gray">Yo\'q</span>'}</td><td class="muted">${date(u.createdAt)}</td>
+        <td><button class="btn btn-soft btn-sm" data-u="${esc(u.id)}">Boshqarish</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:30px">Topilmadi</td></tr>'}</tbody></table></div>
+      <div class="row" style="justify-content:center;margin-top:14px">${uq.page > 0 ? '<button class="btn btn-plain" id="prev">← Oldingi</button>' : ''}<span class="muted">${uq.page + 1}-sahifa</span>${(uq.page + 1) * 50 < r.total ? '<button class="btn btn-plain" id="next">Keyingi →</button>' : ''}</div>`;
+    let t; document.getElementById('uq').oninput = e => { clearTimeout(t); t = setTimeout(() => { uq.q = e.target.value; uq.page = 0; pUsers().then(() => { const i = document.getElementById('uq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }, 400); };
+    document.getElementById('uf').onchange = e => { uq.filter = e.target.value; uq.page = 0; pUsers(); };
+    const pv = document.getElementById('prev'), nx = document.getElementById('next');
+    if (pv) pv.onclick = () => { uq.page--; pUsers(); }; if (nx) nx.onclick = () => { uq.page++; pUsers(); };
+    content.querySelectorAll('[data-u]').forEach(b => b.onclick = () => userModal(r.users.find(u => u.id === b.dataset.u)));
+  }
+  function userModal(u) {
+    const m = modal(`<div class="row" style="gap:14px;margin-bottom:16px">${avatarHtml(u, 56)}<div><h2 style="margin:0">${esc(u.name)}</h2><div class="muted">+998 ${esc(u.phone)} · <span class="coin">${num(u.coins)}</span></div></div></div>
+      <div class="stack" style="gap:18px">
+        <form class="stack" id="fc" style="gap:8px"><b>Coin berish / ayirish</b><div class="two"><input class="input" name="amount" type="number" placeholder="Masalan: 50 yoki -20" required><input class="input" name="reason" placeholder="Sabab (masalan: Uy vazifasi)"></div><button class="btn btn-accent">Coinni qo'llash</button></form>
+        <form class="stack" id="fs" style="gap:8px"><b>Obuna (qo'lda)</b><div class="two"><select class="select" name="addDays"><option value="30">+30 kun</option><option value="90">+90 kun</option><option value="365">+365 kun</option><option value="7">+7 kun</option></select><input class="input" name="plan" placeholder="Tarif nomi" value="${esc(u.plan || 'Oylik')}"></div>
+          <div class="row"><button class="btn btn-primary">Obunani uzaytirish</button>${u.active ? '<button type="button" class="btn btn-danger" id="endSub">Obunani to\'xtatish</button>' : ''}</div></form>
+        <div class="stack" style="gap:8px"><b>Hisob</b><div class="row wrap-row"><button class="btn btn-ghost" id="rp">Yangi parol berish</button><button class="btn ${u.status === 'blocked' ? 'btn-primary' : 'btn-danger'}" id="bl">${u.status === 'blocked' ? 'Blokdan chiqarish' : 'Bloklash'}</button></div></div>
+        <div class="row" style="justify-content:flex-end"><button class="btn btn-plain" data-close>Yopish</button></div></div>`);
+    const el = m.el, done = msg => { toast(msg, 'success'); m.close(); pUsers(); };
+    el.querySelector('#fc').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget); busy(e.currentTarget.querySelector('button'), () => call('a.coins', { id: u.id, amount: Number(d.amount), reason: d.reason }).then(() => done('Coin qo\'llandi'))).catch(err => toast(err.message, 'error')); };
+    el.querySelector('#fs').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget); busy(e.currentTarget.querySelector('button'), () => call('a.user', { id: u.id, addDays: Number(d.addDays), plan: d.plan }).then(() => done('Obuna uzaytirildi'))).catch(err => toast(err.message, 'error')); };
+    const es = el.querySelector('#endSub'); if (es) es.onclick = async () => { if (await confirmBox("Obunani hozir to'xtatasizmi?", "To'xtatish", true)) call('a.user', { id: u.id, endSub: true }).then(() => done("Obuna to'xtatildi")).catch(err => toast(err.message, 'error')); };
+    el.querySelector('#rp').onclick = async () => {
+      if (!await confirmBox("O'quvchiga yangi vaqtinchalik parol beriladi. Eski parol ishlamay qoladi.", 'Yangi parol berish')) return;
+      call('a.resetPassword', { id: u.id }).then(r => modal(`<h2>Yangi parol</h2><p class="muted">Buni o'quvchiga yuboring. U profil sahifasida parolni o'zgartirishi mumkin.</p><div class="card pad" style="margin:16px 0;font-size:26px;font-weight:800;letter-spacing:.1em;text-align:center">${esc(r.password)}</div><div class="row" style="justify-content:flex-end"><button class="btn btn-primary" data-close>Tushunarli</button></div>`)).catch(err => toast(err.message, 'error'));
+    };
+    el.querySelector('#bl').onclick = async () => {
+      const block = u.status !== 'blocked';
+      if (block && !await confirmBox(`${u.name} bloklansinmi? U saytga kira olmaydi.`, 'Bloklash', true)) return;
+      call('a.user', { id: u.id, status: block ? 'blocked' : 'active' }).then(() => done(block ? 'Bloklandi' : 'Blokdan chiqarildi')).catch(err => toast(err.message, 'error'));
+    };
+  }
+
+  // ================= TO'LOVLAR =================
+  let pf = 'pending';
+  async function pPayments() {
+    const [r, s] = await Promise.all([call('a.payments', { status: pf }), call('a.stats')]); counts(s);
+    const PS = { pending: ['orange', 'Kutilmoqda'], paid: ['green', "To'langan"], cancelled: ['gray', 'Bekor'] };
+    content.innerHTML = head("To'lovlar", "Test rejimida o'quvchi to'lov so'rovini yuboradi — siz pul tushganini tekshirib tasdiqlaysiz. Live rejimda Click/Payme avtomatik tasdiqlaydi.") + `
+      <div class="tools"><select class="select" id="pf" style="flex:0 1 220px">${[['pending', 'Kutilayotganlar'], ['paid', "To'langanlar"], ['cancelled', 'Bekor qilinganlar'], ['', 'Hammasi']].map(([v, t]) => `<option value="${v}" ${pf === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="table-wrap"><table class="t"><thead><tr><th>ID</th><th>O'quvchi</th><th>Tarif</th><th>Summa</th><th>Usul</th><th>Sana</th><th>Holat</th><th></th></tr></thead><tbody>
+      ${r.payments.map(p => `<tr><td><code>${esc(p.id)}</code></td><td><b>${esc(p.name)}</b><div class="muted" style="font-size:12px">+998 ${esc(p.phone)}</div></td><td>${esc(p.plan)} (${p.months} oy)</td><td><b>${money(p.amount)}</b></td><td>${esc(p.provider)}${p.extId ? `<div class="muted" style="font-size:12px">${esc(p.extId)}</div>` : ''}</td><td class="muted">${dateTime(p.createdAt)}</td>
+        <td><span class="badge ${(PS[p.status] || PS.pending)[0]}">${(PS[p.status] || PS.pending)[1]}</span></td>
+        <td><div class="acts">${p.status === 'pending' ? `<button class="btn btn-primary btn-sm" data-ok="${esc(p.id)}">Tasdiqlash</button>` : ''}${p.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" data-no="${esc(p.id)}">Bekor</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="8" class="muted" style="text-align:center;padding:30px">To\'lovlar yo\'q</td></tr>'}</tbody></table></div>`;
+    document.getElementById('pf').onchange = e => { pf = e.target.value; pPayments(); };
+    content.querySelectorAll('[data-ok]').forEach(b => b.onclick = async () => {
+      const p = r.payments.find(x => x.id === b.dataset.ok);
+      if (!await confirmBox(`${p.name} — ${money(p.amount)} to'lovi tushganini tekshirdingizmi? Obuna ${p.months} oyga ochiladi.`, 'Tasdiqlash')) return;
+      busy(b, () => call('a.payment', { id: p.id, op: 'confirm' })).then(() => { toast('Tasdiqlandi, obuna ochildi', 'success'); pPayments(); }).catch(err => toast(err.message, 'error'));
+    });
+    content.querySelectorAll('[data-no]').forEach(b => b.onclick = async () => {
+      const p = r.payments.find(x => x.id === b.dataset.no);
+      if (!await confirmBox(p.status === 'paid' ? "Bu to'lov bekor qilinsa, o'quvchining obunasi shu muddatga qisqaradi." : "To'lov so'rovi bekor qilinsinmi?", 'Bekor qilish', true)) return;
+      busy(b, () => call('a.payment', { id: p.id, op: 'cancel' })).then(() => { toast('Bekor qilindi'); pPayments(); }).catch(err => toast(err.message, 'error'));
+    });
+  }
+
+  // ================= RASM TANLASH =================
+  function imageField(name, value) {
+    return `<div class="field"><span>Rasm</span><div class="row" style="gap:10px"><img class="thumb" data-prev src="${esc(safeUrl(value) || '')}" alt="" ${safeUrl(value) ? '' : 'style="visibility:hidden"'}>
+      <input class="input" name="${name}" value="${esc(value || '')}" placeholder="Rasm havolasi yoki yuklang" style="flex:1">
+      <label class="btn btn-soft" style="cursor:pointer">${icon('camera')} Yuklash<input type="file" accept="image/*" class="sr" data-up></label></div></div>`;
+  }
+  function wireImage(el, name) {
+    const inp = el.querySelector(`[name=${name}]`), prev = el.querySelector('[data-prev]');
+    inp.oninput = () => { const ok = safeUrl(inp.value); prev.src = ok || ''; prev.style.visibility = ok ? '' : 'hidden'; };
+    el.querySelector('[data-up]').onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try { toast('Rasm yuklanmoqda…'); const data = await VX.resizeImage(f, 1200, 0.82); const r = await call('a.image', { image: data }); inp.value = r.url; inp.oninput(); toast('Yuklandi', 'success'); }
+      catch (err) { toast(err.message, 'error'); }
+    };
+  }
+
+  // ================= KURSLAR VA DARSLAR =================
+  async function pCourses() {
+    const r = await call('a.courses');
+    content.innerHTML = head('Kurslar va darslar', "Darslar YouTube havolasi bilan qo'shiladi (videoni YouTube'ga \"Ro'yxatda yo'q / Unlisted\" qilib yuklang).", '<button class="btn btn-primary" id="addC">' + icon('plus') + ' Yangi kurs</button>') +
+      (r.courses.map(c => `<details class="card course-box" ${r.courses.length < 4 ? 'open' : ''}><summary>${safeUrl(c.image) ? `<img class="thumb" src="${esc(c.image)}" alt="">` : '<span class="thumb"></span>'}
+        <div style="flex:1;min-width:0"><b style="font-size:17px">${esc(c.title)}</b> ${c.active ? '' : '<span class="badge gray">Yashirin</span>'}<div class="muted" style="font-size:13px">${c.lessons.length} ta dars · ${esc(c.level || '')}</div></div>
+        <div class="acts"><button class="btn btn-soft btn-sm" data-ec="${esc(c.id)}">${icon('edit')}</button><button class="btn btn-primary btn-sm" data-al="${esc(c.id)}">${icon('plus')} Dars</button></div></summary>
+        ${c.lessons.map((l, i) => `<div class="lrow"><span class="badge gray">${i + 1}</span><div style="flex:1;min-width:0"><b>${esc(l.title)}</b> ${l.active ? '' : '<span class="badge gray">Yashirin</span>'}<div class="muted" style="font-size:12px">${l.youtube ? '🎬 Video bor' : '⚠️ Video yo\'q'} · ${l.quiz.length} ta savol${l.duration ? ' · ' + esc(l.duration) : ''}</div></div>
+          <button class="btn btn-soft btn-sm" data-el="${esc(l.id)}" data-c="${esc(c.id)}">${icon('edit')} Tahrirlash</button></div>`).join('') || '<div class="lrow muted">Hali dars yo\'q.</div>'}</details>`).join('') || '<div class="card empty">Kurslar yo\'q. "Yangi kurs" tugmasini bosing.</div>');
+    document.getElementById('addC').onclick = () => courseModal({});
+    content.querySelectorAll('[data-ec]').forEach(b => b.onclick = e => { e.preventDefault(); courseModal(r.courses.find(c => c.id === b.dataset.ec)); });
+    content.querySelectorAll('[data-al]').forEach(b => b.onclick = e => { e.preventDefault(); lessonModal({ courseId: b.dataset.al, quiz: [] }); });
+    content.querySelectorAll('[data-el]').forEach(b => b.onclick = () => lessonModal(Object.assign({ courseId: b.dataset.c }, r.courses.find(c => c.id === b.dataset.c).lessons.find(l => l.id === b.dataset.el))));
+  }
+  function courseModal(c) {
+    const m = modal(`<h2>${c.id ? 'Kursni tahrirlash' : 'Yangi kurs'}</h2><form class="stack" id="cf" style="margin-top:12px">
+      <label class="field"><span>Kurs nomi</span><input class="input" name="title" value="${esc(c.title || '')}" required></label>
+      <label class="field"><span>Qisqa tavsif</span><textarea class="textarea" name="desc">${esc(c.desc || '')}</textarea></label>
+      ${imageField('image', c.image)}
+      <div class="two"><label class="field"><span>Ustoz</span><input class="input" name="teacher" value="${esc(c.teacher || 'Xusniddin Sharofiddinov')}"></label><label class="field"><span>Daraja</span><input class="input" name="level" value="${esc(c.level || "Boshlang'ich")}"></label></div>
+      <div class="two"><label class="field"><span>Tartib raqami</span><input class="input" type="number" name="order" value="${esc(c.order || 0)}"></label><label class="row" style="margin-top:28px"><input type="checkbox" name="active" ${c.active === false ? '' : 'checked'}> Saytda ko'rinsin</label></div>
+      <div class="row between" style="margin-top:8px">${c.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
+    wireImage(m.el, 'image');
+    m.el.querySelector('#cf').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget); d.active = !!e.currentTarget.active.checked; d.id = c.id;
+      busy(e.currentTarget.querySelector('.btn-primary'), () => call('a.course.save', { course: d })).then(() => { toast('Saqlandi', 'success'); m.close(); pCourses(); }).catch(err => toast(err.message, 'error')); };
+    const del = m.el.querySelector('#del');
+    if (del) del.onclick = async () => { if (await confirmBox(`"${c.title}" kursi va uning barcha darslari o'chirilsinmi?`, "O'chirish", true)) call('a.course.delete', { id: c.id }).then(() => { m.close(); pCourses(); }).catch(err => toast(err.message, 'error')); };
+  }
+  function lessonModal(l) {
+    let quiz = (l.quiz || []).map(q => ({ q: q.q, o: q.o.slice(), a: q.a }));
+    const m = modal(`<h2>${l.id ? 'Darsni tahrirlash' : 'Yangi dars'}</h2><form class="stack" id="lf2" style="margin-top:12px">
+      <label class="field"><span>Dars nomi</span><input class="input" name="title" value="${esc(l.title || '')}" required></label>
+      <div class="two"><label class="field"><span>YouTube havolasi</span><input class="input" name="youtube" value="${esc(l.youtube || '')}" placeholder="https://youtu.be/..."></label><label class="field"><span>Davomiyligi</span><input class="input" name="duration" value="${esc(l.duration || '')}" placeholder="12:30"></label></div>
+      <label class="field"><span>Tavsif / topshiriq</span><textarea class="textarea" name="desc">${esc(l.desc || '')}</textarea></label>
+      <div class="two"><label class="field"><span>Tartib raqami</span><input class="input" type="number" name="order" value="${esc(l.order != null ? l.order : '')}" placeholder="avtomatik"></label><label class="row" style="margin-top:28px"><input type="checkbox" name="active" ${l.active === false ? '' : 'checked'}> Saytda ko'rinsin</label></div>
+      <div class="row between"><b>Test savollari</b><button type="button" class="btn btn-soft btn-sm" id="addQ">${icon('plus')} Savol</button></div>
+      <p class="hint" style="margin-top:-6px">To'g'ri javob yonidagi doirachani belgilang. Testsiz dars "Darsni tugatdim" tugmasi bilan yakunlanadi.</p>
+      <div class="stack" id="qs"></div>
+      <div class="row between" style="margin-top:8px">${l.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary" id="sv">Saqlash</button></div></div></form>`, { wide: true });
+    const qs = m.el.querySelector('#qs');
+    const drawQ = () => {
+      qs.innerHTML = quiz.map((q, i) => `<div class="qed" data-i="${i}"><div class="row"><b>${i + 1}.</b><input class="input" data-q value="${esc(q.q)}" placeholder="Savol matni"><button type="button" class="icon-btn" data-rq aria-label="Savolni o'chirish">${icon('trash')}</button></div>
+        ${q.o.map((o, j) => `<div class="o"><input type="radio" name="a${i}" value="${j}" ${q.a === j ? 'checked' : ''} aria-label="To'g'ri javob"><input class="input" data-o="${j}" value="${esc(o)}" placeholder="Javob ${j + 1}"><button type="button" class="icon-btn" data-ro="${j}" aria-label="Javobni o'chirish" ${q.o.length <= 2 ? 'disabled' : ''}>${icon('x')}</button></div>`).join('')}
+        ${q.o.length < 6 ? '<button type="button" class="btn btn-plain btn-sm" data-ao style="align-self:flex-start">+ Javob</button>' : ''}</div>`).join('');
+      qs.querySelectorAll('.qed').forEach(box => {
+        const i = Number(box.dataset.i), q = quiz[i];
+        box.querySelector('[data-q]').oninput = e => { q.q = e.target.value; };
+        box.querySelectorAll('[data-o]').forEach(inp => inp.oninput = () => { q.o[Number(inp.dataset.o)] = inp.value; });
+        box.querySelectorAll('input[type=radio]').forEach(r => r.onchange = () => { q.a = Number(r.value); });
+        box.querySelector('[data-rq]').onclick = () => { quiz.splice(i, 1); drawQ(); };
+        box.querySelectorAll('[data-ro]').forEach(b => b.onclick = () => { const j = Number(b.dataset.ro); q.o.splice(j, 1); if (q.a >= q.o.length) q.a = 0; else if (q.a > j) q.a--; drawQ(); });
+        const ao = box.querySelector('[data-ao]'); if (ao) ao.onclick = () => { q.o.push(''); drawQ(); };
+      });
+    };
+    drawQ();
+    m.el.querySelector('#addQ').onclick = () => { quiz.push({ q: '', o: ['', '', ''], a: 0 }); drawQ(); qs.lastElementChild.querySelector('[data-q]').focus(); };
+    m.el.querySelector('#lf2').onsubmit = e => {
+      e.preventDefault(); const d = form2obj(e.currentTarget);
+      const lesson = { id: l.id, courseId: l.courseId, title: d.title, youtube: d.youtube, duration: d.duration, desc: d.desc, order: d.order, active: !!e.currentTarget.active.checked, quiz };
+      busy(m.el.querySelector('#sv'), () => call('a.lesson.save', { lesson })).then(() => { toast('Dars saqlandi', 'success'); m.close(); pCourses(); }).catch(err => toast(err.message, 'error'));
+    };
+    const del = m.el.querySelector('#del');
+    if (del) del.onclick = async () => { if (await confirmBox(`"${l.title}" darsi o'chirilsinmi?`, "O'chirish", true)) call('a.lesson.delete', { id: l.id }).then(() => { m.close(); pCourses(); }).catch(err => toast(err.message, 'error')); };
+  }
+
+  // ================= DO'KON =================
+  async function pProducts() {
+    const r = await call('a.products');
+    content.innerHTML = head("Do'kon mahsulotlari", 'Narx coinda belgilanadi.', '<button class="btn btn-primary" id="addP">' + icon('plus') + ' Yangi mahsulot</button>') + `
+      <div class="table-wrap"><table class="t"><thead><tr><th>Mahsulot</th><th>Narx</th><th>Qoldiq</th><th>Holat</th><th></th></tr></thead><tbody>
+      ${r.products.map(p => `<tr><td><div class="row" style="gap:10px">${safeUrl(p.image) ? `<img class="thumb" src="${esc(p.image)}" alt="" style="object-fit:contain;background:#fff">` : '<span class="thumb"></span>'}<div><b>${esc(p.name)}</b><div class="muted" style="font-size:12px">${esc(p.desc)}</div></div></div></td>
+        <td><span class="coin">${num(p.price)}</span></td><td>${p.stock}</td><td>${p.active ? '<span class="badge green">Sotuvda</span>' : '<span class="badge gray">Yashirin</span>'}</td><td><button class="btn btn-soft btn-sm" data-p="${esc(p.id)}">${icon('edit')} Tahrirlash</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:30px">Mahsulot yo\'q</td></tr>'}</tbody></table></div>`;
+    document.getElementById('addP').onclick = () => productModal({});
+    content.querySelectorAll('[data-p]').forEach(b => b.onclick = () => productModal(r.products.find(p => p.id === b.dataset.p)));
+  }
+  function productModal(p) {
+    const m = modal(`<h2>${p.id ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot'}</h2><form class="stack" id="pf2" style="margin-top:12px">
+      <label class="field"><span>Nomi</span><input class="input" name="name" value="${esc(p.name || '')}" required></label>
+      <label class="field"><span>Qisqa tavsif</span><input class="input" name="desc" value="${esc(p.desc || '')}"></label>
+      ${imageField('image', p.image)}
+      <div class="two"><label class="field"><span>Narxi (coin)</span><input class="input" type="number" min="1" name="price" value="${esc(p.price || '')}" required></label><label class="field"><span>Qoldiq (dona)</span><input class="input" type="number" min="0" name="stock" value="${esc(p.stock != null ? p.stock : 10)}"></label></div>
+      <div class="two"><label class="field"><span>Tartib</span><input class="input" type="number" name="order" value="${esc(p.order || 0)}"></label><label class="row" style="margin-top:28px"><input type="checkbox" name="active" ${p.active === false ? '' : 'checked'}> Sotuvda</label></div>
+      <div class="row between" style="margin-top:8px">${p.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
+    wireImage(m.el, 'image');
+    m.el.querySelector('#pf2').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget); d.active = !!e.currentTarget.active.checked; d.id = p.id;
+      busy(e.currentTarget.querySelector('.btn-primary'), () => call('a.product.save', { product: d })).then(() => { toast('Saqlandi', 'success'); m.close(); pProducts(); }).catch(err => toast(err.message, 'error')); };
+    const del = m.el.querySelector('#del');
+    if (del) del.onclick = async () => { if (await confirmBox(`"${p.name}" o'chirilsinmi?`, "O'chirish", true)) call('a.product.delete', { id: p.id }).then(() => { m.close(); pProducts(); }).catch(err => toast(err.message, 'error')); };
+  }
+
+  // ================= BUYURTMALAR =================
+  let of = 'yangi';
+  async function pOrders() {
+    const [r, s] = await Promise.all([call('a.orders', { status: of }), call('a.stats')]); counts(s);
+    const ST = { yangi: ['orange', 'Yangi'], berildi: ['green', 'Topshirildi'], bekor: ['gray', 'Bekor'] };
+    content.innerHTML = head('Buyurtmalar', "Sovg'ani topshirgach \"Topshirildi\" ni bosing. Bekor qilinsa coin o'quvchiga qaytariladi.") + `
+      <div class="tools"><select class="select" id="of" style="flex:0 1 220px">${[['yangi', 'Yangi'], ['berildi', 'Topshirilgan'], ['bekor', 'Bekor qilingan'], ['', 'Hammasi']].map(([v, t]) => `<option value="${v}" ${of === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="table-wrap"><table class="t"><thead><tr><th>O'quvchi</th><th>Mahsulot</th><th>Coin</th><th>Sana</th><th>Holat</th><th></th></tr></thead><tbody>
+      ${r.orders.map(o => `<tr><td><b>${esc(o.name)}</b><div class="muted" style="font-size:12px">+998 ${esc(o.phone)}</div></td><td>${esc(o.product)} × ${o.qty}</td><td><span class="coin">${num(o.price)}</span></td><td class="muted">${dateTime(o.at)}</td>
+        <td><span class="badge ${(ST[o.status] || ST.yangi)[0]}">${(ST[o.status] || ST.yangi)[1]}</span></td>
+        <td><div class="acts">${o.status === 'yangi' ? `<button class="btn btn-primary btn-sm" data-g="${esc(o.id)}">Topshirildi</button><button class="btn btn-danger btn-sm" data-x="${esc(o.id)}">Bekor</button>` : ''}</div></td></tr>`).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;padding:30px">Buyurtma yo\'q</td></tr>'}</tbody></table></div>`;
+    document.getElementById('of').onchange = e => { of = e.target.value; pOrders(); };
+    content.querySelectorAll('[data-g]').forEach(b => b.onclick = () => busy(b, () => call('a.order', { id: b.dataset.g, status: 'berildi' })).then(() => { toast('Belgilandi', 'success'); pOrders(); }).catch(err => toast(err.message, 'error')));
+    content.querySelectorAll('[data-x]').forEach(b => b.onclick = async () => { if (await confirmBox("Buyurtma bekor qilinib, coin o'quvchiga qaytarilsinmi?", 'Bekor qilish', true)) call('a.order', { id: b.dataset.x, status: 'bekor' }).then(() => { toast('Bekor qilindi, coin qaytarildi'); pOrders(); }).catch(err => toast(err.message, 'error')); });
+  }
+
+  // ================= COINLAR TARIXI =================
+  async function pCoinLog() {
+    const r = await call('a.coinlog', {});
+    const T = { quiz: 'Test', birthday: "Tug'ilgan kun", admin: 'Admin', order: 'Xarid', refund: 'Qaytarish' };
+    content.innerHTML = head('Coinlar tarixi', "Oxirgi 300 ta harakat. Coin berish uchun O'quvchilar → Boshqarish.") + `
+      <div class="table-wrap"><table class="t"><thead><tr><th>O'quvchi</th><th>Miqdor</th><th>Turi</th><th>Sabab</th><th>Sana</th></tr></thead><tbody>
+      ${r.log.map(c => `<tr><td><b>${esc(c.name)}</b></td><td style="font-weight:800;color:${c.amount > 0 ? 'var(--green)' : 'var(--red)'}">${c.amount > 0 ? '+' : ''}${num(c.amount)}</td><td><span class="badge gray">${esc(T[c.type] || c.type)}</span></td><td>${esc(c.reason)}</td><td class="muted">${dateTime(c.at)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:30px">Hali yo\'q</td></tr>'}</tbody></table></div>`;
+  }
+
+  // ================= TARIFLAR =================
+  async function pPlans() {
+    const r = await call('a.plans');
+    content.innerHTML = head('Tariflar', 'Obuna narxlari va muddatlari.', '<button class="btn btn-primary" id="addT">' + icon('plus') + ' Yangi tarif</button>') + `
+      <div class="table-wrap"><table class="t"><thead><tr><th>Nomi</th><th>Muddat</th><th>Narx</th><th>Holat</th><th></th></tr></thead><tbody>
+      ${r.plans.map(p => `<tr><td><b>${esc(p.name)}</b> ${p.popular ? '<span class="badge orange">Ommabop</span>' : ''}</td><td>${p.months} oy</td><td><b>${money(p.price)}</b></td><td>${p.active ? '<span class="badge green">Faol</span>' : '<span class="badge gray">Yashirin</span>'}</td><td><button class="btn btn-soft btn-sm" data-t="${esc(p.id)}">${icon('edit')} Tahrirlash</button></td></tr>`).join('')}</tbody></table></div>`;
+    document.getElementById('addT').onclick = () => planModal({});
+    content.querySelectorAll('[data-t]').forEach(b => b.onclick = () => planModal(r.plans.find(p => p.id === b.dataset.t)));
+  }
+  function planModal(p) {
+    const m = modal(`<h2>${p.id ? 'Tarifni tahrirlash' : 'Yangi tarif'}</h2><form class="stack" id="tf" style="margin-top:12px">
+      <label class="field"><span>Nomi</span><input class="input" name="name" value="${esc(p.name || '')}" required></label>
+      <div class="two"><label class="field"><span>Muddat (oy)</span><input class="input" type="number" min="1" name="months" value="${esc(p.months || 1)}" required></label><label class="field"><span>Narx (so'm)</span><input class="input" type="number" min="1000" step="1000" name="price" value="${esc(p.price || '')}" required></label></div>
+      <label class="field"><span>Afzalliklar (har biri yangi qatorda)</span><textarea class="textarea" name="features">${esc(p.features || '')}</textarea></label>
+      <div class="two"><label class="field"><span>Tartib</span><input class="input" type="number" name="order" value="${esc(p.order || 0)}"></label><div class="stack" style="gap:6px;margin-top:22px"><label class="row"><input type="checkbox" name="popular" ${p.popular ? 'checked' : ''}> "Ommabop" belgisi</label><label class="row"><input type="checkbox" name="active" ${p.active === false ? '' : 'checked'}> Faol</label></div></div>
+      <div class="row between" style="margin-top:8px">${p.id ? '<button type="button" class="btn btn-danger" id="del">O\'chirish</button>' : '<span></span>'}<div class="row"><button type="button" class="btn btn-plain" data-close>Bekor</button><button class="btn btn-primary">Saqlash</button></div></div></form>`);
+    m.el.querySelector('#tf').onsubmit = e => { e.preventDefault(); const f = e.currentTarget, d = form2obj(f); d.popular = f.popular.checked; d.active = f.active.checked; d.id = p.id;
+      busy(f.querySelector('.btn-primary'), () => call('a.plan.save', { plan: d })).then(() => { toast('Saqlandi', 'success'); m.close(); pPlans(); }).catch(err => toast(err.message, 'error')); };
+    const del = m.el.querySelector('#del');
+    if (del) del.onclick = async () => { if (await confirmBox(`"${p.name}" tarifi o'chirilsinmi?`, "O'chirish", true)) call('a.plan.delete', { id: p.id }).then(() => { m.close(); pPlans(); }).catch(err => toast(err.message, 'error')); };
+  }
+
+  // ================= SOZLAMALAR =================
+  async function pSettings() {
+    const r = await call('a.settings');
+    const groups = [['Sayt', ['site_name', 'hero_title', 'hero_text']], ['Aloqa', ['phone', 'telegram', 'instagram', 'address']], ['Coinlar', ['coin_per_correct', 'birthday_coins']],
+      ["To'lov (Click / Payme)", ['payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url']]];
+    const by = Object.fromEntries(r.settings.map(s => [s.key, s]));
+    content.innerHTML = head('Sozlamalar') + `<form class="stack" id="sf" style="gap:18px;max-width:820px">${groups.map(([g, keys]) => `<div class="card pad stack"><h2 style="font-size:18px">${g}</h2>
+      ${keys.map(k => { const s = by[k] || { value: '', note: '' };
+        if (k === 'payment_mode') return `<label class="field"><span>To'lov rejimi</span><select class="select" name="${k}"><option value="test" ${s.value !== 'live' ? 'selected' : ''}>Test — to'lovni admin tasdiqlaydi</option><option value="live" ${s.value === 'live' ? 'selected' : ''}>Live — Click/Payme avtomatik</option></select>${r.worker ? '' : '<span class="hint" style="color:var(--orange-600)">⚠️ To\'lov serveri kaliti yaratilmagan (Google Sheets → Vector → 3-band). Live rejim uchun kerak.</span>'}</label>`;
+        return `<label class="field"><span>${esc(s.note || k)}</span>${k === 'hero_text' ? `<textarea class="textarea" name="${k}">${esc(s.value)}</textarea>` : `<input class="input" name="${k}" value="${esc(s.value)}">`}</label>`; }).join('')}</div>`).join('')}
+      <div><button class="btn btn-primary btn-lg">Saqlash</button></div></form>`;
+    document.getElementById('sf').onsubmit = e => { e.preventDefault(); const d = form2obj(e.currentTarget);
+      busy(e.currentTarget.querySelector('.btn-primary'), () => call('a.settings.save', { settings: d })).then(() => { VX.clearPublic(); toast('Sozlamalar saqlandi', 'success'); }).catch(err => toast(err.message, 'error')); };
+  }
+
+  VX.adminToken() ? shell() : loginScreen();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+name = "vector-payments"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Maxfiy kalitlar bu faylga YOZILMAYDI. Ularni Cloudflare panelida (Settings → Variables and Secrets)
+# yoki buyruq bilan qo'shing:  npx wrangler secret put GAS_SECRET
+# Kerakli o'zgaruvchilar: GAS_URL, GAS_SECRET, CLICK_SECRET_KEY, CLICK_SERVICE_ID, PAYME_KEY

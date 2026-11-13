@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kirish — Vector</title>
+<meta name="theme-color" content="#1E63F0">
+<link rel="icon" href="assets/img/vector-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  body { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { body { grid-template-columns: 1fr; } .side { display: none !important; } }
+  .side { background: linear-gradient(160deg, #1E63F0, #1243B8); color: #fff; padding: clamp(32px, 5vw, 64px); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+  .side::after { content: ''; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: rgba(255,138,0,.22); right: -140px; bottom: -120px; }
+  .side h2 { font-size: clamp(30px, 3.4vw, 44px); font-weight: 900; margin: 24px 0 14px; max-width: 460px; position: relative; z-index: 1; }
+  .side p { color: rgba(255,255,255,.85); font-size: 18px; max-width: 440px; position: relative; z-index: 1; }
+  .side ul { list-style: none; padding: 0; margin: 28px 0 0; display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1; }
+  .side li { display: flex; gap: 12px; align-items: center; font-weight: 500; }
+  .side li span { width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,.15); display: grid; place-items: center; }
+  .side .cat { position: absolute; right: 24px; bottom: 16px; width: 200px; z-index: 1; filter: drop-shadow(0 20px 30px rgba(0,0,0,.3)); }
+  .side .logo { color: #fff; position: relative; z-index: 1; }
+  .main { display: flex; flex-direction: column; padding: clamp(20px, 4vw, 48px); background: var(--card); }
+  .main-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .box { width: min(440px, 100%); margin: auto; padding-block: 32px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--soft); border-radius: 14px; padding: 5px; margin: 20px 0 24px; }
+  .tabs button { border: 0; background: transparent; padding: 11px; border-radius: 10px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--card); color: var(--blue); box-shadow: var(--shadow); }
+  form { display: flex; flex-direction: column; gap: 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .phone { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 12px; background: var(--card); transition: border-color .2s, box-shadow .2s; }
+  .phone:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 15%, transparent); }
+  .phone b { padding: 0 4px 0 14px; color: var(--ink-2); }
+  .phone input { border: 0; box-shadow: none !important; padding-left: 4px; }
+  .pw { position: relative; }
+  .pw button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px; }
+  h1 { font-size: clamp(26px, 3vw, 32px); font-weight: 800; }
+</style>
+</head>
+<body>
+<aside class="side">
+  <a class="logo" href="index.html"><img src="assets/img/vector-logo-white.png" alt="" style="background:rgba(255,255,255,.12)"><span>VECTOR</span></a>
+  <div>
+    <h2>O'qing, coin to'plang, sovg'a yuting!</h2>
+    <p>Shaxsiy kabinetingizda darslar, testlar, coinlar va sovg'alar do'koni sizni kutmoqda.</p>
+    <ul>
+      <li><span>🎬</span>Video darslar va testlar</li>
+      <li><span>🪙</span>Har bir to'g'ri javob uchun coin</li>
+      <li><span>🎁</span>Coinlarni sovg'alarga almashtirish</li>
+    </ul>
+  </div>
+  <img class="cat" src="assets/img/cat-happy.png" alt="">
+</aside>
+
+<div class="main">
+  <div class="main-top">
+    <a class="logo" href="index.html"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a>
+    <a href="index.html" class="btn btn-plain btn-sm">← Bosh sahifa</a>
+  </div>
+  <div class="box">
+    <h1 id="title">Xush kelibsiz!</h1>
+    <p class="muted" id="subtitle" style="margin-top:6px">Kabinetingizga kiring</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabLogin" aria-selected="true" aria-controls="login">Kirish</button>
+      <button role="tab" id="tabReg" aria-selected="false" aria-controls="register">Ro'yxatdan o'tish</button>
+    </div>
+
+    <form id="login" novalidate>
+      <label class="field"><span>Telefon raqam</span><div class="phone"><b>+998</b><input class="input" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="90 123 45 67" required></div></label>
+      <label class="field"><span>Parol</span><div class="pw"><input class="input" name="password" type="password" autocomplete="current-password" required placeholder="••••••"><button type="button" data-eye>Ko'rsatish</button></div></label>
+      <div class="err" hidden></div>
+      <button class="btn btn-primary btn-lg" type="submit">Kirish</button>
+      <p class="hint" style="text-align:center">Parolni unutdingizmi? <a id="forgot" href="#" target="_blank" rel="noopener">Admin bilan bog'laning</a></p>
+    </form>
+
+    <form id="register" novalidate hidden>
+      <label class="field"><span>Ism va familiya</span><input class="input" name="name" autocomplete="name" placeholder="Ali Valiyev" required></label>
+      <label class="field"><span>Telefon raqam</span><div class="phone"><b>+998</b><input class="input" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="90 123 45 67" required></div></label>
+      <div class="two">
+        <label class="field"><span>Tug'ilgan sana</span><input class="input" name="birthday" type="date" min="1950-01-01"></label>
+        <label class="field"><span>Sinf</span><select class="select" name="grade"><option value="">Tanlang</option></select></label>
+      </div>
+      <div class="two">
+        <label class="field"><span>Viloyat</span><select class="select" name="region"><option value="">Tanlang</option></select></label>
+        <label class="field"><span>Maktab</span><input class="input" name="school" placeholder="18-maktab"></label>
+      </div>
+      <label class="field"><span>Parol</span><div class="pw"><input class="input" name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="Kamida 6 ta belgi"><button type="button" data-eye>Ko'rsatish</button></div></label>
+      <label class="field"><span>Parolni takrorlang</span><input class="input" name="password2" type="password" autocomplete="new-password" required placeholder="••••••"></label>
+      <p class="hint">Tug'ilgan kuningizda sovg'a coinlar beriladi 🎉</p>
+      <div class="err" hidden></div>
+      <button class="btn btn-accent btn-lg" type="submit">Ro'yxatdan o'tish</button>
+    </form>
+  </div>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/api.js"></script>
+<script>
+(function () {
+  if (VX.token()) { location.replace('kabinet.html'); return; }
+  const REGIONS = ['Farg\'ona', 'Andijon', 'Namangan', 'Toshkent shahri', 'Toshkent viloyati', 'Samarqand', 'Buxoro', 'Navoiy', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Xorazm', "Qoraqalpog'iston"];
+  const reg = document.getElementById('register'), log = document.getElementById('login');
+  reg.region.innerHTML += REGIONS.map(r => `<option>${VX.esc(r)}</option>`).join('');
+  reg.grade.innerHTML += Array.from({ length: 11 }, (_, i) => `<option value="${i + 1}">${i + 1}-sinf</option>`).join('') + '<option value="talaba">Talaba</option><option value="boshqa">Boshqa</option>';
+  reg.birthday.max = new Date().toISOString().slice(0, 10);
+
+  const pub = VX.cachedPublic();
+  const tg = (pub && pub.settings && pub.settings.telegram) || 'vectoradminn';
+  document.getElementById('forgot').href = 'https://t.me/' + tg.replace(/^@/, '');
+  VX.publicData().then(d => { const t = d.settings && d.settings.telegram; if (t) document.getElementById('forgot').href = 'https://t.me/' + t.replace(/^@/, ''); }).catch(() => {});
+
+  function mode(m) {
+    const r = m === 'register';
+    reg.hidden = !r; log.hidden = r;
+    document.getElementById('tabReg').setAttribute('aria-selected', r);
+    document.getElementById('tabLogin').setAttribute('aria-selected', !r);
+    document.getElementById('title').textContent = r ? "Ro'yxatdan o'tish" : 'Xush kelibsiz!';
+    document.getElementById('subtitle').textContent = r ? "Bepul akkaunt oching — 1 daqiqa" : 'Kabinetingizga kiring';
+    history.replaceState(null, '', r ? '?mode=register' : location.pathname);
+  }
+  document.getElementById('tabLogin').onclick = () => mode('login');
+  document.getElementById('tabReg').onclick = () => mode('register');
+  mode(new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login');
+
+  // telefon: 90 123 45 67 ko'rinishida
+  document.querySelectorAll('input[name=phone]').forEach(inp => inp.addEventListener('input', () => {
+    let d = inp.value.replace(/\D/g, ''); if (d.startsWith('998') && d.length > 9) d = d.slice(3); d = d.slice(0, 9);
+    inp.value = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
+  }));
+  document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => { const i = b.previousElementSibling; const s = i.type === 'password'; i.type = s ? 'text' : 'password'; b.textContent = s ? 'Yashirish' : "Ko'rsatish"; });
+
+  const showErr = (form, msg) => { const e = form.querySelector('.err'); e.textContent = msg || ''; e.hidden = !msg; };
+  const done = (r) => { VX.setToken(r.token); VX.applyTheme(r.user && r.user.theme); location.replace('kabinet.html'); };
+
+  log.addEventListener('submit', e => {
+    e.preventDefault(); showErr(log);
+    const phone = log.phone.value.replace(/\D/g, ''), password = log.password.value;
+    if (phone.length !== 9) return showErr(log, "Telefon raqamni to'liq kiriting.");
+    if (!password) return showErr(log, 'Parolni kiriting.');
+    VX.busy(log.querySelector('[type=submit]'), () => VX.call('login', { phone, password }).then(done).catch(err => showErr(log, err.message)));
+  });
+
+  reg.addEventListener('submit', e => {
+    e.preventDefault(); showErr(reg);
+    const f = reg, phone = f.phone.value.replace(/\D/g, '');
+    if (f.name.value.trim().length < 3) return showErr(reg, 'Ism va familiyani kiriting.');
+    if (phone.length !== 9) return showErr(reg, "Telefon raqamni to'liq kiriting.");
+    if (f.password.value.length < 6) return showErr(reg, "Parol kamida 6 ta belgidan iborat bo'lsin.");
+    if (f.password.value !== f.password2.value) return showErr(reg, 'Parollar bir xil emas.');
+    VX.busy(f.querySelector('[type=submit]'), () => VX.call('register', {
+      name: f.name.value.trim(), phone, password: f.password.value, birthday: f.birthday.value, grade: f.grade.value, region: f.region.value, school: f.school.value.trim()
+    }).then(done).catch(err => showErr(reg, err.message)));
+  });
+})();
+</script>
+</body>
+</html>
