@@ -1,5 +1,5 @@
 // Vector ilovasi: sahifa va rasmlarni keshlaydi (internet sekin bo'lsa ham tez ochiladi). Server (Google) so'rovlari keshlanmaydi.
-const V = 'vector-app-v1';
+const V = 'vector-app-v2';
 const SHELL = ['app.html', 'assets/js/config.js', 'assets/js/api.js', 'assets/css/app.css', 'assets/js/vector-i18n.js', 'assets/js/vector-i18n-dict.js',
   'assets/img/vector-logo.png', 'assets/img/app/ob1.jpg', 'assets/img/app/ob2.jpg', 'assets/img/app/ob3.jpg', 'assets/img/cat-happy.png', 'assets/img/cat-sad.png', 'assets/img/cat-empty.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });

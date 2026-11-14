@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vector</title>
 <meta name="description" content="Vector — onlayn IT ta'lim: video darslar, testlar, Vector Coin va sovg'alar.">
-<meta name="theme-color" content="#0a7aff">
+<meta name="theme-color" content="#0a2a8a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1087,11 +1087,10 @@
   // ================= ISHGA TUSHIRISH =================
   applyDark();
   const sp = document.getElementById('splash');
-  const seen = (() => { try { return sessionStorage.getItem('vx_splash'); } catch (_) { return 1; } })();
+  const seen = false; // har safar ilova ochilganda ko'rsatiladi
   const ready = Promise.all([VX.publicData().then(d => { PUB = d; }).catch(() => {}), VX.token() ? loadMe().catch(e => { if (e && (e.code === 'auth' || e.code === 'blocked')) { clearAll(); VX.setToken(null); ME = null; } }) : null]);
-  // Animatsiya ~2,7 soniya; bosilsa darhol o'tadi. Bir seansda faqat bir marta ko'rsatiladi.
+  // Animatsiya ~2,7 soniya; ilova har ochilganda chiqadi, bosilsa darhol o'tadi.
   const anim = new Promise(r => { if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) { r(); return; } const t = setTimeout(r, 2700); sp.addEventListener('click', () => { clearTimeout(t); r(); }); });
-  if (seen) sp.style.display = 'none';
   Promise.all([Promise.race([ready, new Promise(r => setTimeout(r, 6000))]), anim]).then(() => {
     try { sessionStorage.setItem('vx_splash', '1'); } catch (_) {}
     route(); sp.style.opacity = '0'; setTimeout(() => sp.remove(), 520);

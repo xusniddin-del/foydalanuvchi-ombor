@@ -183,9 +183,8 @@ with sync_playwright() as p:
     # mobil ilova: promokod bilan Telegram orqali ro'yxatdan o'tish
     m2 = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True)
     m2.route(re.compile(r"https://(fonts\.googleapis|fonts\.gstatic|unpkg\.com|www\.youtube-nocookie).*"), lambda r: r.abort())
-    m2.add_init_script("try{sessionStorage.setItem('vx_splash','1')}catch(e){}")
     ap = m2.new_page(); ap.on("pageerror", lambda e: errors.append("APP " + str(e)))
-    ap.goto(BASE + "/app.html?ref=" + ref_code + "#royxat"); ap.wait_for_timeout(2600)
+    ap.goto(BASE + "/app.html?ref=" + ref_code + "#royxat"); ap.wait_for_timeout(3600)
     check("app: register screen with ref prefilled", ap.locator("#f [name=ref]").input_value() == ref_code and ap.locator("#f [name=phone]").count() == 0)
     ap.fill("#f [name=name]", "Vali Ilova"); ap.fill("#f [name=p1]", "parol777"); ap.fill("#f [name=p2]", "parol777")
     ap.click("[form=f]"); ap.wait_for_timeout(1200)
