@@ -6,9 +6,60 @@
   const here = (location.pathname.split('/').pop() || 'index.html');
   const loggedIn = (() => { try { return !!localStorage.getItem('vx_token'); } catch (_) { return false; } })();
 
+  // Kirgan o'quvchi uchun menyu (vectortalim kabinetidagi kabi)
+  const NAV_IN = [['kabinet.html#premium', 'Premium', 'prem'], ['index.html', 'Asosiy'], ['kabinet.html#dokon', "Do'kon"], ['kabinet.html#kurslar', 'Kurslar'], ['kabinet.html#liderlar', 'Liderlar']];
+  const CROWN = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z" fill="#FFC21A" stroke="#E08A00" stroke-width="1.2" stroke-linejoin="round"/><circle cx="7" cy="14" r="1.2" fill="#E5484D"/><circle cx="12" cy="14" r="1.2" fill="#1E63F0"/><circle cx="17" cy="14" r="1.2" fill="#12A150"/></svg>';
+  const meCache = () => { try { return JSON.parse(localStorage.getItem('vx_me') || 'null'); } catch (_) { return null; } };
+  const initials = n => String(n || '?').trim().split(/\s+/).slice(0, 1).map(w => w[0]).join('').toUpperCase();
+  function paintMe(u) {
+    const box = document.getElementById('vuMe'); if (!box || !u) return;
+    const first = String(u.name || '').trim().split(/\s+/)[0] || '';
+    const ava = /^https:\/\//.test(u.avatar || '') ? `<img src="${esc(u.avatar)}" alt="">` : esc(initials(u.name));
+    box.innerHTML = `<span class="vu-ava">${ava}</span><span class="vu-nm"><b>${esc(first)}</b><small>Coin ${Number(u.coins || 0).toLocaleString('en-US').replace(/,/g, '.')}</small></span>`;
+  }
+  function markActive() {
+    const cur = here + (location.hash || '').split('/')[0];
+    document.querySelectorAll('[data-vu]').forEach(a => { const on = a.dataset.vu === cur || (cur === 'kabinet.html#kurs' || cur === 'kabinet.html#dars') && a.dataset.vu === 'kabinet.html#kurslar'; if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  }
+  function headerUser() {
+    const el = document.getElementById('vh');
+    const pub = (window.VX && VX.cachedPublic()) || {}, mini = (pub.settings || {}).mini_app || '';
+    const link = ([h, t, k]) => `<a href="${h}" data-vu="${h}"${k === 'prem' ? ' class="vu-prem"' : ''}>${k === 'prem' ? CROWN : ''}${t}</a>`;
+    el.className = 'vh vu';
+    el.innerHTML = `<div class="vu-in">
+        <div class="vu-bar">
+          <a class="vh-logo" href="index.html" aria-label="VECTOR bosh sahifa"><img src="assets/img/vector-logo.png" alt="" width="40" height="40"><span>VECTOR</span></a>
+          <nav class="vu-nav" aria-label="Asosiy menyu">${NAV_IN.map(link).join('')}${/^https:\/\//.test(mini) ? `<a href="${esc(mini)}" target="_blank" rel="noopener">Mini app</a>` : '<span class="vu-off" title="Tez orada">Mini app</span>'}</nav>
+          <a class="vu-bell" href="kabinet.html#bildirishnoma" aria-label="Bildirishnomalar"><span class="ms">notifications</span></a>
+          <button class="vh-burger ms" type="button" aria-label="Menyu" aria-expanded="false">menu</button>
+        </div>
+        <a class="vu-me" id="vuMe" href="kabinet.html#profil" aria-label="Profil"></a>
+      </div>`;
+    paintMe(meCache());
+    const dr = document.createElement('div');
+    dr.className = 'vh-drawer';
+    dr.innerHTML = `<div class="ov"></div><div class="panel" role="dialog" aria-label="Menyu">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><a class="vh-logo" href="index.html"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a><button type="button" class="vh-burger ms" data-x aria-label="Yopish" style="display:grid">close</button></div>
+        ${NAV_IN.map(([h, t]) => `<a class="lnk" href="${h}" data-vu="${h}">${t}</a>`).join('')}
+        <a class="lnk" href="kabinet.html#bildirishnoma" data-vu="kabinet.html#bildirishnoma">Bildirishnomalar</a>
+        <a class="lnk" href="kabinet.html#profil" data-vu="kabinet.html#profil">Profil</a></div>`;
+    document.body.appendChild(dr);
+    const b = el.querySelector('.vh-burger');
+    const set = o => { dr.classList.toggle('open', o); b.setAttribute('aria-expanded', o); };
+    b.onclick = () => set(true);
+    dr.querySelector('.ov').onclick = () => set(false);
+    dr.querySelector('[data-x]').onclick = () => set(false);
+    dr.querySelectorAll('a').forEach(a => a.addEventListener('click', () => set(false)));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
+    markActive(); window.addEventListener('hashchange', markActive);
+    // kabinetdan tashqarida ism va coinlarni yangilab olamiz
+    if (here !== 'kabinet.html' && window.VX) VX.call('me').then(r => { try { localStorage.setItem('vx_me', JSON.stringify({ name: r.user.name, coins: r.user.coins, avatar: r.user.avatar })); } catch (_) {} paintMe(r.user); }).catch(() => {});
+  }
+
   function header() {
     const el = document.getElementById('vh');
     if (!el) return;
+    if (loggedIn) return headerUser();
     const nav = NAV.map(([h, t]) => `<a href="${h}"${h === here ? ' aria-current="page"' : ''}>${t}</a>`).join('');
     const auth = loggedIn
       ? `<a class="btn-blue vh-auth" href="kabinet.html"><span class="ms" style="font-size:20px">person</span>Kabinet</a>`
@@ -84,7 +135,7 @@
 
   header();
   footer((window.VX && VX.cachedPublic() || {}).settings);
-  window.VSite = { footer, reveal, gate, loggedIn, esc };
+  window.VSite = { footer, reveal, gate, loggedIn, esc, paintMe };
   if (window.VX) VX.publicData().then(d => footer(d.settings)).catch(() => {});
   reveal();
 })();

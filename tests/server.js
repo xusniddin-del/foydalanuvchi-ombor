@@ -10,6 +10,7 @@ const PORT = Number(process.env.PORT || 8787);
 const g = createGas();
 g.ctx.setup();
 g.ctx.setAdminPasswordValue('admin-parol-123');
+{ const t = g.call({ action: 'admin.login', password: 'admin-parol-123' }).token; g.call({ action: 'a.settings.save', token: t, settings: { card_number: '5614681403666906', card_holder: 'SHAROFIDDINOV XUSNIDDIN', phone: '+998 90 832 44 36' } }); }
 // Telegram bot taqlidi (o'chirish: NOTG=1). Bot xabarlari: GET /dev/tg-out, botga yozish: POST /dev/tg {chat, text | phone}
 if (!process.env.NOTG) g.ctx.connectTelegramValue('123456:' + 'A'.repeat(35), 'https://script.google.com/macros/s/TEST/exec');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json' };

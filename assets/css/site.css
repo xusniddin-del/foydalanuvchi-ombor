@@ -44,7 +44,8 @@ img { max-width: 100%; }
 .vh-drawer .panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(320px, 86vw); background: #fff; padding: 20px; display: flex; flex-direction: column; gap: 6px; transform: translateX(105%); transition: transform .3s cubic-bezier(.2,.7,.2,1); box-shadow: -20px 0 50px rgba(11,30,79,.2); }
 .vh-drawer.open { pointer-events: auto; }
 .vh-drawer.open .ov { opacity: 1; }
-.vh-drawer.open .panel { transform: none; }
+.vh-drawer .panel { visibility: hidden; transition: transform .3s cubic-bezier(.2,.7,.2,1), visibility 0s .3s; }
+.vh-drawer.open .panel { transform: none; visibility: visible; transition: transform .3s cubic-bezier(.2,.7,.2,1); }
 .vh-drawer .panel a.lnk { padding: 14px 12px; border-radius: 12px; font-weight: 600; font-size: 17px; color: #0F172A; }
 .vh-drawer .panel a.lnk:hover, .vh-drawer .panel a.lnk[aria-current="page"] { background: #EAF2FF; color: #1E63F0; }
 .vh-drawer .panel .acts { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
@@ -74,3 +75,35 @@ img { max-width: 100%; }
 .vm .x { position: absolute; top: 12px; right: 12px; border: 0; cursor: pointer; width: 38px; height: 38px; border-radius: 12px; background: #EAF2FF; color: #1E63F0; display: grid; place-items: center; font-size: 22px; }
 .vm h2 { margin: 4px 0 0; font-size: 22px; font-weight: 800; }
 .vm p { margin: 0; color: #64748B; font-size: 15px; line-height: 1.5; }
+
+/* ---------- kirgan o'quvchi menyusi (ko'k tasma + oq pilla) ---------- */
+.vh.vu { background: #1E63F0; border-bottom: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.vu-in { max-width: 1216px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; gap: 16px; }
+.vu-bar { flex: 1; min-width: 0; height: 60px; background: #fff; border-radius: 22px; display: flex; align-items: center; gap: 18px; padding: 0 8px 0 20px; }
+.vu-bar .vh-logo img { width: 40px; height: 40px; }
+.vu-bar .vh-logo span { font-size: 21px; letter-spacing: .05em; color: #0B1E4F; }
+.vu-nav { margin-left: auto; display: flex; align-items: center; gap: 22px; }
+.vu-nav a, .vu-off { font-weight: 500; font-size: 15.5px; color: #1F2A44; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.vu-nav a:hover, .vu-nav a[aria-current="page"] { color: #1E63F0; }
+.vu-nav a[aria-current="page"] { font-weight: 600; }
+.vu-off { color: #A3AEC2; cursor: default; }
+.vu-bell { width: 46px; height: 46px; border-radius: 50%; background: #1E63F0; color: #fff; display: grid; place-items: center; flex: none; transition: background .2s; }
+.vu-bell:hover { background: #1552cf; color: #fff; }
+.vu-bell .ms { font-size: 24px; }
+.vu-me { height: 60px; min-width: 174px; background: #fff; border-radius: 22px; display: flex; align-items: center; gap: 12px; padding: 0 22px 0 8px; color: #0F172A; flex: none; }
+.vu-me:hover { color: #0F172A; box-shadow: 0 8px 20px rgba(11,30,79,.18); }
+.vu-ava { width: 44px; height: 44px; border-radius: 50%; background: #0B1E4F; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 18px; overflow: hidden; flex: none; }
+.vu-ava img { width: 100%; height: 100%; object-fit: cover; }
+.vu-nm { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.vu-nm b { color: #1E63F0; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.vu-nm small { color: #475569; font-size: 12.5px; }
+.vu .vh-burger { background: #EAF2FF; }
+@media (max-width: 1100px) { .vu-nav { gap: 14px; } .vu-nav a, .vu-off { font-size: 14.5px; } }
+@media (max-width: 960px) {
+  .vu-nav { display: none; }
+  .vu-bar .vh-burger { display: grid; }
+  .vu-bell { margin-left: auto; }
+  .vu-me { min-width: 0; padding: 0 8px; }
+  .vu-nm { display: none; }
+}
+@media (max-width: 480px) { .vu-in { padding: 10px 12px; gap: 10px; } .vu-bar { height: 56px; padding-left: 12px; gap: 10px; } .vu-me { height: 56px; } .vu-bell { width: 42px; height: 42px; } }

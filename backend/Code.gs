@@ -30,7 +30,7 @@ var SHEETS = {
   Coins: ['id', 'userId', 'amount', 'type', 'reason', 'at', 'by'],
   Products: ['id', 'name', 'desc', 'image', 'price', 'stock', 'active', 'order', 'category'],
   Orders: ['id', 'userId', 'userName', 'phone', 'productId', 'productName', 'qty', 'price', 'status', 'at'],
-  Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason'],
+  Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason', 'receipt'],
   Settings: ['key', 'value', 'izoh']
 };
 
@@ -57,11 +57,14 @@ var DEFAULT_SETTINGS = [
   ['click_service_id', '', 'Click service_id'],
   ['click_merchant_id', '', 'Click merchant_id'],
   ['payme_merchant_id', '', 'Payme merchant (kassa) ID'],
-  ['return_url', '', "To'lovdan keyin qaytiladigan sahifa (masalan https://.../kabinet.html#obuna)"]
+  ['return_url', '', "To'lovdan keyin qaytiladigan sahifa (masalan https://.../kabinet.html#obuna)"],
+  ['card_number', '', "Test rejimida o'quvchi pul o'tkazadigan karta raqami (masalan 5614 6814 0366 6906)"],
+  ['card_holder', '', 'Karta egasining ismi (masalan SHAROFIDDINOV XUSNIDDIN)'],
+  ['mini_app', '', 'Telegram Mini App havolasi (bo\'lmasa bo\'sh qoldiring)']
 ];
 var PUBLIC_SETTINGS = ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients', 'phone', 'telegram', 'instagram', 'youtube', 'facebook',
   'app_store', 'google_play', 'address', 'coin_per_correct', 'birthday_coins', 'daily_goal',
-  'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url'];
+  'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url', 'card_number', 'card_holder', 'mini_app'];
 
 // ======================= KIRISH NUQTALARI =======================
 function doGet() {
@@ -117,7 +120,9 @@ var USER = {
   'profile': apiProfile,
   'password': apiPassword,
   'avatar': apiAvatar,
-  'tg.link': apiTgLink
+  'tg.link': apiTgLink,
+  'pay.receipt': apiPayReceipt,
+  'leaders': apiLeaders
 };
 var ADMIN = {
   'a.stats': aStats,
@@ -182,9 +187,20 @@ function route(req) {
 var MEMO = {};
 function ss() { return SpreadsheetApp.getActive(); }
 
+var COLS_OK = {};
 function sheet(name) {
   var sh = ss().getSheetByName(name);
   if (!sh) fail('Jadval tayyorlanmagan: Vector → "1. Jadvalni tayyorlash" ni bosing.', 'setup');
+  // yangi versiyada qo'shilgan ustunlar bo'lsa — o'zi qo'shib qo'yadi (jadvalni qayta tayyorlash shart emas)
+  if (!COLS_OK[name] && SHEETS[name]) {
+    var head = SHEETS[name], have = sh.getMaxColumns();
+    if (have < head.length) {
+      sh.insertColumnsAfter(have, head.length - have);
+      sh.getRange(1, have + 1, sh.getMaxRows(), head.length - have).setNumberFormat('@');
+      sh.getRange(1, have + 1, 1, head.length - have).setValues([head.slice(have)]).setFontWeight('bold').setBackground('#1E63F0').setFontColor('#ffffff');
+    }
+    COLS_OK[name] = true;
+  }
   return sh;
 }
 
@@ -451,6 +467,34 @@ function apiMe(req, u) {
     },
     leaders: leaders(u.id, num(u.coins))
   };
+}
+
+/** Liderlar sahifasi: period = 'all' (umumiy coin) yoki 'month' (shu oyda topilgan coin). Eng yaxshi 50 ta + o'quvchining o'rni. */
+function apiLeaders(req, u) {
+  var month = req.period === 'month', key = 'leadP:' + (month ? Utilities.formatDate(now(), TZ, 'yyyy-MM') : 'all');
+  var b = cacheGet(key);
+  if (!b) {
+    var users = rows('Users').filter(function (x) { return x.status !== 'blocked'; }), score = {};
+    if (month) {
+      var m0 = Utilities.formatDate(now(), TZ, 'yyyy-MM');
+      rows('Coins').forEach(function (c) {
+        var a = num(c.amount); if (a <= 0 || c.type === 'refund') return;
+        var d = new Date(c.at); if (isNaN(d) || Utilities.formatDate(d, TZ, 'yyyy-MM') !== m0) return;
+        score[c.userId] = (score[c.userId] || 0) + a;
+      });
+    } else users.forEach(function (x) { score[x.id] = num(x.coins); });
+    var short = function (n) { var p = String(n || '').trim().split(/\s+/); return p[0] + (p[1] ? ' ' + p[1] : ''); };
+    b = users.map(function (x) { return { id: x.id, name: short(x.name), avatar: x.avatar, school: x.school, coins: score[x.id] || 0 }; })
+      .sort(function (a, c) { return c.coins - a.coins; }).slice(0, 500);
+    cachePut(key, b, 300);
+  }
+  var idx = -1;
+  for (var i = 0; i < b.length; i++) if (b[i].id === u.id) { idx = i; break; }
+  var me = findUser(u.id), mine = idx >= 0 ? b[idx].coins : (month ? 0 : num(me.coins));
+  var ahead = idx > 0 ? b[idx - 1].coins : (idx < 0 && b.length ? b[b.length - 1].coins : 0);
+  return { ok: true, period: month ? 'month' : 'all',
+    top: b.slice(0, 50).map(function (x, i) { return { rank: i + 1, name: x.name, avatar: x.avatar, school: x.school, coins: x.coins, me: x.id === u.id }; }),
+    me: { rank: idx >= 0 ? idx + 1 : null, coins: mine, gap: idx === 0 ? 0 : Math.max(0, ahead - mine + 1) } };
 }
 
 /** Coin bo'yicha reyting: eng yaxshi 5 o'quvchi + o'quvchining o'z o'rni. 5 daqiqa keshda. */
@@ -770,7 +814,20 @@ function apiPayCreate(req, u) {
   });
 }
 
-function payView(p) { return { id: p.id, plan: p.planName, months: num(p.months), amount: num(p.amount), provider: p.provider, status: p.status, createdAt: p.createdAt, paidAt: p.paidAt }; }
+function payView(p) { return { id: p.id, plan: p.planName, months: num(p.months), amount: num(p.amount), provider: p.provider, status: p.status, createdAt: p.createdAt, paidAt: p.paidAt, receipt: p.receipt ? true : false }; }
+
+/** Test rejimi: o'quvchi kartaga pul o'tkazib, chek rasmini yuklaydi — admin tasdiqlaydi */
+function apiPayReceipt(req, u) {
+  if (limited('receipt:' + u.id, 10, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
+  var url = saveImage(req.image, 'chek-' + String(req.id).replace(/\W/g, ''));
+  return withLock(function () {
+    var p = byId('Payments', req.id);
+    if (!p || p.userId !== u.id) fail("To'lov topilmadi.");
+    if (p.status !== 'pending') fail("Bu to'lov allaqachon ko'rib chiqilgan.");
+    p.receipt = url; save('Payments', p);
+    return { ok: true, payment: payView(p) };
+  });
+}
 
 function apiMyPayments(req, u) {
   return { ok: true, payments: rows('Payments').filter(function (p) { return p.userId === u.id; }).reverse().map(payView) };
@@ -1057,7 +1114,7 @@ function aOrderStatus(req) {
 // --- to'lovlar ---
 function aPayments(req) {
   return { ok: true, payments: rows('Payments').filter(function (p) { return !req.status || p.status === req.status; }).reverse().slice(0, 500)
-    .map(function (p) { var v = payView(p); v.name = p.userName; v.phone = p.phone; v.extId = p.extId; return v; }) };
+    .map(function (p) { var v = payView(p); v.name = p.userName; v.phone = p.phone; v.extId = p.extId; v.receipt = /^https:\/\//.test(p.receipt || '') ? p.receipt : ''; return v; }) };
 }
 function aPaymentAction(req) {
   return withLock(function () {

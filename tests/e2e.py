@@ -56,27 +56,42 @@ with sync_playwright() as p:
     check("register: wrong code refused", tg.locator(".msg[role=alert]").is_visible())
     tg.locator("[name=code]").fill(code); tg.locator("[type=submit]").click()
     pg.wait_for_url("**/kabinet.html**", timeout=8000); pg.wait_for_timeout(1500)
-    check("cabinet: profile name top-left", "Ali Valiyev" in pg.locator("#meSide").inner_text())
+    check("cabinet: name + coins top-right", "Ali" in pg.locator("#vuMe").inner_text() and "Coin" in pg.locator("#vuMe").inner_text())
     m = pg.locator("#pfAsk")
     check("cabinet: asks to complete profile", m.is_visible())
     pg.screenshot(path=f"{OUT}/03a-profil-toldirish.png")
     m.locator("[name=region]").select_option("Farg'ona"); m.locator("[name=city]").fill("Marg'ilon"); m.locator("[name=school]").fill("18")
-    m.locator("[name=grade]").select_option("7-sinf"); m.locator("[name=bd]").select_option("5"); m.locator("[name=bm]").select_option("3"); m.locator("[name=by]").select_option("2013")
+    m.locator("[name=grade]").select_option("7-sinf"); m.locator("[name=birthday]").fill("2013-03-05")
     m.locator("[type=submit]").click(); pg.wait_for_timeout(1500)
-    check("cabinet: profile saved, reminder gone", pg.locator("#pfAsk").count() == 0 and pg.locator("[data-pf]").count() == 0)
-    check("cabinet: no-subscription notice", pg.locator(".notice").count() >= 1)
+    check("cabinet: profile saved", pg.locator("#pfAsk").count() == 0)
+    check("cabinet: courses + premium lock bar", pg.locator(".k-course").count() == 7 and pg.locator(".k-lockbar").count() == 1)
     pg.screenshot(path=f"{OUT}/03-kabinet.png", full_page=True)
 
     # kurs yopiq
     pg.goto(BASE + "/kabinet.html#kurslar"); pg.wait_for_timeout(1000)
-    pg.locator(".ccard").first.click(); pg.wait_for_timeout(1000)
-    check("course: lessons locked without sub", pg.locator(".lesson.locked").count() == 3)
+    pg.locator(".k-course").first.click(); pg.wait_for_timeout(1000)
+    check("course: lessons locked without sub", pg.locator(".k-lesson.locked").count() == 3)
 
     # obuna so'rovi (test rejim)
     pg.goto(BASE + "/kabinet.html#obuna"); pg.wait_for_timeout(1200)
+    check("premium: 3 plans, monthly 69.000", pg.locator(".k-plan").count() == 3 and "69.000" in pg.locator("#plans").inner_text())
+    pg.click("#tog [data-p='12']"); pg.wait_for_timeout(300)
+    check("premium: yearly toggle", "708.000" in pg.locator("#plans").inner_text())
+    pg.click("#tog [data-p='1']"); pg.wait_for_timeout(300)
     pg.screenshot(path=f"{OUT}/04-obuna.png", full_page=True)
-    pg.click("[data-pv=test]"); pg.wait_for_timeout(1500)
-    check("payment request listed as pending", pg.locator("text=Kutilmoqda").count() >= 1)
+    pg.locator("[data-buy]").first.click(); pg.wait_for_timeout(400)
+    pg.click("#goPay"); pg.wait_for_timeout(500)
+    check("premium: card step shown", pg.locator(".k-bank").is_visible() and "5614" in pg.locator(".k-bank").inner_text())
+    pg.click("#paid"); pg.wait_for_timeout(400)
+    check("premium: receipt required", pg.locator(".modal").count() == 1)
+    import base64
+    png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+    pg.set_input_files("#upF", files=[{"name": "chek.png", "mimeType": "image/png", "buffer": png}]); pg.wait_for_timeout(600)
+    pg.click("#paid"); pg.wait_for_timeout(1800)
+    check("premium: receipt sent", "Chek qabul qilindi" in pg.locator(".modal").inner_text())
+    pg.keyboard.press("Escape")
+    pg.goto(BASE + "/kabinet.html#profil/obuna"); pg.wait_for_timeout(1200)
+    check("payment request listed as pending with receipt", pg.locator("text=Kutilmoqda").count() >= 1 and pg.locator("text=chek yuklangan").count() >= 1)
 
     # admin tasdiqlaydi
     a = ctx.new_page(); a.on("pageerror", lambda e: errors.append("ADMIN " + str(e)))
@@ -104,10 +119,10 @@ with sync_playwright() as p:
 
     # o'quvchi darsni ko'radi va test ishlaydi
     pg.goto(BASE + "/kabinet.html#kurslar"); pg.wait_for_timeout(1000)
-    pg.locator(".ccard").first.click(); pg.wait_for_timeout(1000)
-    check("course: first lesson open after payment", pg.locator("a.lesson").count() == 1 and pg.locator(".lesson.locked").count() == 2)
-    pg.locator("a.lesson").first.click(); pg.wait_for_timeout(1200)
-    check("lesson: video iframe", pg.locator(".video iframe").count() == 1)
+    pg.locator(".k-course").first.click(); pg.wait_for_timeout(1000)
+    check("course: first lesson open after payment", pg.locator("a.k-lesson").count() == 1 and pg.locator(".k-lesson.locked").count() == 2)
+    pg.locator("a.k-lesson").first.click(); pg.wait_for_timeout(1200)
+    check("lesson: video iframe", pg.locator(".k-video iframe").count() == 1)
     pg.locator("input[name=q0][value='0']").check(); pg.locator("input[name=q1][value='1']").check()
     pg.screenshot(path=f"{OUT}/08-dars.png", full_page=True)
     pg.click("#quiz [type=submit]"); pg.wait_for_timeout(1500)
@@ -117,19 +132,24 @@ with sync_playwright() as p:
 
     # do'kon
     pg.goto(BASE + "/kabinet.html#dokon"); pg.wait_for_timeout(1200)
-    check("shop: balance 5 004", "5 004" in pg.locator(".page-h").inner_text())
+    check("shop: balance 5.004", "5.004" in pg.locator(".k-bal").inner_text())
     pg.locator("[data-buy]").first.click(); pg.wait_for_timeout(300); pg.click("#okBuy"); pg.wait_for_timeout(1500)
-    check("shop: bought, coins 2 004", "2 004" in pg.locator("#pills").inner_text() and pg.locator("text=Tayyorlanmoqda").count() == 1)
+    check("shop: bought, coins 2.004", "2.004" in pg.locator("#vuMe").inner_text())
+    pg.click("#cart"); pg.wait_for_timeout(1000)
+    check("shop: order listed", pg.locator(".modal >> text=Tayyorlanmoqda").count() == 1)
+    pg.keyboard.press("Escape")
     pg.screenshot(path=f"{OUT}/10-dokon.png", full_page=True)
 
     # coin tarixi va profil
-    pg.goto(BASE + "/kabinet.html#coin"); pg.wait_for_timeout(1000)
-    check("coin history has 3 rows", pg.locator(".list-row").count() == 3)
+    pg.goto(BASE + "/kabinet.html#bildirishnoma"); pg.wait_for_timeout(1200)
+    check("notifications: coins, order, payment", pg.locator(".k-ni").count() >= 4)
+    pg.goto(BASE + "/kabinet.html#liderlar"); pg.wait_for_timeout(1200)
+    check("leaders: podium + my row", pg.locator(".k-pod").count() == 3 and pg.locator(".k-meRow").count() == 1)
     pg.goto(BASE + "/kabinet.html#profil"); pg.wait_for_timeout(1000)
-    pg.click("[data-t=dark]"); pg.wait_for_timeout(600)
+    pg.click("#darkRow"); pg.wait_for_timeout(600)
     check("dark theme applied", pg.evaluate("document.documentElement.dataset.theme") == "dark")
     pg.screenshot(path=f"{OUT}/11-profil-dark.png", full_page=True)
-    pg.click("[data-t=light]"); pg.wait_for_timeout(400)
+    pg.click("#darkRow"); pg.wait_for_timeout(400)
 
     # telefon ko'rinishi
     m = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True)
@@ -146,7 +166,7 @@ with sync_playwright() as p:
 
     # chiqish
     pg.goto(BASE + "/kabinet.html#profil"); pg.wait_for_timeout(900)
-    pg.click("#logout2"); pg.wait_for_timeout(1200)
+    pg.click("#outRow"); pg.wait_for_timeout(1200)
     check("logout → landing, token cleared", pg.evaluate("localStorage.getItem('vx_token')") is None)
     b.close()
 

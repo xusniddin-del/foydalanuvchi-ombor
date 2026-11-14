@@ -46,6 +46,9 @@ t('payment created in test mode', r.ok && r.payment.provider === 'test' && r.pay
 const P1 = r.payment.id;
 t('same pending payment reused', call({ action: 'pay.create', token: A, planId: plans[0].id }).payment.id === P1);
 t('user cannot call admin', !call({ action: 'a.payment', token: A, id: P1, op: 'confirm' }).ok);
+const PNG = 'data:image/png;base64,' + Buffer.from('fakepng').toString('base64');
+t('receipt upload on own pending payment', call({ action: 'pay.receipt', token: A, id: P1, image: PNG }).payment.receipt === true);
+t('receipt cannot attach to unknown payment', !call({ action: 'pay.receipt', token: A, id: 'P_nope', image: PNG }).ok);
 r = call({ action: 'admin.login', password: 'xato' });
 t('admin wrong password', !r.ok);
 const AD = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
@@ -137,6 +140,15 @@ const st = call({ action: 'public' }).settings;
 t('settings saved, mode sanitized, unknown ignored', st.coin_per_correct === '5' && st.payment_mode === 'test' && st.evil === undefined);
 r = call({ action: 'a.stats', token: AD });
 t('stats', r.ok && r.users === 2 && r.active === 1);
+
+// --- liderlar ---
+{
+  const L = call({ action: 'leaders', token: A });
+  t('leaders all: sorted, me ranked, no ids', L.ok && L.top.length >= 2 && L.top.every((x, i, a) => !i || a[i - 1].coins >= x.coins) && L.me.rank >= 1 && L.top.some(x => x.me) && !('id' in L.top[0]) && !('phone' in L.top[0]));
+  const M = call({ action: 'leaders', token: A, period: 'month' });
+  t('leaders month: counts only this month earnings', M.ok && M.period === 'month' && M.top.every(x => x.coins >= 0));
+  t('admin payments show receipt link', call({ action: 'a.payments', token: call({ action: 'admin.login', password: 'admin-parol-123' }).token }).payments.some(p => /^https:/.test(p.receipt)));
+}
 
 // --- formula himoyasi ---
 {
