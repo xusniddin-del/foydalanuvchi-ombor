@@ -180,16 +180,17 @@
   .mini i { font-size: 26px; }
 
   /* asosiy */
-  .hero { position: relative; aspect-ratio: 16/10; border-radius: 18px; overflow: hidden; background: #0a1b4a; }
+  .hero { position: relative; aspect-ratio: 2.1; border-radius: 18px; overflow: hidden; background: #dfe6f3; }
   .hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .6s; }
   .hero img.on { opacity: 1; }
   .hdots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
   .hdots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--a-blue); }
   .hdots i.on { background: var(--a-blue); }
-  .big { display: block; border-radius: 18px; overflow: hidden; background: #fff; margin-bottom: 14px; color: var(--a-ink); }
-  .big img { width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block; }
-  .big div { padding: 12px 14px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-  .big b { font-size: 17px; }
+  .feat-c, .big { display: block; aspect-ratio: 2; border-radius: 18px; overflow: hidden; background: #0a1b4a; margin-top: 16px; color: #fff; }
+  .big { margin: 0 0 14px; }
+  .feat-c img, .big img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+  .feat-c b, .big b { display: grid; place-items: center; height: 100%; font-size: 20px; padding: 16px; text-align: center; }
+  .feat-c:active, .big:active { transform: scale(.985); }
   .guest { margin: 14px 0; padding: 16px; border-radius: 18px; background: linear-gradient(135deg, #0a84ff, #0546b8); color: #fff; }
   .guest b { font-size: 18px; } .guest p { margin: 6px 0 12px; font-size: 14px; opacity: .9; }
   .guest .row { display: flex; gap: 10px; } .guest .btn { height: 42px; font-size: 15px; } .guest .btn.ln { color: #fff; box-shadow: inset 0 0 0 1.5px #fff; }
@@ -656,13 +657,17 @@
   R.asosiy = async (_, silent) => {
     const c = await swr('courses', null).catch(() => null) || { courses: (PUB && PUB.courses) || [], active: false };
     const list = c.courses || [];
-    const imgs = list.filter(x => safeUrl(x.image)).slice(0, 5);
+    const imgs = ['s1', 's2', 's3', 's4', 's5'].map(n => 'assets/img/students/' + n + '.jpg');
+    const href = x => member() ? '#kurs/' + esc(x.id) : '#kirish';
+    const card = (x, cls) => `<a class="${cls}" href="${href(x)}" aria-label="${esc(x.title)}">${safeUrl(x.image) ? `<img src="${esc(x.image)}" alt="${esc(x.title)}" loading="lazy">` : `<b>${esc(x.title)}</b>`}</a>`;
+    const [top, ...rest] = list;
     show(`<div class="scr">${tabHead('Xush kelibsiz!', member() ? esc(first(ME.name)) + ' Platformaga' : 'Vector platformasiga')}
       <div class="body">
-        ${imgs.length ? `<div class="hero" id="hero">${imgs.map((x, i) => `<img src="${esc(x.image)}" alt="" class="${i ? '' : 'on'}">`).join('')}</div><div class="hdots" id="hd">${imgs.map((x, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}
+        <div class="hero" id="hero">${imgs.map((src, i) => `<img src="${src}" alt="Vector o'quvchilari" class="${i ? '' : 'on'}">`).join('')}</div><div class="hdots" id="hd">${imgs.map((x, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>
         ${member() ? '' : `<div class="guest"><b>Mehmon rejimi</b><p>Barcha imkoniyatlardan foydalanish uchun akkaunt yarating yoki tizimga kiring.</p><div class="row"><a class="btn" style="background:#fff;color:var(--a-blue)" href="#royxat">Ro'yxatdan o'tish</a><a class="btn ln" href="#kirish">Kirish</a></div></div>`}
+        ${top ? card(top, 'feat-c') : ''}
         <h2 class="sec-t">Eng sara kurslarimiz</h2>
-        ${list.map(x => `<a class="big" href="${member() ? '#kurs/' + esc(x.id) : '#kirish'}">${safeUrl(x.image) ? `<img src="${esc(x.image)}" alt="${esc(x.title)}" loading="lazy">` : ''}<div><b>${esc(x.title)}</b><span class="muted" style="font-size:13px;white-space:nowrap">Darslar soni: ${(x.lessons && x.lessons.length) || x.lessons || 0} ta</span></div></a>`).join('') || '<div class="empty"><b>Kurslar tez orada</b></div>'}
+        ${rest.map(x => card(x, 'big')).join('') || (top ? '' : '<div class="empty"><b>Kurslar tez orada</b></div>')}
       </div></div>`);
     clearInterval(HERO_T); let k = 0;
     if (imgs.length > 1) HERO_T = setInterval(() => { const h = document.getElementById('hero'); if (!h) return clearInterval(HERO_T); k = (k + 1) % imgs.length; h.querySelectorAll('img').forEach((im, i) => im.classList.toggle('on', i === k)); document.querySelectorAll('#hd i').forEach((d, i) => d.classList.toggle('on', i === k)); }, 3500);
