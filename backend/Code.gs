@@ -1371,12 +1371,10 @@ function connectTelegram() {
   var ui = SpreadsheetApp.getUi();
   var r = ui.prompt('Telegram bot', "@BotFather bergan bot tokenini kiriting (masalan 123456789:AA...):", ui.ButtonSet.OK_CANCEL);
   if (r.getSelectedButton() !== ui.Button.OK) return;
-  var url = ScriptApp.getService().getUrl();
-  if (!url || !/\/exec$/.test(url)) {
-    var u2 = ui.prompt('Sayt manzili', "Apps Script veb-ilova manzilini kiriting (https://script.google.com/macros/s/.../exec):", ui.ButtonSet.OK_CANCEL);
-    if (u2.getSelectedButton() !== ui.Button.OK) return;
-    url = u2.getResponseText().trim();
-  }
+  // Manzilni taxmin qilmaymiz: ScriptApp.getService().getUrl() eski yoki o'chirilgan deploymentni berishi mumkin (Telegram 404 oladi)
+  var u2 = ui.prompt('Apps Script manzili', "Saytdagi config.js ga yozilgan veb-ilova manzilini kiriting\n(Deploy → Manage deployments → Web app URL, .../exec bilan tugaydi):", ui.ButtonSet.OK_CANCEL);
+  if (u2.getSelectedButton() !== ui.Button.OK) return;
+  var url = u2.getResponseText().trim();
   var w = ui.prompt("To'lov serveri (ixtiyoriy)", "Cloudflare Worker manzili bo'lsa kiriting (https://vector-payments....workers.dev).\nBot shu orqali tezroq va ishonchli ishlaydi. Bo'lmasa bo'sh qoldirib OK ni bosing.", ui.ButtonSet.OK_CANCEL);
   if (w.getSelectedButton() !== ui.Button.OK) return;
   var res = connectTelegramValue(r.getResponseText().trim(), url, w.getResponseText().trim());
