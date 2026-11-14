@@ -96,11 +96,55 @@
   .sec-t { margin: 22px 4px 12px; font-size: 21px; font-weight: 700; }
 
   /* splash va tanishtiruv */
-  .splash { position: fixed; inset: 0; z-index: 50; max-width: 440px; margin: 0 auto; background: linear-gradient(180deg, #0a84ff 0%, #0546b8 50%, #031a55 100%); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 24px 60px; transition: opacity .35s; }
-  .splash .lg { width: 132px; height: 132px; border-radius: 32px; background: #fff; display: grid; place-items: center; animation: aLogo .9s cubic-bezier(.2,.8,.3,1) both, aGlow 1.6s ease-in-out .9s infinite; }
-  .splash .lg img { width: 92px; height: 92px; }
-  .splash b { font-size: 32px; font-weight: 800; letter-spacing: .02em; margin-top: 14px; animation: aUp .5s ease-out .6s both; }
-  .splash span { font-size: 13.5px; text-transform: uppercase; margin-top: 12px; max-width: 290px; line-height: 1.4; animation: aUp .5s ease-out .85s both; }
+  /* kirish ekranlari: tungi ko'k uslub */
+  .scr.auth { background: radial-gradient(90% 40% at 85% 0%, rgba(150,120,210,.55), transparent 70%), linear-gradient(180deg, #1a2466 0%, #0b1a4f 35%, #07103a 100%); color: #fff; }
+  .auth .top { background: transparent; }
+  .auth .top h1, .auth .top h1 span { color: #fff !important; }
+  .auth .top p, .auth .note, .auth .fl > span { color: #9fb0d6; }
+  .auth .back { color: #fff; }
+  .auth .in, .auth .phone .cc, .auth .codes input { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); color: #fff; }
+  .auth .in::placeholder { color: #6f7fa8; }
+  .auth .in:focus, .auth .codes input:focus { border-color: #4c8dff; box-shadow: 0 0 0 3px rgba(76,141,255,.25); }
+  .auth .pw button { color: #9fb0d6; }
+  .auth .note a, .auth .forgot { color: #7fb0ff; }
+  .auth .btn.gr { background: rgba(255,255,255,.1); }
+  .auth .btn.ln { color: #fff; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.5); }
+  .auth .tgbox { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+  .auth .tgbox p, .auth .tgstate { color: #b9c5e3; }
+  .auth select.in option { color: #111; }
+  .hero-in { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: calc(34px + env(safe-area-inset-top)) 18px 0 24px; min-height: 250px; }
+  .hero-in h1 { margin: 0; font-size: 36px; font-weight: 800; line-height: 1.05; letter-spacing: -.01em; animation: aUp .5s ease-out both; }
+  .hero-in p { margin: 10px 0 18px; font-size: 14px; line-height: 1.4; color: #b9c5e3; max-width: 190px; animation: aUp .5s ease-out .1s both; }
+  .hero-in img { width: 168px; flex: none; margin-bottom: -6px; transform-origin: 50% 100%; animation: catIn .7s cubic-bezier(.2,1.3,.4,1) .15s both, catBob 3s ease-in-out 1s infinite; }
+  @keyframes catIn { from { transform: translateY(40px) scale(.7); opacity: 0; } }
+  @keyframes catBob { 50% { transform: translateY(-5px) rotate(-2deg); } }
+  .panel { flex: 1; background: #081335; border-radius: 26px 26px 0 0; padding: 24px 24px calc(28px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,.25); }
+  .panel .forgot { align-self: flex-end; margin-top: -6px; font-size: 14px; font-weight: 600; }
+  .panel .btn { margin-top: 6px; }
+  /* kirish animatsiyasi: mushuk chiqadi, esnaydi, ko'zini yopib uxlashga ketadi */
+  .splash { position: fixed; inset: 0; z-index: 50; max-width: 440px; margin: 0 auto; overflow: hidden; color: #fff; text-align: center; cursor: pointer; transition: opacity .5s;
+    background: radial-gradient(70% 45% at 85% 88%, rgba(120,150,230,.55), transparent 70%), radial-gradient(60% 40% at 10% 105%, rgba(70,100,200,.35), transparent 70%), linear-gradient(180deg, #0b1d5c 0%, #0a1850 45%, #07103a 100%); }
+  .sp-top { position: absolute; left: 0; right: 0; top: calc(9vh + env(safe-area-inset-top)); display: flex; flex-direction: column; align-items: center; gap: 10px; animation: aUp .6s ease-out .1s both; }
+  .sp-top img { width: 48px; height: 48px; }
+  .sp-top b { font-size: 38px; font-weight: 800; letter-spacing: .06em; line-height: 1; }
+  .sp-top span { font-size: 15px; font-weight: 600; opacity: .85; }
+  .sp-cat { position: absolute; left: 50%; bottom: -2px; width: min(78vw, 340px); margin-left: calc(min(78vw, 340px) / -2); transform: translateY(110%);
+    animation: spUp 1s cubic-bezier(.2,1.25,.4,1) .6s forwards, spDown .75s cubic-bezier(.5,0,.8,.4) 4.05s forwards; }
+  .sp-cat .body { position: relative; aspect-ratio: 280 / 395; transform-origin: 50% 100%; animation: spYawn 1.1s ease-in-out 1.7s both, spSettle .5s ease-in-out 3.2s both; }
+  .sp-cat img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sp-mask { position: absolute; left: 30.7%; top: 28.4%; width: 44%; transform: rotate(36deg) translateY(-150%); animation: spMask .55s cubic-bezier(.3,.7,.4,1.1) 2.95s forwards; filter: drop-shadow(0 3px 4px rgba(0,0,40,.35)); }
+  .sp-bub { position: absolute; left: -2%; top: 2%; padding: 8px 14px; border-radius: 16px 16px 16px 4px; background: #fff; color: #0b1d5c; font-weight: 700; font-size: 15px; white-space: nowrap; opacity: 0; transform: scale(.4); transform-origin: 0 100%; animation: spBub 1.4s ease-out 1.65s both; }
+  .sp-z { position: absolute; left: 72%; top: 6%; font: 800 26px Inter; color: #cfe0ff; opacity: 0; animation: spZ 1.6s ease-out both; }
+  .sp-z.z1 { animation-delay: 3.25s; } .sp-z.z2 { animation-delay: 3.55s; font-size: 20px; left: 80%; } .sp-z.z3 { animation-delay: 3.85s; font-size: 16px; left: 66%; }
+  .sp-skip { position: absolute; right: 16px; bottom: calc(14px + env(safe-area-inset-bottom)); font-size: 12px; opacity: .55; }
+  @keyframes spUp { to { transform: translateY(16%); } }
+  @keyframes spDown { from { transform: translateY(16%); } to { transform: translateY(115%); } }
+  @keyframes spYawn { 0% { transform: none; } 30% { transform: scale(1.05, .95) rotate(-3deg); } 60% { transform: scale(.97, 1.06) rotate(3deg); } 100% { transform: none; } }
+  @keyframes spSettle { 50% { transform: translateY(4%) scale(1.02, .97); } }
+  @keyframes spMask { to { transform: rotate(36deg) translateY(0); } }
+  @keyframes spBub { 0% { opacity: 0; transform: scale(.4); } 20%, 75% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(.9); } }
+  @keyframes spZ { 0% { opacity: 0; transform: translate(0, 10px) scale(.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(26px, -70px) scale(1.2); } }
+  @media (prefers-reduced-motion: reduce) { .sp-cat { transform: translateY(16%); } .sp-mask { transform: rotate(36deg); } }
   .ob-top { display: flex; justify-content: flex-end; padding: calc(28px + env(safe-area-inset-top)) 24px 0; }
   .ob-skip { height: 38px; padding: 0 14px; border: 1.5px solid var(--a-blue); border-radius: 10px; background: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
   .ob-view { margin: 24px 24px 0; aspect-ratio: 1.3; overflow: hidden; border-radius: 20px; border: 1px solid #cfcfcf; background: #fff; }
@@ -342,7 +386,13 @@
 </head>
 <body>
 <div id="app"></div>
-<div class="splash" id="splash" aria-hidden="true"><div class="lg"><img src="assets/img/vector-logo.png" alt=""></div><b>VECTOR</b><span>O'zbekistondagi 1-raqamli onlayn ta'lim platformasi</span></div>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-top"><img src="assets/img/vector-logo-white.png" alt=""><b>VECTOR</b><span>Onlayn ta'lim platformasi</span></div>
+  <div class="sp-cat"><div class="body"><img src="assets/img/app/cat-sleep.png" alt="">
+    <svg class="sp-mask" viewBox="0 0 200 84" aria-hidden="true"><path d="M-6 30 Q4 33 12 34 M188 34 Q196 33 206 30" stroke="#6f9bd6" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M10 38 C8 12 42 4 72 10 C86 13 93 22 100 22 C107 22 114 13 128 10 C158 4 192 12 190 38 C189 64 160 78 130 72 C114 69 108 58 100 58 C92 58 86 69 70 72 C40 78 11 64 10 38Z" fill="#a9cbf2" stroke="#7aa6dd" stroke-width="3"/><path d="M34 26 C46 18 62 17 74 21 M126 21 C138 17 154 18 166 26" stroke="#d8e8fb" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+    <span class="sp-bub">Uyqum keldi… 🥱</span><i class="sp-z z1">Z</i><i class="sp-z z2">z</i><i class="sp-z z3">z</i></div></div>
+  <span class="sp-skip">O'tkazib yuborish uchun bosing</span>
+</div>
 <nav class="tabbar" id="tabbar" hidden aria-label="Asosiy menyu"></nav>
 
 <script src="assets/js/config.js"></script>
@@ -455,20 +505,21 @@
   const eye = () => app.querySelectorAll('.pw button').forEach(b => b.onclick = () => { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.innerHTML = ic(i.type === 'password' ? 'eye' : 'eye-slash', 1); });
   const terms = `<p class="note">Davom etish uchun <a href="#qoida" style="font-weight:600">Foydalanuvchi shartlariga</a> rozi bo'lishingiz kerak</p>`;
   R.kirish = () => {
-    show(`<div class="scr">${head('<span style="color:var(--a-blue);font-size:22px">Kirish</span>')}
-      <form class="body nobar stack" id="f" novalidate style="padding:24px 24px 0">
-        <label class="fl"><span>Telefon raqamni kiriting</span><div class="phone"><span class="cc">+998</span><input class="in" name="phone" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00" style="font-size:18px"></div></label>
-        <label class="fl"><span>Parolni kiriting</span><div class="pw"><input class="in" name="password" type="password" autocomplete="current-password"><button type="button" aria-label="Parolni ko'rsatish">${ic('eye', 1)}</button></div></label>
+    show(`<div class="scr auth"><div class="hero-in"><div><h1>Xush<br>kelibsiz</h1><p>Akkauntingizga kiring va o'qishni davom ettiring</p></div><img src="assets/img/cat-happy.png" alt=""></div>
+      <div class="panel"><form class="stack" id="f" novalidate>
+        <label class="fl"><span>Telefon raqam</span><div class="phone"><span class="cc">+998</span><input class="in" name="phone" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00"></div></label>
+        <label class="fl"><span>Parol</span><div class="pw"><input class="in" name="password" type="password" autocomplete="current-password" placeholder="Parolingiz"><button type="button" aria-label="Parolni ko'rsatish">${ic('eye', 1)}</button></div></label>
+        <a class="forgot" href="#parol">Parolni unutdingizmi?</a>
         <div class="err" role="alert" hidden></div>
-      </form>
-      <div class="foot"><button class="btn" type="submit" form="f">Davom etish</button><a class="btn gr" href="#parol">Parolingizni unutdingizmi?</a>
-        <p class="note">Akkauntingiz yo'qmi? <a href="#royxat" style="font-weight:600">Ro'yxatdan o'tish</a></p>${terms}</div></div>`);
+        <button class="btn" type="submit">Kirish</button>
+        <p class="note">Akkauntingiz yo'qmi? <a href="#royxat" style="font-weight:700">Ro'yxatdan o'tish</a></p>${terms}
+      </form></div></div>`);
     const f = $('#f'), er = f.querySelector('.err'); phoneInput(f.phone); eye();
     f.onsubmit = e => {
       e.preventDefault(); er.hidden = true;
       const phone = f.phone.value.replace(/\D/g, '');
       if (phone.length !== 9) { er.textContent = "Telefon raqamni to'liq kiriting"; er.hidden = false; return; }
-      busy(app.querySelector('[form=f]'), async () => { const r = await VX.call('login', { phone, password: f.password.value }); VX.setToken(r.token); setMe(r.user); applyDark(); location.replace('#asosiy'); })
+      busy(app.querySelector('#f [type=submit]'), async () => { const r = await VX.call('login', { phone, password: f.password.value }); VX.setToken(r.token); setMe(r.user); applyDark(); location.replace('#asosiy'); })
         .catch(x => { er.textContent = x.message; er.hidden = false; });
     };
   };
@@ -479,7 +530,7 @@
     const ref = (new URLSearchParams(location.search).get('ref') || store.get('vx_ref') || '').toUpperCase();
     if (ref) store.set('vx_ref', ref);
     const noBot = PUB && PUB.settings && !PUB.settings.tg_bot;
-    show(`<div class="scr">${head('<span style="color:var(--a-blue);font-size:22px">Ro\'yxatdan o\'tish</span>')}
+    show(`<div class="scr auth">${head('<span style="font-size:24px">Ro\'yxatdan o\'tish</span>')}
       <form class="body nobar stack" id="f" novalidate style="padding:20px 24px 0">
         ${noBot ? `<label class="fl"><span>Telefon raqamni kiriting</span><div class="phone"><span class="cc">+998</span><input class="in" name="phone" inputmode="numeric" placeholder="(00)-000-00-00"></div></label>` : ''}
         <label class="fl"><span>Ism familiya</span><input class="in" name="name" autocomplete="name"></label>
@@ -511,7 +562,7 @@
   let POLL = 0;
   R.kod = () => {
     if (!REG) { location.replace('#royxat'); return; }
-    show(`<div class="scr"><div class="top plain"><button class="back" type="button" data-back aria-label="Orqaga">${ic('caret-left')}</button></div>
+    show(`<div class="scr auth"><div class="top plain"><button class="back" type="button" data-back aria-label="Orqaga">${ic('caret-left')}</button></div>
       <form class="body nobar" id="f" novalidate style="padding:0 24px;text-align:center">
         <h1 style="font-size:20px;font-weight:700;margin:4px 0 0;line-height:1.3">Ro'yxatdan o'tish uchun Telegram botdan kelgan 6 xonali kodni ilovaga kiriting</h1>
         <p class="note" style="margin-top:8px">Kodni shu kataklarga kiriting</p>
@@ -550,7 +601,7 @@
   // ================= PAROLNI TIKLASH =================
   R.parol = () => {
     const bot = set().tg_bot;
-    show(`<div class="scr">${head('<span style="color:var(--a-blue);font-size:22px">Parolni tiklash</span>')}
+    show(`<div class="scr auth">${head('<span style="font-size:24px">Parolni tiklash</span>')}
       <form class="body nobar stack" id="f" novalidate style="padding:6px 24px 0">
         <p style="margin:0;font-size:14px;line-height:1.45;color:#555">${bot ? 'Telegram botimizdan kod oling: botda «Parolni tiklash» ni bosing yoki /parol deb yozing. Keyin raqamingiz, kod va yangi parolni kiriting.' : `Parolni tiklash uchun adminga yozing: <a href="https://t.me/${esc(tgName())}" target="_blank" rel="noopener">@${esc(tgName())}</a>`}</p>
         ${bot ? `<a class="btn tg" href="https://t.me/${esc(bot)}?start=reset" target="_blank" rel="noopener">${ic('telegram-logo', 1)} Botdan kod olish</a>
@@ -1036,14 +1087,16 @@
   // ================= ISHGA TUSHIRISH =================
   applyDark();
   const sp = document.getElementById('splash');
-  const t0 = Date.now(), seen = (() => { try { return sessionStorage.getItem('vx_splash'); } catch (_) { return 1; } })();
+  const seen = (() => { try { return sessionStorage.getItem('vx_splash'); } catch (_) { return 1; } })();
   const ready = Promise.all([VX.publicData().then(d => { PUB = d; }).catch(() => {}), VX.token() ? loadMe().catch(e => { if (e && (e.code === 'auth' || e.code === 'blocked')) { clearAll(); VX.setToken(null); ME = null; } }) : null]);
-  const minWait = seen ? 0 : 1800;
-  Promise.race([ready, new Promise(r => setTimeout(r, 4000))]).then(() => setTimeout(() => {
+  // Animatsiya ~5 soniya; bosilsa darhol o'tadi. Bir seansda faqat bir marta ko'rsatiladi.
+  const anim = new Promise(r => { if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) { r(); return; } const t = setTimeout(r, 4750); sp.addEventListener('click', () => { clearTimeout(t); r(); }); });
+  if (seen) sp.style.display = 'none';
+  Promise.all([Promise.race([ready, new Promise(r => setTimeout(r, 6000))]), anim]).then(() => {
     try { sessionStorage.setItem('vx_splash', '1'); } catch (_) {}
-    route(); sp.style.opacity = '0'; setTimeout(() => sp.remove(), 380);
+    route(); sp.style.opacity = '0'; setTimeout(() => sp.remove(), 520);
     if (member()) setTimeout(() => { askProfile(); ['courses', 'shop', 'plans'].forEach(a => swr(a, null, () => {}).catch(() => {})); }, 1200);
-  }, Math.max(0, minWait - (Date.now() - t0))));
+  });
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
