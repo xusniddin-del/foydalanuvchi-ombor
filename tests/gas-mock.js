@@ -1,3 +1,6 @@
+// Google Sheets kabi: boshidagi ' faqat "bu matn" belgisi, qiymatga kirmaydi; ' siz =,+ bilan boshlanuvchi matn formula bo'lib qoladi
+const FORMULA_HITS = [];
+const unq = v => { if (typeof v !== 'string') return v; if (v[0] === "'") return v.slice(1); if (/^[=+@]/.test(v)) { FORMULA_HITS.push(v); return '#ERROR!'; } return v; };
 // Google Apps Script muhitining kichik taqlidi — backend/Code.gs ni kompyuterda sinash uchun.
 // Ishlatish: node tests/server.js  (http://127.0.0.1:8787 — saytdagi API o'rniga)
 const fs = require('fs');
@@ -17,12 +20,12 @@ function makeSheet(name) {
     getMaxRows: () => Math.max(1000, data.length),
     insertColumnsAfter: (_c, n) => { maxCols += n; },
     setFrozenRows: () => sh,
-    appendRow: (vals) => { const r = sh.getLastRow(); data[r] = vals.map(v => (v === undefined ? '' : v)); return sh; },
+    appendRow: (vals) => { const r = sh.getLastRow(); data[r] = vals.map(v => (v === undefined ? '' : unq(v))); return sh; },
     deleteRow: (r) => { data.splice(r - 1, 1); return sh; },
     getRange: (r, c, nr = 1, nc = 1) => {
       const rng = {
         getValues: () => { const out = []; for (let i = 0; i < nr; i++) { const row = data[r - 1 + i] || []; const o = []; for (let j = 0; j < nc; j++) o.push(row[c - 1 + j] === undefined ? '' : row[c - 1 + j]); out.push(o); } return out; },
-        setValues: (v) => { for (let i = 0; i < nr; i++) { data[r - 1 + i] = data[r - 1 + i] || []; for (let j = 0; j < nc; j++) data[r - 1 + i][c - 1 + j] = v[i][j]; } return rng; },
+        setValues: (v) => { for (let i = 0; i < nr; i++) { data[r - 1 + i] = data[r - 1 + i] || []; for (let j = 0; j < nc; j++) data[r - 1 + i][c - 1 + j] = unq(v[i][j]); } return rng; },
         setNumberFormat: () => rng, setFontWeight: () => rng, setBackground: () => rng, setFontColor: () => rng
       };
       return rng;
@@ -101,7 +104,7 @@ function createGas(opts = {}) {
   const tg = (update, key) => JSON.parse(ctx.doPost({ parameter: { tg: key || props.get('TG_HOOK') }, postData: { contents: JSON.stringify({ update_id: ++upd, ...update }) } }).content);
   const tgMsg = (chatId, text, extra) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, text, ...(extra || {}) } });
   const tgContact = (chatId, phone, ownerId) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, contact: { phone_number: phone, user_id: ownerId === undefined ? chatId : ownerId } } });
-  return { ctx, sheets, call, props, cache, files, tg, tgMsg, tgContact, tgOut };
+  return { ctx, sheets, call, props, cache, files, tg, tgMsg, tgContact, tgOut, FORMULA_HITS };
 }
 
 module.exports = { createGas };

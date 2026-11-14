@@ -216,7 +216,10 @@ function cell(v) {
   return String(v);
 }
 
-function rowValues(name, o) { return SHEETS[name].map(function (h) { var v = o[h]; return v === undefined || v === null ? '' : String(v); }); }
+// Jadvalga yoziladigan matn: "=", "+", "@" yoki "-" (sondan boshqa) bilan boshlansa, oldiga ' qo'yiladi.
+// Shunda Google Sheets uni formula deb o'qimaydi (#ERROR! va formula orqali hujumning oldi olinadi).
+function txt(v) { v = String(v); return /^[=+@]|^-(?![\d.])/.test(v) ? "'" + v : v; }
+function rowValues(name, o) { return SHEETS[name].map(function (h) { var v = o[h]; return v === undefined || v === null ? '' : txt(v); }); }
 
 function insert(name, o) {
   var sh = sheet(name);

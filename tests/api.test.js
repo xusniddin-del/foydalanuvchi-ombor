@@ -138,6 +138,16 @@ t('settings saved, mode sanitized, unknown ignored', st.coin_per_correct === '5'
 r = call({ action: 'a.stats', token: AD });
 t('stats', r.ok && r.users === 2 && r.active === 1);
 
+// --- formula himoyasi ---
+{
+  const a = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
+  call({ action: 'a.settings.save', token: a, settings: { phone: '+998 90 123 45 67' } });
+  t('phone with + saved as text, not formula', call({ action: 'public' }).settings.phone === '+998 90 123 45 67');
+  const ev = call({ action: 'register', phone: '907778899', name: '=HYPERLINK("http://x","y")', password: 'parol123' });
+  t('formula-like name stored as text', ev.ok && call({ action: 'me', token: ev.token }).user.name === '=HYPERLINK("http://x","y")');
+  t('no value ever written as formula', g.FORMULA_HITS.length === 0);
+}
+
 // --- faollik va reyting ---
 r = call({ action: 'me', token: A });
 t('me has week/streak/goal', Array.isArray(r.stats.week) && r.stats.week.length === 7 && r.stats.week.some(Boolean) && r.stats.streak >= 1 && r.stats.today >= 1 && r.stats.goal === 2);
