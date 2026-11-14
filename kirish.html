@@ -99,6 +99,7 @@
       <label>Ism familiyangiz<input name="name" autocomplete="name" required></label>
       <label>Paro'l<span class="pw"><input name="password" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
       <label>Paro'lni qayta kiriting<span class="pw"><input name="password2" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
+      <label>Taklif kodi (ixtiyoriy)<input name="ref" autocomplete="off" placeholder="Masalan: X7K2P9Q" style="text-transform:uppercase"></label>
       <p class="msg" role="alert" hidden></p>
       <button class="b-w or" type="submit" style="margin-top:12px">Davom etish</button>
       <p class="note">Agar akauntingiz bo'lsa kirish tugmasini bosing</p>
@@ -163,6 +164,8 @@
   }
   document.querySelectorAll('[data-mode]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); mode(a.dataset.mode, true); }));
   const q0 = new URLSearchParams(location.search).get('mode');
+  const ref0 = (new URLSearchParams(location.search).get('ref') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  try { if (ref0) localStorage.setItem('vx_ref', JSON.stringify(ref0)); reg.ref.value = ref0 || String(JSON.parse(localStorage.getItem('vx_ref') || '""') || ''); } catch (_) {}
   mode(q0 === 'register' || q0 === 'reset' ? q0 : 'login');
 
   // telefon raqam: faqat 9 ta raqam, 90 123 45 67 ko'rinishida
@@ -201,9 +204,9 @@
         if (row.hidden) { row.hidden = false; f.phone.required = true; f.phone.focus(); return err(reg, 'Telefon raqamingizni kiriting.'); }
         const phone = f.phone.value.replace(/\D/g, '');
         if (phone.length !== 9) return err(reg, "Telefon raqamni to'liq kiriting.");
-        return VX.call('register', { phone, name, password: f.password.value }).then(done);
+        return VX.call('register', { phone, name, password: f.password.value, ref: f.ref.value.trim().toUpperCase() }).then(done);
       }
-      const r = await VX.call('reg.start', { name, password: f.password.value });
+      const r = await VX.call('reg.start', { name, password: f.password.value, ref: f.ref.value.trim().toUpperCase() });
       RID = r.rid;
       document.getElementById('tgLink').href = r.link;
       setStep(1, ''); tgf.code.value = ''; err(tgf);

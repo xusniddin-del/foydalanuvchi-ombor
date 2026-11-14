@@ -21,7 +21,7 @@ var CACHE_SECONDS = 300;           // ommaviy ma'lumotlar (kurslar, tariflar, do
 var MAX_PENDING_PAYMENTS = 5;
 
 var SHEETS = {
-  Users: ['id', 'phone', 'name', 'avatar', 'birthday', 'region', 'school', 'grade', 'passHash', 'salt', 'coins', 'plan', 'subEnd', 'status', 'createdAt', 'lastLogin', 'theme', 'bdayYear', 'tgId', 'remindAt', 'remindN', 'subRemind'],
+  Users: ['id', 'phone', 'name', 'avatar', 'birthday', 'region', 'school', 'grade', 'passHash', 'salt', 'coins', 'plan', 'subEnd', 'status', 'createdAt', 'lastLogin', 'theme', 'bdayYear', 'tgId', 'remindAt', 'remindN', 'subRemind', 'refCode', 'refBy', 'refPaid'],
   Sessions: ['token', 'userId', 'role', 'expires'],
   Plans: ['id', 'name', 'months', 'price', 'features', 'popular', 'active', 'order', 'oldPrice'],
   Courses: ['id', 'title', 'desc', 'image', 'teacher', 'level', 'order', 'active', 'price'],
@@ -31,7 +31,9 @@ var SHEETS = {
   Products: ['id', 'name', 'desc', 'image', 'price', 'stock', 'active', 'order', 'category'],
   Orders: ['id', 'userId', 'userName', 'phone', 'productId', 'productName', 'qty', 'price', 'status', 'at'],
   Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason', 'receipt'],
-  Settings: ['key', 'value', 'izoh']
+  Settings: ['key', 'value', 'izoh'],
+  Applications: ['id', 'userId', 'name', 'phone', 'region', 'school', 'grade', 'telegram', 'why', 'experience', 'photo', 'status', 'at', 'note'],
+  Donations: ['id', 'userId', 'name', 'phone', 'amount', 'receipt', 'status', 'at']
 };
 
 var DEFAULT_SETTINGS = [
@@ -60,11 +62,16 @@ var DEFAULT_SETTINGS = [
   ['return_url', '', "To'lovdan keyin qaytiladigan sahifa (masalan https://.../kabinet.html#obuna)"],
   ['card_number', '', "Test rejimida o'quvchi pul o'tkazadigan karta raqami (masalan 5614 6814 0366 6906)"],
   ['card_holder', '', 'Karta egasining ismi (masalan SHAROFIDDINOV XUSNIDDIN)'],
-  ['mini_app', '', 'Telegram Mini App havolasi (bo\'lmasa bo\'sh qoldiring)']
+  ['mini_app', '', 'Telegram Mini App havolasi (bo\'lmasa bo\'sh qoldiring)'],
+  ['ref_discount', '20', "Do'st taklif kodi bilan birinchi oylik obunaga chegirma (%)"],
+  ['ref_coins', '20', "Taklif qilgan do'sti Premium olsa beriladigan coin"],
+  ['ref_bonuses', '5:50, 15:100, 30:150, 50:200, 75:300, 100:500', "Qo'shimcha bonuslar: do'stlar soni:coin, vergul bilan"],
+  ['team_limit', '10', 'Bitta maktabdan qabul qilinadigan sardorlar soni'],
+  ['app_url', '', "Mobil ilova (Play Market) havolasi — bo'lmasa bo'sh"]
 ];
 var PUBLIC_SETTINGS = ['site_name', 'hero_title', 'hero_text', 'stat_videos', 'stat_schools', 'stat_clients', 'phone', 'telegram', 'instagram', 'youtube', 'facebook',
   'app_store', 'google_play', 'address', 'coin_per_correct', 'birthday_coins', 'daily_goal',
-  'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url', 'card_number', 'card_holder', 'mini_app'];
+  'payment_mode', 'click_service_id', 'click_merchant_id', 'payme_merchant_id', 'return_url', 'card_number', 'card_holder', 'mini_app', 'ref_discount', 'ref_coins', 'ref_bonuses', 'team_limit', 'app_url'];
 
 // ======================= KIRISH NUQTALARI =======================
 function doGet() {
@@ -122,7 +129,12 @@ var USER = {
   'avatar': apiAvatar,
   'tg.link': apiTgLink,
   'pay.receipt': apiPayReceipt,
-  'leaders': apiLeaders
+  'leaders': apiLeaders,
+  'ref': apiRef,
+  'ref.apply': apiRefApply,
+  'team': apiTeam,
+  'team.apply': apiTeamApply,
+  'donate': apiDonate
 };
 var ADMIN = {
   'a.stats': aStats,
@@ -149,7 +161,12 @@ var ADMIN = {
   'a.settings.save': aSettingsSave,
   'a.image': aImage,
   'a.coinlog': aCoinLog,
-  'a.broadcast': aBroadcast
+  'a.broadcast': aBroadcast,
+  'a.apps': aApps,
+  'a.app': aAppStatus,
+  'a.donations': aDonations,
+  'a.donation': aDonationAction,
+  'a.refs': aRefs
 };
 var WORKER = {
   'pay.get': wPayGet,
@@ -375,7 +392,7 @@ function isActive(u) { return u.status !== 'blocked' && u.subEnd && Date.parse(u
 function publicUser(u) {
   return {
     id: u.id, phone: u.phone, name: u.name, avatar: u.avatar, birthday: u.birthday, region: u.region, school: u.school, grade: u.grade,
-    coins: num(u.coins), plan: u.plan, subEnd: u.subEnd, active: isActive(u), status: u.status, createdAt: u.createdAt, theme: u.theme || 'light', tg: !!u.tgId
+    coins: num(u.coins), plan: u.plan, subEnd: u.subEnd, active: isActive(u), status: u.status, createdAt: u.createdAt, theme: u.theme || 'light', tg: !!u.tgId, refBy: !!u.refBy
   };
 }
 
@@ -401,7 +418,7 @@ function apiRegister(req) {
     return insert('Users', {
       id: newId('U'), phone: phone, name: name, avatar: '', birthday: birthday, region: clip(req.region, 60), school: clip(req.school, 60),
       grade: clip(req.grade, 20), passHash: hash(pw, salt), salt: salt, coins: '0', plan: '', subEnd: '', status: 'active',
-      createdAt: iso(), lastLogin: iso(), theme: 'light', bdayYear: ''
+      createdAt: iso(), lastLogin: iso(), theme: 'light', bdayYear: '', refBy: refOwnerId(req.ref, '')
     });
   });
   var s = createSession(u.id, 'user');
@@ -805,11 +822,14 @@ function apiPayCreate(req, u) {
   if (limited('pay:' + u.id, 15, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
   return withLock(function () {
     var mine = rows('Payments').filter(function (p) { return p.userId === u.id && p.status === 'pending'; });
-    // shu tarif va usul bo'yicha kutilayotgan to'lov bo'lsa — o'shani qaytaramiz
-    var same = mine.filter(function (p) { return p.planId === plan.id && p.provider === provider && num(p.amount) === plan.price && !p.extId; })[0];
+    var x = findUser(u.id);
+    // taklif kodi bilan kelgan o'quvchi: birinchi to'lovidagi oylik obunaga chegirma
+    var off = num(st.ref_discount, 0);
+    if (x.refBy && off > 0 && plan.months === 1 && !rows('Payments').some(function (q) { return q.userId === x.id && q.status === 'paid'; }))
+      plan = { id: plan.id, name: plan.name, months: plan.months, price: Math.round(plan.price * (100 - Math.min(off, 90)) / 100 / 100) * 100 };
+    var same = mine.filter(function (q) { return q.planId === plan.id && q.provider === provider && num(q.amount) === plan.price && !q.extId; })[0];
     if (same) return { ok: true, payment: payView(same), mode: mode };
     if (mine.length >= MAX_PENDING_PAYMENTS) fail("Sizda tugallanmagan to'lovlar ko'p. Admin bilan bog'laning.");
-    var x = findUser(u.id);
     var p = insert('Payments', { id: newId('P'), userId: x.id, userName: x.name, phone: x.phone, planId: plan.id, planName: plan.name, months: String(plan.months),
       amount: String(plan.price), provider: provider, status: 'pending', createdAt: iso(), paidAt: '', extId: '', extState: '', extCreate: '', extPerform: '', extCancel: '', extReason: '' });
     return { ok: true, payment: payView(p), mode: mode };
@@ -848,6 +868,7 @@ function markPaid(p, provider, extId) {
   p.status = 'paid'; p.paidAt = iso(); p.provider = provider || p.provider;
   if (extId) p.extId = String(extId);
   save('Payments', p);
+  refReward(u);
   tgQueue(u, "✅ <b>To'lov qabul qilindi!</b>\n\n" + tgEsc(p.planName) + " obunasi faollashdi. Barcha kurslar " + uzDate(u.subEnd) + " gacha ochiq.", siteBtn("Darslarni boshlash", 'kabinet.html#kurslar'));
   return p;
 }
@@ -1316,7 +1337,7 @@ function apiRegStart(req) {
   if (pw.length < 6) fail("Parol kamida 6 ta belgidan iborat bo'lsin.");
   if (limited('regstart', 300, 600)) fail("Hozir so'rovlar juda ko'p. Bir daqiqadan so'ng qayta urinib ko'ring.");
   var rid = newToken().slice(0, 24), salt = newToken().slice(0, 16);
-  regPut(rid, { name: name, salt: salt, hash: hash(pw, salt), at: Date.now() });
+  regPut(rid, { name: name, salt: salt, hash: hash(pw, salt), at: Date.now(), ref: clip(req.ref, 12).toUpperCase() });
   return { ok: true, rid: rid, bot: tgBot(), link: 'https://t.me/' + tgBot() + '?start=r_' + rid };
 }
 
@@ -1339,7 +1360,7 @@ function apiRegVerify(req) {
     if (findByPhone(R.phone)) fail("Bu raqam allaqachon ro'yxatdan o'tgan. Kirish bo'limidan foydalaning.");
     return insert('Users', {
       id: newId('U'), phone: R.phone, name: R.name, avatar: '', birthday: '', region: '', school: '', grade: '', passHash: R.hash, salt: R.salt,
-      coins: '0', plan: '', subEnd: '', status: 'active', createdAt: iso(), lastLogin: iso(), theme: 'light', bdayYear: '', tgId: String(R.chatId), remindAt: iso(), remindN: '0', subRemind: ''
+      coins: '0', plan: '', subEnd: '', status: 'active', createdAt: iso(), lastLogin: iso(), theme: 'light', bdayYear: '', tgId: String(R.chatId), remindAt: iso(), remindN: '0', subRemind: '', refBy: refOwnerId(R.ref, '')
     });
   });
   CacheService.getScriptCache().remove('R:' + rid);
@@ -1457,6 +1478,146 @@ function connectTelegramValue(token, execUrl, workerUrl) {
   tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Boshlash' }, { command: 'parol', description: 'Parolni tiklash' }] });
   cacheClear();
   return { ok: true, bot: me.result.username, via: workerUrl ? 'worker' : 'direct' };
+}
+
+// ======================= TAKLIF (PROMOKOD) =======================
+function refBonuses() {
+  return String(settings().ref_bonuses || '').split(',').map(function (x) { var m = /(\d+)\s*:\s*(\d+)/.exec(x); return m ? { need: num(m[1]), coins: num(m[2]) } : null; })
+    .filter(Boolean).sort(function (a, b) { return a.need - b.need; });
+}
+function refOwnerId(code, selfId) {
+  code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length < 4) return '';
+  var o = rows('Users').filter(function (x) { return x.refCode === code; })[0];
+  return o && o.id !== selfId ? o.id : '';
+}
+/** O'quvchining shaxsiy kodi (bir marta yaratiladi). Lock ichida. */
+function ensureRefCode(u) {
+  if (u.refCode) return u.refCode;
+  var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', used = {};
+  rows('Users').forEach(function (x) { if (x.refCode) used[x.refCode] = 1; });
+  var code = '';
+  do { code = ''; for (var i = 0; i < 7; i++) code += abc.charAt(Math.floor(Math.random() * abc.length)); } while (used[code]);
+  u.refCode = code; save('Users', u);
+  return code;
+}
+/** Birinchi to'lovda taklif qilgan o'quvchiga coin va bosqich bonuslari. Lock ichida. */
+function refReward(u) {
+  if (!u.refBy || u.refPaid === '1') return;
+  u.refPaid = '1'; save('Users', u);
+  var r = findUser(u.refBy); if (!r) return;
+  var st = settings(), give = num(st.ref_coins, 0);
+  if (give > 0) addCoins(r.id, give, 'ref', u.name.split(' ')[0] + ' Premium oldi', 'system');
+  var cnt = rows('Users').filter(function (x) { return x.refBy === r.id && x.refPaid === '1'; }).length, bonus = 0;
+  refBonuses().forEach(function (b) { if (b.need === cnt) bonus = b.coins; });
+  if (bonus) addCoins(r.id, bonus, 'ref', cnt + " ta do'st uchun bonus", 'system');
+  var rr = findUser(r.id);
+  tgQueue(rr, "🎉 Do'stingiz <b>" + tgEsc(u.name.split(' ')[0]) + "</b> Premium oldi!" + (give ? "\n\n+" + give + " coin" : '') + (bonus ? "\n🏆 Bonus: +" + bonus + " coin (" + cnt + " ta do'st)" : ''), siteBtn("Do'stlarni taklif qilish", 'kabinet.html#profil/taklif-dost'));
+}
+function apiRef(req, u) {
+  var code = withLock(function () { return ensureRefCode(findUser(u.id)); });
+  var me = findUser(u.id), st = settings();
+  var friends = rows('Users').filter(function (x) { return x.refBy === u.id; }).reverse();
+  var paid = friends.filter(function (x) { return x.refPaid === '1'; }).length;
+  var earned = rows('Coins').filter(function (c) { return c.userId === u.id && c.type === 'ref'; }).reduce(function (n, c) { return n + num(c.amount); }, 0);
+  return { ok: true, code: code, discount: num(st.ref_discount, 0), perFriend: num(st.ref_coins, 0), earned: earned, paid: paid, refBy: !!me.refBy,
+    canApply: !me.refBy && !rows('Payments').some(function (p) { return p.userId === u.id && p.status === 'paid'; }),
+    bonuses: refBonuses().map(function (b) { return { need: b.need, coins: b.coins, done: paid >= b.need }; }),
+    friends: friends.slice(0, 100).map(function (x) { var p = String(x.name || '').split(/\s+/); return { name: p[0] + (p[1] ? ' ' + p[1].charAt(0) + '.' : ''), avatar: x.avatar, at: x.createdAt, paid: x.refPaid === '1' }; }) };
+}
+function apiRefApply(req, u) {
+  if (limited('refapply:' + u.id, 10, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
+  return withLock(function () {
+    var me = findUser(u.id);
+    if (me.refBy) fail("Siz allaqachon taklif kodidan foydalangansiz.");
+    if (rows('Payments').some(function (p) { return p.userId === me.id && p.status === 'paid'; })) fail("Taklif kodi faqat birinchi obunagacha ishlaydi.");
+    var owner = refOwnerId(req.code, me.id);
+    if (!owner) fail("Bunday taklif kodi topilmadi.");
+    if (findUser(owner).refBy === me.id) fail("Bu kodni ishlatib bo'lmaydi.");
+    me.refBy = owner; save('Users', me);
+    return { ok: true, discount: num(settings().ref_discount, 0), user: publicUser(me) };
+  });
+}
+
+// ======================= SARDORLAR (JAMOA) =======================
+function schoolKey(s) { return String(s || '').toLowerCase().replace(/[^0-9a-z\u0400-\u04ff]/g, '').replace(/maktab|школа|school/g, ''); }
+function apiTeam(req, u) {
+  var me = findUser(u.id), lim = num(settings().team_limit, 10);
+  var mine = rows('Applications').filter(function (a) { return a.userId === u.id; }).pop();
+  var school = String(req.school || (mine && mine.school) || me.school || '');
+  var taken = rows('Applications').filter(function (a) { return a.status !== 'rad' && schoolKey(a.school) && schoolKey(a.school) === schoolKey(school); }).length;
+  return { ok: true, limit: lim, school: school, free: Math.max(0, lim - taken),
+    mine: mine ? { status: mine.status, at: mine.at, school: mine.school, note: mine.note } : null };
+}
+function apiTeamApply(req, u) {
+  if (limited('team:' + u.id, 5, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
+  var d = { name: clip(req.name, 80), phone: normPhone(req.phone), region: clip(req.region, 80), school: clip(req.school, 60), grade: clip(req.grade, 20),
+    telegram: clip(req.telegram, 40).replace(/^@?/, '@'), why: clip(req.why, 1500), experience: clip(req.experience, 1500) };
+  if (d.name.length < 3) fail('Ism-familiyangizni kiriting.');
+  if (!/^\d{9}$/.test(d.phone)) fail("Telefon raqamni to'liq kiriting.");
+  if (!d.region || !d.school || !d.grade) fail("Viloyat, maktab va sinfni kiriting.");
+  if (d.why.length < 10) fail("Nega sardor bo'lmoqchi ekaningizni yozing.");
+  var photo = req.photo ? saveImage(req.photo, 'sardor-' + u.id) : '';
+  return withLock(function () {
+    var all = rows('Applications');
+    if (all.some(function (a) { return a.userId === u.id && a.status !== 'rad'; })) fail("Arizangiz allaqachon yuborilgan. Javobni kuting.");
+    var lim = num(settings().team_limit, 10);
+    if (all.filter(function (a) { return a.status !== 'rad' && schoolKey(a.school) === schoolKey(d.school); }).length >= lim) fail("Bu maktabdan joylar to'lgan.");
+    insert('Applications', { id: newId('A'), userId: u.id, name: d.name, phone: d.phone, region: d.region, school: d.school, grade: d.grade, telegram: d.telegram,
+      why: d.why, experience: d.experience, photo: photo, status: 'yangi', at: iso(), note: '' });
+    return { ok: true };
+  });
+}
+
+// ======================= DONAT =======================
+function apiDonate(req, u) {
+  if (limited('donate:' + u.id, 10, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
+  var amount = Math.round(num(req.amount));
+  if (amount < 1000 || amount > 100000000) fail("Miqdorni kiriting (kamida 1 000 so'm).");
+  if (!req.image) fail("To'lov chekining rasmini yuklang.");
+  var url = saveImage(req.image, 'donat-' + u.id);
+  return withLock(function () {
+    var me = findUser(u.id);
+    insert('Donations', { id: newId('D'), userId: u.id, name: clip(req.name, 80) || me.name, phone: me.phone, amount: String(amount), receipt: url, status: 'yangi', at: iso() });
+    return { ok: true };
+  });
+}
+
+// --- admin: arizalar, donatlar, takliflar ---
+function aApps(req) {
+  return { ok: true, apps: rows('Applications').slice().reverse().filter(function (a) { return !req.status || a.status === req.status; }).slice(0, 500)
+    .map(function (a) { return { id: a.id, userId: a.userId, name: a.name, phone: a.phone, region: a.region, school: a.school, grade: a.grade, telegram: a.telegram, why: a.why, experience: a.experience, photo: a.photo, status: a.status, at: a.at, note: a.note }; }) };
+}
+function aAppStatus(req) {
+  if (['qabul', 'rad', 'yangi'].indexOf(req.status) < 0) fail("Noma'lum holat.");
+  return withLock(function () {
+    var a = byId('Applications', req.id); if (!a) fail('Ariza topilmadi.');
+    a.status = req.status; a.note = clip(req.note, 300); save('Applications', a);
+    var u = findUser(a.userId);
+    if (req.status === 'qabul') tgQueue(u, "🎉 <b>Tabriklaymiz!</b> Siz Vector sardori sifatida qabul qilindingiz. Tez orada siz bilan bog'lanamiz.");
+    if (req.status === 'rad') tgQueue(u, "Sardorlik arizangiz bo'yicha javob: hozircha qabul qilinmadi." + (a.note ? "\n\n" + tgEsc(a.note) : ''));
+    return { ok: true };
+  });
+}
+function aDonations() {
+  var list = rows('Donations').slice().reverse();
+  return { ok: true, total: list.filter(function (d) { return d.status === 'tasdiq'; }).reduce(function (n, d) { return n + num(d.amount); }, 0),
+    donations: list.slice(0, 500).map(function (d) { return { id: d.id, name: d.name, phone: d.phone, amount: num(d.amount), receipt: d.receipt, status: d.status, at: d.at }; }) };
+}
+function aDonationAction(req) {
+  if (['tasdiq', 'bekor'].indexOf(req.status) < 0) fail("Noma'lum holat.");
+  return withLock(function () {
+    var d = byId('Donations', req.id); if (!d) fail('Donat topilmadi.');
+    var was = d.status; d.status = req.status; save('Donations', d);
+    if (req.status === 'tasdiq' && was !== 'tasdiq') tgQueue(findUser(d.userId), "💙 Rahmat! " + Number(d.amount).toLocaleString('ru-RU') + " so'm qo'llab-quvvatlovingiz qabul qilindi. Bu bizga ko'proq dars tayyorlashga yordam beradi!");
+    return { ok: true };
+  });
+}
+function aRefs() {
+  var users = rows('Users'), by = {};
+  users.forEach(function (u) { if (u.refBy) { var b = by[u.refBy] = by[u.refBy] || { all: 0, paid: 0 }; b.all++; if (u.refPaid === '1') b.paid++; } });
+  return { ok: true, top: Object.keys(by).map(function (id) { var u = findUser(id) || {}; return { id: id, name: u.name, phone: u.phone, code: u.refCode, all: by[id].all, paid: by[id].paid }; })
+    .sort(function (a, b) { return b.paid - a.paid || b.all - a.all; }).slice(0, 200) };
 }
 
 function onOpen() {

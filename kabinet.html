@@ -694,7 +694,7 @@
 
   // ================= PROFIL =================
   const PSECS = [['malumot', "Profil ma'lumotlari", 'person'], ['obuna', 'Mening obunam', 'subscriptions'], ['sertifikat', 'Sertifikatlar', 'workspace_premium'], ['buyurtma', 'Buyurtmalar', 'shopping_bag'],
-    ['#premium', 'Premium olish', 'diamond'], ['haqida', 'Ilova haqida', 'info'], ['taklif', 'Bizga taklif', 'lightbulb'], ['yordam', 'Yordam', 'help'], ['qoida', 'Foydalanish qoidasi', 'gavel']];
+    ['#premium', 'Premium olish', 'diamond'], ['donat', 'Donat', 'volunteer_activism'], ['jamoa', "Jamoaga qo'shilish", 'group_add'], ['dostlar', "Do'stlarni taklif qilish", 'share'], ['haqida', 'Ilova haqida', 'info'], ['taklif', 'Bizga taklif', 'lightbulb'], ['yordam', 'Yordam', 'help'], ['qoida', 'Foydalanish qoidasi', 'gavel']];
   async function pProfile(sec) {
     sec = PSECS.some(s => s[0] === sec) ? sec : 'malumot';
     const m = await loadMe(); if (!PUB) PUB = await VX.publicData().catch(() => PUB) || PUB;
@@ -713,7 +713,7 @@
     };
     $('#darkRow').onclick = () => { const t = (ME.theme || '') === 'dark' ? 'light' : 'dark'; ME.theme = t; VX.applyTheme(t); const b = $('#darkRow'); b.setAttribute('aria-pressed', t === 'dark'); b.querySelector('.k-sw').classList.toggle('on', t === 'dark'); call('profile', { theme: t }).then(() => drop('me')).catch(() => {}); };
     const box = $('#psec');
-    await ({ malumot: secInfo, obuna: secSub, sertifikat: secCert, buyurtma: secOrders, haqida: secAbout, taklif: secIdea, yordam: secHelp, qoida: secRules }[sec])(box, m);
+    await ({ malumot: secInfo, obuna: secSub, sertifikat: secCert, buyurtma: secOrders, haqida: secAbout, donat: secDonate, jamoa: secTeam, dostlar: secRef, taklif: secIdea, yordam: secHelp, qoida: secRules }[sec])(box, m);
   }
 
   function secInfo(box, m) {
@@ -788,6 +788,79 @@
       ['Web sayt', s.site_url || (location.origin + location.pathname.replace(/[^/]*$/, '')), 'language', '#1E63F0'], ['Mobil ilova', s.google_play || s.app_store, 'android', '#12A150']].filter(x => /^https:\/\//.test(x[1] || ''));
     box.innerHTML = `<div class="k-card k-pad k-about"><div style="text-align:center"><h2 style="margin:0 0 16px;font-size:24px;font-weight:800">Ilova haqida</h2><div class="logo"><img src="assets/img/vector-logo.png" alt="Vector"></div><p style="margin:16px 0 0;font-size:17px;line-height:1.5">O'zbekistonda birinchi raqamli zamonaviy kasblarni o'rganish platformasi</p></div>
       <div><p class="k-sub" style="font-weight:600;font-size:16px">Ijtimoiy tarmoqlarimiz</p>${links.map(([t, u, i, bg]) => `<a class="k-linkrow" href="${esc(u)}" target="_blank" rel="noopener"><i style="background:${bg}">${ms(i, 1)}</i>${t}<span class="ms go">north_east</span></a>`).join('')}</div></div>`;
+  }
+
+
+  const copyTxt = t => (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('Nusxalandi', 'success')).catch(() => toast(t));
+  const cardBox = card => `<div style="padding:18px;border-radius:16px;background:linear-gradient(120deg,#1E73F6,#0B2A7A);color:#fff"><div style="display:flex;justify-content:space-between;align-items:center;font-size:14px"><span>Karta raqami</span><button type="button" id="cpCard" style="border:0;background:rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer">Nusxalash</button></div><div style="font-size:24px;font-weight:800;letter-spacing:.05em;margin:8px 0">${esc(card.replace(/(\d{4})(?=\d)/g, '$1 '))}</div><div style="font-size:14px;font-weight:600">${esc(set().card_holder || '')}</div></div>`;
+  function receiptPicker(box, onImg) {
+    const inp = box.querySelector('#rcF'); if (!inp) return;
+    inp.onchange = async e => { const fl = e.target.files[0]; if (!fl) return; if (fl.size > 5242880) return toast('Rasm 5 MB dan katta', 'error');
+      try { const d = await VX.resizeImage(fl, 1400, .82); onImg(d); box.querySelector('#rcI').innerHTML = `<img src="${d}" alt="" style="width:100%;height:100%;object-fit:cover">`; box.querySelector('#rcT').textContent = 'Chek yuklandi ✓'; } catch (x) { toast(x.message, 'error'); } };
+  }
+  const receiptRow = `<label style="display:flex;align-items:center;gap:12px;padding:12px;border:1.5px dashed #B8C6DE;border-radius:14px;cursor:pointer"><i id="rcI" style="width:46px;height:46px;border-radius:12px;background:var(--k-blue-l);color:var(--k-blue);display:grid;place-items:center;overflow:hidden;flex:none">${ms('receipt_long', 1)}</i><span><b id="rcT" style="display:block">To'lov chekini yuklang</b><small class="muted">Kartaga o'tkazgandan keyin</small></span><input type="file" accept="image/*" id="rcF" class="sr"></label>`;
+
+  function secDonate(box) {
+    const card = String(set().card_number || '').replace(/\D/g, ''); let img = '';
+    box.innerHTML = `<h1 class="k-h1" style="margin-bottom:18px">Qo'llab-quvvatlash</h1><form class="k-card k-pad" id="dn" novalidate>
+      <p class="k-sub" style="margin:0 0 14px;line-height:1.5">"Vector" loyihasini qo'llab-quvvatlang. Bu faoliyatimizni davom ettirishga va yanada ko'proq video darslar yaratishimizga yordam beradi.</p>
+      <div class="k-form"><label class="k-f">Ism va familiya<input name="name" value="${esc(ME.name)}"></label><label class="k-f">Miqdor (so'm)<input name="amount" inputmode="numeric" placeholder="Masalan, 50 000"></label></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">${[33000, 69000, 99000].map(v => `<button type="button" class="k-btn ln sm" data-v="${v}">${fmt(v)}</button>`).join('')}</div>
+      ${card ? `${cardBox(card)}<div style="margin-top:14px">${receiptRow}</div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="k-btn bl" type="submit">O'tkazdim</button></div>` : `<p class="k-sub">Donat qabul qilish hali sozlanmagan. Adminga yozing: <a href="https://t.me/${esc(tgName())}" target="_blank" rel="noopener">@${esc(tgName())}</a></p>`}</form>`;
+    const f = $('#dn');
+    f.amount.oninput = () => { const d = f.amount.value.replace(/\D/g, '').slice(0, 9); f.amount.value = d ? Number(d).toLocaleString('en-US').replace(/,/g, ' ') : ''; };
+    box.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { f.amount.value = Number(b.dataset.v).toLocaleString('en-US').replace(/,/g, ' '); });
+    if (!card) return;
+    $('#cpCard').onclick = () => copyTxt(card);
+    receiptPicker(box, d => { img = d; });
+    f.onsubmit = e => { e.preventDefault(); const amount = Number(f.amount.value.replace(/\D/g, ''));
+      if (amount < 1000) return toast("Miqdorni kiriting (kamida 1 000 so'm)", 'error'); if (!img) return toast("To'lov chekini yuklang", 'error');
+      busy(f.querySelector('[type=submit]'), async () => { await call('donate', { name: f.name.value, amount, image: img }); toast("Rahmat! Admin tasdiqlagach qabul qilinadi 💙", 'success'); secDonate(box); }).catch(x => toast(x.message, 'error')); };
+  }
+
+  async function secTeam(box) {
+    const t = await call('team', { school: ME.school });
+    const S = { yangi: ['or', "Ko'rib chiqilmoqda", 'Arizangiz yuborildi. Javob Telegram botga keladi.'], qabul: ['gn', 'Qabul qilindi 🎉', "Tabriklaymiz! Siz Vector sardorisiz. Admin siz bilan bog'lanadi."], rad: ['gy', 'Qabul qilinmadi', 'Keyinroq qayta ariza yuborishingiz mumkin.'] };
+    const F = [['checkroom', 'Vector yuniformasi', 'Sardorlar uchun maxsus kiyim'], ['badge', 'Guvohnoma va sertifikat', 'Rasmiy Vector sardori maqomi'], ['workspace_premium', '1 yillik bepul dostup', 'Platformaning barcha kurslari'], ['payments', 'Har bir mijozdan ulush', 'Siz jalb qilgan har bir mijoz uchun']];
+    let img = '';
+    box.innerHTML = `<h1 class="k-h1">Vector sardori bo'ling</h1><p class="k-sub" style="margin:6px 0 18px">Maktabingizda Vector vakili bo'ling. Har bir maktabdan ${t.limit} tagacha sardor qabul qilamiz.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">${F.map(([i, b, x]) => `<div class="k-card" style="padding:16px"><i style="width:40px;height:40px;border-radius:12px;background:var(--k-orange);color:#fff;display:grid;place-items:center">${ms(i, 1)}</i><b style="display:block;margin-top:10px">${b}</b><small class="muted">${x}</small></div>`).join('')}</div>
+      <p style="margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--k-blue-l);color:var(--k-blue);font-weight:500">Talab: har kuni platformaga 2 soat vaqt ajratish, Vector'ni targ'ib qilish va yangi mijozlar jalb qilish.</p>
+      ${t.mine && t.mine.status !== 'rad' ? `<div class="k-card k-pad k-sec" style="text-align:center"><span class="k-badge ${S[t.mine.status][0]}" style="font-size:15px">${S[t.mine.status][1]}</span><p class="k-sub" style="margin-top:10px">${S[t.mine.status][2]}</p>${t.mine.note ? `<p style="margin-top:8px">${esc(t.mine.note)}</p>` : ''}</div>` :
+      `<form class="k-card k-pad k-sec" id="tm" novalidate><h2 style="margin:0 0 6px;font-size:20px;font-weight:800">Ariza</h2>
+        <label style="display:flex;align-items:center;gap:14px;cursor:pointer;margin:10px 0"><span id="tmP" style="width:72px;height:72px;border-radius:50%;border:2px dashed #B8C6DE;display:grid;place-items:center;color:#777;overflow:hidden">${ms('add_a_photo')}</span><span><b>Rasmingiz</b><br><small class="muted">JPG yoki PNG</small></span><input type="file" accept="image/*" id="tmF" class="sr"></label>
+        <div class="k-form"><label class="k-f">Ism-familiya<input name="name" value="${esc(ME.name)}"></label><label class="k-f">Telefon raqami<input name="phone" inputmode="numeric" value="${esc(ME.phone)}"></label>
+          <label class="k-f">Viloyat / tuman<input name="region" value="${esc(ME.region || '')}"></label><label class="k-f">Maktab raqami<input name="school" value="${esc(ME.school || '')}" placeholder="4-maktab"></label>
+          <label class="k-f">Sinf<input name="grade" value="${esc(ME.grade || '')}" placeholder="9-B"></label><label class="k-f">Telegram username<input name="telegram" placeholder="@username"></label></div>
+        <div id="tmS" style="margin-top:14px"></div>
+        <div class="k-form" style="grid-template-columns:1fr"><label class="k-f">Nega sardor bo'lmoqchisiz?<textarea name="why" rows="3"></textarea></label><label class="k-f">Tajriba yoki yutuqlaringiz<textarea name="experience" rows="3" placeholder="Olimpiadalar, to'garaklar, loyihalar..."></textarea></label></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="k-btn bl" type="submit">Ariza yuborish</button></div></form>`}`;
+    const f = $('#tm'); if (!f) return;
+    const slots = (sch, free) => { $('#tmS').innerHTML = sch ? `<div style="display:flex;justify-content:space-between;font-size:14px"><span>${esc(sch)}${/maktab/i.test(sch) ? '' : '-maktab'}da bo'sh joylar</span><b style="color:var(--k-green,#12A150)">${free} / ${t.limit}</b></div><div style="height:6px;border-radius:4px;background:#eee;margin-top:6px;overflow:hidden"><i style="display:block;height:100%;width:${free / t.limit * 100}%;background:#12A150"></i></div>` : ''; };
+    slots(t.school, t.free);
+    let tm = 0; f.school.oninput = () => { clearTimeout(tm); tm = setTimeout(() => call('team', { school: f.school.value }).then(x => slots(f.school.value, x.free)).catch(() => {}), 600); };
+    $('#tmF').onchange = async e => { const fl = e.target.files[0]; if (!fl) return; try { img = await VX.resizeImage(fl, 600, .85); $('#tmP').innerHTML = `<img src="${img}" alt="" style="width:100%;height:100%;object-fit:cover">`; } catch (x) { toast(x.message, 'error'); } };
+    f.onsubmit = e => { e.preventDefault(); const d = { name: f.name.value, phone: f.phone.value.replace(/\D/g, '').slice(-9), region: f.region.value, school: f.school.value, grade: f.grade.value, telegram: f.telegram.value, why: f.why.value, experience: f.experience.value, photo: img || undefined };
+      busy(f.querySelector('[type=submit]'), async () => { await call('team.apply', d); toast('Arizangiz yuborildi', 'success'); secTeam(box); }).catch(x => toast(x.message, 'error')); };
+  }
+
+  async function secRef(box) {
+    const r = await swr('ref');
+    const link = location.origin + location.pathname.replace(/[^/]*$/, '') + 'kirish.html?mode=register&ref=' + r.code;
+    const text = `Vector'da IT kasblarni o'rganaman, test yechib coin yig'aman va sovg'alar olaman! Mening kodim bilan birinchi oyga ${r.discount}% chegirma oling: ${r.code}`;
+    box.innerHTML = `<div style="padding:22px;border-radius:20px;background:linear-gradient(120deg,#1E73F6,#0B2A7A);color:#fff"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><h1 style="margin:0;font-size:24px;font-weight:800">Do'stlarni taklif qilish</h1><span style="background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-weight:700">${sum(r.earned)} coin</span></div>
+        <p style="margin:10px 0 0;max-width:640px;line-height:1.5;opacity:.92">Promokodingizni do'stingizga yuboring. Do'stingiz birinchi oy uchun ${r.discount}% chegirma oladi, u Premium xarid qilsa, sizga ${r.perFriend} coin sovg'a qilinadi.</p>
+        <div style="margin-top:16px;padding:16px;border-radius:16px;background:#fff;color:var(--k-ink);text-align:center;max-width:420px"><small class="muted">Sizning promokodingiz</small><div id="rfCode" style="font-size:32px;font-weight:800;letter-spacing:.18em;margin:4px 0">${esc(r.code)}</div><small class="muted">Kod doimiy — istalgancha ulashing</small>
+          <div style="display:flex;gap:10px;margin-top:12px"><button class="k-btn ln" type="button" id="rfCp" style="flex:1">Nusxalash</button><button class="k-btn or" type="button" id="rfSh" style="flex:1">Ulashish</button></div></div></div>
+      <div class="k-card k-pad k-sec"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0;font-size:20px;font-weight:800">Bonuslar</h2><span class="k-sub">${r.paid} ta do'st Premium oldi</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">${r.bonuses.map(b => `<div style="text-align:center;padding:14px 6px;border-radius:14px;border:1px solid ${b.done ? '#FFC98A' : 'var(--k-line,#eee)'};background:${b.done ? '#FFF6EA' : 'transparent'}"><i style="display:grid;place-items:center;width:36px;height:36px;margin:0 auto 6px;border-radius:10px;background:${b.done ? 'var(--k-orange)' : '#D9D9D9'};color:#fff">${ms(b.done ? 'emoji_events' : 'lock', 1)}</i><b style="display:block">${b.coins} coin</b><small class="muted">${b.need} ta do'stga</small></div>`).join('')}</div></div>
+      <div class="k-card k-pad k-sec"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:20px;font-weight:800">Taklif qilgan do'stlaringiz</h2><span class="k-badge bl">${r.friends.length} ta</span></div>
+        ${r.friends.length ? r.friends.map(x => `<div class="k-row"><div><b>${esc(x.name)}</b><div class="muted" style="font-size:13px">${dateTime(x.at)}</div></div><span class="k-badge ${x.paid ? 'gn' : 'gy'}">${x.paid ? 'Premium ✓' : "Ro'yxatdan o'tdi"}</span></div>`).join('') : '<p class="k-sub" style="margin-top:12px">Hali hech kimni taklif qilmadingiz. Promokodingizni do\'stlaringizga yuboring.</p>'}</div>
+      ${r.canApply ? `<form class="k-card k-pad k-sec" id="rfAp"><h2 style="margin:0;font-size:18px;font-weight:800">Do'stingizning taklif kodi bormi?</h2><p class="k-sub" style="margin:4px 0 12px">Birinchi oy obunasiga ${r.discount}% chegirma oling</p><div style="display:flex;gap:10px;flex-wrap:wrap"><label class="k-f" style="flex:1;min-width:200px;margin:0"><span class="sr">Taklif kodi</span><input name="code" placeholder="MASALAN, X7K2P9Q" style="text-transform:uppercase"></label><button class="k-btn bl" type="submit">Qo'llash</button></div></form>`
+        : r.refBy ? `<p class="k-sec" style="padding:12px 14px;border-radius:14px;background:#E6F7EC;color:#157347;font-weight:500">✓ Siz do'stingiz kodi bilan ro'yxatdan o'tgansiz — birinchi oylik obunaga ${r.discount}% chegirma.</p>` : ''}`;
+    $('#rfCp').onclick = () => copyTxt(r.code);
+    $('#rfSh').onclick = () => { if (navigator.share) navigator.share({ title: 'Vector', text, url: link }).catch(() => {}); else window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank', 'noopener'); };
+    const ap = $('#rfAp'); if (ap) ap.onsubmit = e => { e.preventDefault(); busy(ap.querySelector('button'), async () => { const x = await call('ref.apply', { code: ap.code.value }); drop('ref', 'me'); ME = x.user; toast(`Kod qo'llandi: birinchi oyga ${x.discount}% chegirma`, 'success'); secRef(box); }).catch(x => toast(x.message, 'error')); };
   }
 
   function secIdea(box) {

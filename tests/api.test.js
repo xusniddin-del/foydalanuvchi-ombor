@@ -150,6 +150,43 @@ t('stats', r.ok && r.users === 2 && r.active === 1);
   t('admin payments show receipt link', call({ action: 'a.payments', token: call({ action: 'admin.login', password: 'admin-parol-123' }).token }).payments.some(p => /^https:/.test(p.receipt)));
 }
 
+// --- taklif kodi, sardor, donat ---
+{
+  const AD = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
+  const R1 = call({ action: 'ref', token: A });
+  t('ref: personal code created and stable', /^[A-Z2-9]{7}$/.test(R1.code) && call({ action: 'ref', token: A }).code === R1.code && R1.bonuses.length === 6);
+  const F = call({ action: 'register', phone: '933334455', name: 'Do\'st Bola', password: 'parol123', ref: R1.code });
+  t('register with ref code links friend', F.ok && F.user.refBy === true);
+  t('ref: friend listed (unpaid)', call({ action: 'ref', token: A }).friends.some(x => x.name.startsWith("Do'st") && !x.paid));
+  const F2 = call({ action: 'register', phone: '933334466', name: 'Ikkinchi Bola', password: 'parol123' });
+  t('ref.apply: wrong code refused', !call({ action: 'ref.apply', token: F2.token, code: 'ZZZZZZZ' }).ok);
+  t('ref.apply: own code refused', !call({ action: 'ref.apply', token: A, code: R1.code }).ok);
+  t('ref.apply: works once', call({ action: 'ref.apply', token: F2.token, code: R1.code }).ok && !call({ action: 'ref.apply', token: F2.token, code: R1.code }).ok);
+  const plan1 = call({ action: 'plans', token: F.token }).plans.find(p => p.months === 1);
+  const pay = call({ action: 'pay.create', token: F.token, planId: plan1.id }).payment;
+  t('ref: 20% discount on first monthly payment', pay.amount === Math.round(plan1.price * 0.8 / 100) * 100);
+  const before = call({ action: 'me', token: A, lite: 1 }).user.coins;
+  call({ action: 'a.payment', token: AD, id: pay.id, op: 'confirm' });
+  const after = call({ action: 'me', token: A, lite: 1 }).user.coins;
+  t('ref: referrer gets coins when friend pays', after - before === 20);
+  t('ref: paid friend counted', call({ action: 'ref', token: A }).paid === 1);
+  t('ref.apply: refused after a paid payment', !call({ action: 'ref.apply', token: F.token, code: R1.code }).ok);
+  t('admin refs list', call({ action: 'a.refs', token: AD }).top[0].paid === 1);
+
+  t('team: status shows free slots', call({ action: 'team', token: F.token, school: '18' }).free === 10);
+  t('team: incomplete apply refused', !call({ action: 'team.apply', token: F.token, name: 'Do\'st Bola', phone: '933334455' }).ok);
+  const ap = call({ action: 'team.apply', token: F.token, name: "Do'st Bola", phone: '933334455', region: "Farg'ona", school: '18-maktab', grade: '7-sinf', telegram: 'dost', why: 'Maktabimda IT ni tarqatmoqchiman' });
+  t('team: apply ok, second refused', ap.ok && !call({ action: 'team.apply', token: F.token, name: "Do'st Bola", phone: '933334455', region: "Farg'ona", school: '18', grade: '7-sinf', why: 'yana bir marta yozaman' }).ok);
+  t('team: school slots decrease (18 = 18-maktab)', call({ action: 'team', token: A, school: '18' }).free === 9);
+  const apps = call({ action: 'a.apps', token: AD }).apps;
+  t('admin sees application and accepts', apps.length === 1 && call({ action: 'a.app', token: AD, id: apps[0].id, status: 'qabul' }).ok && call({ action: 'team', token: F.token }).mine.status === 'qabul');
+
+  t('donate: needs receipt', !call({ action: 'donate', token: F.token, amount: 50000 }).ok);
+  t('donate: ok with receipt', call({ action: 'donate', token: F.token, amount: 50000, image: PNG }).ok);
+  const dn = call({ action: 'a.donations', token: AD });
+  t('admin confirms donation, total counted', dn.donations.length === 1 && call({ action: 'a.donation', token: AD, id: dn.donations[0].id, status: 'tasdiq' }).ok && call({ action: 'a.donations', token: AD }).total === 50000);
+}
+
 // --- formula himoyasi ---
 {
   const a = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
