@@ -104,6 +104,27 @@ Payme sinov muhitida ([test.paycom.uz](https://test.paycom.uz)) barcha tekshiruv
 
 ---
 
+## 5-qadam. Telegram bot (ro'yxatdan o'tish, parolni tiklash, xabarlar)
+
+Bot ulangandan so'ng:
+- **Ro'yxatdan o'tish:** o'quvchi saytda ism va parolni yozadi → **Davom etish** → **Telegramga o'tish** → botda **Start** va **📱 Telefon raqamni yuborish** → bot **6 xonali kod** yuboradi (1 daqiqa amal qiladi) → kodni saytga kiritadi → akkaunt ochiladi. Telefon raqam shu tariqa tasdiqlanadi.
+- **Viloyat, shahar/tuman, maktab, sinf, tug'ilgan sana** ro'yxatdan o'tishda so'ralmaydi: kabinetga kirgach oyna chiqib so'raydi, bot ham 2 kunda bir eslatadi (ko'pi bilan 3 marta).
+- **Parolni unutsa:** saytda *Paro'l esimdan chiqdi* → botdan kod → yangi parol.
+- **Bot o'zi yuboradi:** to'lov qabul qilingani, obuna tugashiga 3 kun qolgani, berilgan coinlar, sovg'a topshirilgani, tug'ilgan kun tabrigi.
+- **Yangiliklar:** Admin → **Telegram xabar** — barcha, obunasi faol yoki obunasi yo'q o'quvchilarga.
+- Avval ro'yxatdan o'tgan o'quvchilar botni **Kabinet → Profil → Botni ulash** orqali ulaydi.
+
+Ulash:
+1. Telegramda [@BotFather](https://t.me/BotFather) → `/newbot` → bot nomi (masalan *Vector ta'lim*) va username (masalan `vector_talim_bot`) → **token** beradi.
+2. Google jadval → **Vector → 4. Telegram botni ulash** → tokenni kiriting.
+   - Apps Script manzilini so'rasa — 1-qadamdagi `/exec` manzili.
+   - **To'lov serveri (Worker) manzilini** so'raydi: 4-qadamdagi `vector-payments` Worker'ingiz bo'lsa, uning manzilini kiriting (`https://vector-payments.<siz>.workers.dev`). **Tavsiya etiladi**: Telegram xabarlari Google'ga to'g'ridan-to'g'ri borganda Google javobni boshqa manzilga yo'naltiradi va Telegram xabarni qayta yuborib, bot sekinlashishi mumkin. Worker hali bo'lmasa bo'sh qoldiring, keyin Worker ochgach menyuni qayta bosing.
+   - Worker'ga yangi `payments/worker.js` ni joylashtirganingizga ishonch hosil qiling (unda `/tg` yo'li bor).
+3. **Admin → Sozlamalar → site_url** — saytingiz manzili (bot tugmalari shu manzilga olib boradi).
+4. Tekshirish: saytda yangi telefon bilan ro'yxatdan o'ting.
+
+> Bot ulanmaguncha sayt eski usulda ishlaydi: ro'yxatdan o'tishda telefon raqam formada so'raladi, parolni tiklash uchun admin Telegram'i ko'rsatiladi.
+
 ## Ko'p foydalanuvchi bo'lsa qotmaydimi?
 
 - **GitHub Pages** — sahifalar CDN orqali beriladi, minglab kirishni bemalol ko'taradi.
@@ -124,8 +145,8 @@ Payme sinov muhitida ([test.paycom.uz](https://test.paycom.uz)) barcha tekshiruv
 ## Kompyuterda sinash (dasturchilar uchun)
 
 ```bash
-node tests/api.test.js        # server testlari (53 ta)
-node tests/worker.test.mjs    # Click/Payme testlari (23 ta)
+node tests/api.test.js        # server testlari (88 ta)
+node tests/worker.test.mjs    # Click/Payme va Telegram testlari (25 ta)
 node tests/server.js          # http://127.0.0.1:8787 — taqlid qilingan baza bilan sayt (admin paroli: admin-parol-123)
 python3 tests/e2e.py          # brauzer testi (server ishlab turgan bo'lishi kerak)
 ```

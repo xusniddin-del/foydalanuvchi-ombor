@@ -143,6 +143,91 @@ r = call({ action: 'me', token: A });
 t('me has week/streak/goal', Array.isArray(r.stats.week) && r.stats.week.length === 7 && r.stats.week.some(Boolean) && r.stats.streak >= 1 && r.stats.today >= 1 && r.stats.goal === 2);
 t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r.leaders.top[0].coins >= r.leaders.top[1].coins && r.leaders.top.some(x => x.me) && r.leaders.myRank >= 1 && !('id' in r.leaders.top[0]) && !('phone' in r.leaders.top[0]));
 
+// --- Telegram bot ---
+{
+  const C = g.ctx;
+  t('tg: bad token refused', !C.connectTelegramValue('bad:' + 'x'.repeat(35), 'https://script.google.com/macros/s/X/exec').ok);
+  t('tg: connect ok', C.connectTelegramValue('123456:' + 'A'.repeat(35), 'https://script.google.com/macros/s/X/exec').ok && g.props.get('TG_BOT') === 'vector_test_bot');
+  t('tg: public exposes bot username', call({ action: 'public' }).settings.tg_bot === 'vector_test_bot');
+  t('tg: direct register disabled once bot connected', !call({ action: 'register', phone: '935551122', name: 'Direkt Bola', password: 'parol123' }).ok);
+  t('tg: reg.start short password', !call({ action: 'reg.start', name: 'Sardor Aliyev', password: '12' }).ok);
+  let s = call({ action: 'reg.start', name: 'Sardor Aliyev', password: 'sardor123' });
+  t('tg: reg.start gives deep link', s.ok && s.link === 'https://t.me/vector_test_bot?start=r_' + s.rid);
+  const rid = s.rid, CH = 5550001;
+  t('tg: status wait', call({ action: 'reg.status', rid }).state === 'wait');
+  let n = g.tgOut.length;
+  g.tg({ message: { chat: { id: CH, type: 'private' }, from: { id: CH }, text: '/start r_' + rid } }, 'wrong-key');
+  t('tg: wrong webhook key ignored', g.tgOut.length === n);
+  g.tgMsg(CH, '/start r_' + rid);
+  let last = g.tgOut[g.tgOut.length - 1];
+  t('tg: bot asks for contact', last.chat_id === CH && last.reply_markup.keyboard[0][0].request_contact === true);
+  t('tg: status bot', call({ action: 'reg.status', rid }).state === 'bot');
+  g.tgContact(CH, '+998935551122', 999);
+  t('tg: foreign contact refused', /o'zingizning/.test(g.tgOut[g.tgOut.length - 1].text) && call({ action: 'reg.status', rid }).state === 'bot');
+  g.tgContact(CH, '+998901234567');
+  t('tg: existing phone told to log in', /allaqachon/.test(g.tgOut[g.tgOut.length - 1].text));
+  g.tgMsg(CH, '/start r_' + rid);
+  g.tgContact(CH, '+998935551122');
+  last = g.tgOut[g.tgOut.length - 1];
+  const code = (last.text.match(/<code>(\d{6})<\/code>/) || [])[1];
+  t('tg: 6-digit code sent with renew button', !!code && last.reply_markup.inline_keyboard[0][0].callback_data === 'nc');
+  const st = call({ action: 'reg.status', rid });
+  t('tg: status code + masked phone', st.state === 'code' && st.phone === '+998 93 *** ** 22');
+  t('tg: wrong code refused', !call({ action: 'reg.verify', rid, code: code === '111111' ? '222222' : '111111' }).ok);
+  // eskirgan kod
+  const R = C.regGet(rid); const keep = R.exp; R.exp = Date.now() - 1; C.regPut(rid, R);
+  t('tg: expired code refused', /vaqti tugadi/.test(call({ action: 'reg.verify', rid, code }).error));
+  R.exp = keep; R.tries = 0; C.regPut(rid, R);
+  // yangi kod tugmasi
+  g.tg({ callback_query: { id: 'q1', data: 'nc', message: { chat: { id: CH } } } });
+  const code2 = (g.tgOut[g.tgOut.length - 1].text.match(/<code>(\d{6})<\/code>/) || [])[1];
+  t('tg: renew sends new code', !!code2);
+  let v = call({ action: 'reg.verify', rid, code: code2 });
+  t('tg: verify creates user with phone + telegram', v.ok && v.token && v.user.phone === '935551122' && v.user.tg === true && v.user.name === 'Sardor Aliyev');
+  t('tg: welcome message sent', /Tabriklaymiz/.test(g.tgOut[g.tgOut.length - 1].text));
+  t('tg: link single-use', !call({ action: 'reg.verify', rid, code: code2 }).ok);
+  t('tg: login with new password', call({ action: 'login', phone: '935551122', password: 'sardor123' }).ok);
+  const S = v.token;
+  // takroriy update bir marta ishlanadi
+  n = g.tgOut.length;
+  const upd = { update_id: 777777, message: { chat: { id: CH, type: 'private' }, from: { id: CH }, text: '/start' } };
+  C.doPost({ parameter: { tg: g.props.get('TG_HOOK') }, postData: { contents: JSON.stringify(upd) } });
+  C.doPost({ parameter: { tg: g.props.get('TG_HOOK') }, postData: { contents: JSON.stringify(upd) } });
+  t('tg: duplicate update processed once', g.tgOut.length === n + 1);
+  // parolni tiklash
+  g.tgMsg(CH, '/parol');
+  g.tgContact(CH, '998935551122');
+  const pcode = (g.tgOut[g.tgOut.length - 1].text.match(/<code>(\d{6})<\/code>/) || [])[1];
+  t('tg: reset code sent', !!pcode);
+  t('tg: reset wrong code', !call({ action: 'pw.reset', phone: '935551122', code: pcode === '123456' ? '654321' : '123456', password: 'yangi12345' }).ok);
+  v = call({ action: 'pw.reset', phone: '935551122', code: pcode, password: 'yangi12345' });
+  t('tg: reset ok, old sessions dropped', v.ok && !call({ action: 'me', token: S }).ok && call({ action: 'login', phone: '935551122', password: 'yangi12345' }).ok);
+  g.tgMsg(CH + 1, '/parol'); g.tgContact(CH + 1, '998911111111');
+  t('tg: reset unknown phone', /topilmadi/.test(g.tgOut[g.tgOut.length - 1].text));
+  // eski akkauntni botga ulash
+  const lk = call({ action: 'tg.link', token: A });
+  g.tgMsg(7770001, '/start l_' + lk.link.split('l_')[1]);
+  t('tg: existing user linked', call({ action: 'me', token: A }).user.tg === true);
+  // to'lov tasdiqlansa xabar
+  const pl = call({ action: 'plans', token: A }).plans[0];
+  const pay = call({ action: 'pay.create', token: A, planId: pl.id, provider: 'test' }).payment;
+  call({ action: 'a.payment', token: AD, id: pay.id, op: 'confirm' });
+  t('tg: payment notification', g.tgOut.some(m => m.chat_id === '7770001' && /To'lov qabul qilindi/.test(m.text)));
+  call({ action: 'a.coins', token: AD, id: call({ action: 'me', token: A }).user.id, amount: 15, reason: 'Olimpiada' });
+  t('tg: coin notification', /15 coin/.test(g.tgOut[g.tgOut.length - 1].text));
+  // yangiliklar
+  t('tg: broadcast needs text', !call({ action: 'a.broadcast', token: AD, text: '' }).ok);
+  const b = call({ action: 'a.broadcast', token: AD, text: 'Yangi kurs qo\'shildi!', to: 'all' });
+  t('tg: broadcast sent to linked users', b.ok && b.total === 2 && b.sent === 2);
+  t('tg: broadcast escapes html', g.tgOut[g.tgOut.length - 1].text.indexOf('<script') < 0);
+  // eslatmalar
+  n = g.tgOut.length; C.dailyReminders();
+  const rem = g.tgOut.slice(n).filter(m => /profilingizni/.test(m.text)).length;
+  n = g.tgOut.length; C.dailyReminders();
+  t('tg: profile reminder once per 2 days', rem >= 1 && g.tgOut.slice(n).filter(m => /profilingizni/.test(m.text)).length === 0);
+  g.props.delete('TG_TOKEN'); g.props.delete('TG_BOT');
+}
+
 // --- parol almashtirish ---
 r = call({ action: 'password', token: A, old: 'parol123', password: 'yangiparol1' });
 t('password change gives new token, old invalid', r.ok && !call({ action: 'me', token: A }).ok && call({ action: 'me', token: r.token }).ok);

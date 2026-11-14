@@ -7,6 +7,7 @@
  *   Click Prepare:  https://<worker>.workers.dev/click/prepare
  *   Click Complete: https://<worker>.workers.dev/click/complete
  *   Payme:          https://<worker>.workers.dev/payme
+ *   Telegram bot:   https://<worker>.workers.dev/tg  (Google jadvaldagi "4. Telegram botni ulash" o'zi ulaydi)
  *
  * Muhit o'zgaruvchilari (Settings → Variables, "Encrypt" bilan):
  *   GAS_URL           — Apps Script /exec manzili
@@ -19,8 +20,20 @@
 const PAYME_TIMEOUT = 12 * 3600 * 1000; // Payme: tranzaksiya 12 soatda bajarilmasa bekor qilinadi
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // Telegram bot xabarlari: darhol 200 qaytaramiz, xabarni Apps Script'ga orqa fonda uzatamiz.
+    // (Apps Script to'g'ridan-to'g'ri 302 qaytaradi va Telegram xabarni qayta-qayta yuboradi.)
+    if (url.pathname === '/tg' && request.method === 'POST') {
+      const key = url.searchParams.get('tg') || '';
+      if (env.GAS_URL && /^[A-Za-z0-9]{16,64}$/.test(key)) {
+        const body = await request.text();
+        const job = fetch(env.GAS_URL + '?tg=' + key, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'application/json' }, body })
+          .catch(e => console.error('tg relay: ' + e));
+        if (ctx && ctx.waitUntil) ctx.waitUntil(job); else await job;
+      }
+      return new Response('ok');
+    }
     if (request.method === 'GET') return json({ ok: true, name: 'Vector payments' });
     if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
     try {

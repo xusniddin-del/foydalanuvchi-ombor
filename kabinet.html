@@ -222,6 +222,12 @@
   .notice { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 20px; background: var(--orange-50); color: var(--ink); border: 1px solid color-mix(in srgb, var(--orange) 25%, transparent); margin-bottom: 18px; flex-wrap: wrap; }
   .notice p { flex: 1 1 240px; }
   .notice .btn { border-radius: 999px; }
+  .notice.pf-note { background: var(--blue-50); border-color: var(--blue-100); }
+  .notice.pf-note > .ic { color: var(--blue); }
+  .bday { display: grid; grid-template-columns: 80px 1fr 100px; gap: 8px; }
+  .tg-card { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .tg-ic { width: 48px; height: 48px; border-radius: 50%; background: #2AABEE; color: #fff; display: grid; place-items: center; flex: none; }
+  .tg-ic svg { width: 26px; height: 26px; }
 </style>
 </head>
 <body>
@@ -290,6 +296,58 @@
   async function logout() { try { await call('logout'); } catch (_) {} VX.setToken(null); location.replace('index.html'); }
   function authFail(e) { if (e && (e.code === 'auth' || e.code === 'blocked')) { VX.setToken(null); toast(e.message, 'error'); setTimeout(() => location.replace('kirish.html'), 1200); return true; } return false; }
 
+
+  // ================= PROFIL MA'LUMOTLARI (viloyat, maktab, sinf, tug'ilgan sana) =================
+  const REGIONS = ['Toshkent sh.', 'Toshkent vil.', 'Andijon', 'Buxoro', "Farg'ona", 'Jizzax', 'Xorazm', 'Namangan', 'Navoiy', 'Qashqadaryo', "Qoraqalpog'iston", 'Samarqand', 'Sirdaryo', 'Surxondaryo'];
+  const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+  const missing = u => !!u && (!u.region || !u.school || !u.grade || !u.birthday);
+  function pfFields(u) {
+    const [reg0, ...rest] = String(u.region || '').split(', '), city = rest.join(', ');
+    const regs = reg0 && !REGIONS.includes(reg0) ? [reg0, ...REGIONS] : REGIONS;
+    const grades = Array.from({ length: 11 }, (_, i) => (i + 1) + '-sinf').concat(['Talaba', 'Boshqa']);
+    const g = /^\d+$/.test(u.grade || '') ? u.grade + '-sinf' : String(u.grade || '').replace(/^talaba$/, 'Talaba').replace(/^boshqa$/, 'Boshqa');
+    const [by, bm, bd] = String(u.birthday || '').split('-').map(Number), Y = new Date().getFullYear();
+    const opt = (v, t, sel) => `<option value="${esc(v)}" ${sel ? 'selected' : ''}>${esc(t)}</option>`;
+    return `<div class="two">
+        <label class="field"><span>Viloyatingiz</span><select class="select" name="region"><option value="">Tanlang</option>${regs.map(r => opt(r, r, r === reg0)).join('')}</select></label>
+        <label class="field"><span>Shahar yoki tuman</span><input class="input" name="city" value="${esc(city)}" placeholder="Masalan: Marg'ilon"></label></div>
+      <div class="two">
+        <label class="field"><span>Maktabingiz raqami</span><input class="input" name="school" value="${esc(u.school)}" placeholder="Masalan: 18"></label>
+        <label class="field"><span>Sinfingiz</span><select class="select" name="grade"><option value="">Tanlang</option>${grades.map(x => opt(x, x, x === g)).join('')}</select></label></div>
+      <div class="field"><span>Tug'ilgan sanangiz</span><div class="bday">
+        <select class="select" name="bd" aria-label="Kun"><option value="">Kun</option>${Array.from({ length: 31 }, (_, i) => opt(i + 1, i + 1, bd === i + 1)).join('')}</select>
+        <select class="select" name="bm" aria-label="Oy"><option value="">Oy</option>${MONTHS.map((m, i) => opt(i + 1, m, bm === i + 1)).join('')}</select>
+        <select class="select" name="by" aria-label="Yil"><option value="">Yil</option>${Array.from({ length: 40 }, (_, i) => Y - 4 - i).map(y => opt(y, y, by === y)).join('')}</select></div></div>`;
+  }
+  function pfRead(f) {
+    const d = f.bd.value, m = f.bm.value, y = f.by.value;
+    if ((d || m || y) && !(d && m && y)) throw new Error("Tug'ilgan sanani to'liq tanlang: kun, oy va yil.");
+    if (d && new Date(Date.UTC(y, m - 1, d)).getUTCDate() !== Number(d)) throw new Error("Bunday sana yo'q. Kunni tekshiring.");
+    const city = f.city.value.trim();
+    return { region: f.region.value ? f.region.value + (city ? ', ' + city : '') : '', school: f.school.value.trim(), grade: f.grade.value,
+      birthday: d ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` : '' };
+  }
+  function askProfile() {
+    const bc = (PUB && PUB.settings && PUB.settings.birthday_coins) || 50;
+    const m = modal(`<form class="stack" id="pfAsk" style="gap:14px">
+        <div class="row" style="gap:14px"><img src="assets/img/cat-happy.png" alt="" style="width:72px;flex:none"><div><h2>Ma'lumotlaringizni to'ldiring</h2><p class="muted">Tug'ilgan kuningizda <b class="coin">${num(bc)}</b> sovg'a qilamiz!</p></div></div>
+        ${pfFields(ME)}
+        <div class="err" hidden></div>
+        <div class="row" style="justify-content:flex-end"><button type="button" class="btn btn-plain btn-pill" data-later>Keyinroq</button><button class="btn btn-primary btn-pill" type="submit">Saqlash</button></div></form>`);
+    const f = m.el.querySelector('#pfAsk'), er = f.querySelector('.err');
+    f.querySelector('[data-later]').onclick = () => { try { sessionStorage.setItem('vx_pf_later', '1'); } catch (_) {} m.close(); };
+    f.onsubmit = e => {
+      e.preventDefault(); er.hidden = true;
+      let data; try { data = pfRead(f); } catch (x) { er.textContent = x.message; er.hidden = false; return; }
+      if (!data.region || !data.school || !data.grade || !data.birthday) { er.textContent = "Iltimos, barcha maydonlarni to'ldiring."; er.hidden = false; return; }
+      busy(f.querySelector('[type=submit]'), async () => {
+        const r = await call('profile', data);
+        ME = r.user; renderMe(); m.close(); toast('Rahmat! Ma\'lumotlar saqlandi', 'success');
+        if ((location.hash || '#bosh').startsWith('#bosh') || location.hash === '') go();
+      }).catch(x => { er.textContent = x.message; er.hidden = false; });
+    };
+  }
+
   // ================= MARSHRUTLAR =================
   const routes = { bosh: pHome, kurslar: pCourses, kurs: pCourse, dars: pLesson, dokon: pShop, coin: pCoins, obuna: pSub, profil: pProfile };
   async function go() {
@@ -352,8 +410,10 @@
       <div class="progress"><i style="width:${Math.round(u.coins / target.price * 100)}%"></i></div><div class="row" style="margin-top:6px"><span>${num(u.coins)} / ${num(target.price)}</span></div></div></a>` : '';
     view.innerHTML = `<div class="home"><div style="min-width:0">${hero}
         ${active ? '' : `<div class="notice" style="margin-top:18px">${icon('lock')}<p><b>Obuna faol emas.</b> Barcha darslar va testlarni ochish uchun tarif tanlang.</p><a class="btn btn-accent" href="#obuna">Obuna olish</a></div>`}
+        ${missing(u) ? `<div class="notice pf-note" style="margin-top:18px">${icon('cake')}<p><b>Profilingizni to'ldiring.</b> Viloyat, maktab, sinf va tug'ilgan sanangizni kiriting — tug'ilgan kuningizda coin sovg'a qilamiz.</p><button class="btn btn-primary" type="button" data-pf>To'ldirish</button></div>` : ''}
         ${contCard}${skills}${gifts}</div>
       <aside class="rail" aria-label="Natijalarim">${goalBox}${leadBox}${giftBox}</aside></div>`;
+    view.querySelectorAll('[data-pf]').forEach(b => b.onclick = askProfile);
   }
 
   function courseCard(c) {
@@ -543,9 +603,6 @@
   // ================= PROFIL =================
   async function pProfile() {
     const m = await loadMe(), u = m.user;
-    const REGIONS = ["Farg'ona", 'Andijon', 'Namangan', 'Toshkent shahri', 'Toshkent viloyati', 'Samarqand', 'Buxoro', 'Navoiy', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Xorazm', "Qoraqalpog'iston"];
-    const grades = Array.from({ length: 11 }, (_, i) => [(i + 1) + '-sinf', (i + 1) + '-sinf']).concat([['Talaba', 'Talaba'], ['Boshqa', 'Boshqa']]);
-    const gNow = /^\d+$/.test(u.grade || '') ? u.grade + '-sinf' : String(u.grade || '').replace(/^talaba$/, 'Talaba').replace(/^boshqa$/, 'Boshqa');
     view.innerHTML = `<div class="page-h"><div><h1>Profil</h1><p>Ma'lumotlaringiz va sayt sozlamalari.</p></div></div>
       <div class="prof">
         <div class="card pad stack" style="align-items:center;text-align:center">
@@ -560,16 +617,12 @@
           <form class="card pad stack" id="pf">
             <h2 style="font-size:20px">Shaxsiy ma'lumotlar</h2>
             <label class="field"><span>Ism va familiya</span><input class="input" name="name" value="${esc(u.name)}" required></label>
-            <div class="two">
-              <label class="field"><span>Tug'ilgan sana</span><input class="input" type="date" name="birthday" value="${esc(u.birthday)}" max="${new Date().toISOString().slice(0, 10)}"></label>
-              <label class="field"><span>Sinf</span><select class="select" name="grade"><option value="">Tanlang</option>${grades.map(([v, t]) => `<option value="${v}" ${gNow === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-            </div>
-            <div class="two">
-              <label class="field"><span>Viloyat</span><select class="select" name="region"><option value="">Tanlang</option>${REGIONS.map(r => `<option ${u.region === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
-              <label class="field"><span>Maktab</span><input class="input" name="school" value="${esc(u.school)}"></label>
-            </div>
+            ${pfFields(u)}
             <div><button class="btn btn-primary" type="submit">Saqlash</button></div>
           </form>
+          ${PUB && PUB.settings && PUB.settings.tg_bot ? `<div class="card pad tg-card"><span class="tg-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.2c.4-.4-.1-.6-.6-.2L6.3 12.9l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.6.2 1.4 1.5z"/></svg></span>
+            <div style="flex:1;min-width:200px"><h2 style="font-size:18px">Telegram bot</h2><p class="muted" style="font-size:14px;margin-top:4px">${u.tg ? "Ulangan ✓ Yangiliklar, to'lovlar, sovg'alar va parolni tiklash shu botga keladi." : "Botni ulang: yangiliklar, to'lovlar, sovg'alar va parolni tiklash shu botga keladi."}</p></div>
+            ${u.tg ? `<a class="btn btn-soft btn-pill" href="https://t.me/${esc(PUB.settings.tg_bot)}" target="_blank" rel="noopener">Botni ochish</a>` : '<button class="btn btn-primary btn-pill" type="button" id="tgLinkBtn">Botni ulash</button>'}</div>` : ''}
           <div class="card pad stack">
             <h2 style="font-size:20px">Ko'rinish</h2>
             <button type="button" class="row between" id="langRow" style="border:0;background:none;padding:0;cursor:pointer;width:100%;text-align:left;color:inherit"><span>Ilova tili</span><span class="badge" id="langNow"></span></button>
@@ -592,10 +645,13 @@
     const LN = { uz: "O'zbekcha", ru: 'Русский', en: 'English' };
     const paintLang = () => { const el = $('#langNow'); if (el) el.textContent = LN[(window.vectorLang && vectorLang()) || 'uz']; };
     paintLang();
+    const tb = $('#tgLinkBtn');
+    if (tb) tb.onclick = () => busy(tb, async () => { const r = await call('tg.link'); window.open(r.link, '_blank', 'noopener'); toast("Botda «Start» ni bosing, so'ng shu sahifani yangilang."); }).catch(err => toast(err.message, 'error'));
     $('#pf').onsubmit = e => {
       e.preventDefault(); const f = e.currentTarget;
+      try { pfRead(f); } catch (x) { return toast(x.message, 'error'); }
       busy(f.querySelector('[type=submit]'), async () => {
-        const r = await call('profile', { name: f.name.value, birthday: f.birthday.value, grade: f.grade.value, region: f.region.value, school: f.school.value });
+        const r = await call('profile', Object.assign({ name: f.name.value }, pfRead(f)));
         ME = r.user; renderMe(); toast('Saqlandi', 'success');
       }).catch(err => toast(err.message, 'error'));
     };
@@ -618,7 +674,11 @@
   }
 
   // ishga tushirish
-  loadMe().then(() => go()).catch(e => { if (!authFail(e)) go(); });
+  loadMe().then(() => {
+    go();
+    let later = false; try { later = !!sessionStorage.getItem('vx_pf_later'); } catch (_) {}
+    if (missing(ME) && !later) setTimeout(askProfile, 900);
+  }).catch(e => { if (!authFail(e)) go(); });
   VX.publicData().then(d => { PUB = d; }).catch(() => {});
 })();
 </script>

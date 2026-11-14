@@ -15,7 +15,9 @@ const { default: worker, md5 } = await import(pathToFileURL(tmp).href);
 const g = createGas(); g.ctx.setup(); g.ctx.setAdminPasswordValue('admin-parol-123');
 const SECRET = 's'.repeat(64); g.props.set('WORKER_SECRET', SECRET);
 const env = { GAS_URL: 'https://gas.test/exec', GAS_SECRET: SECRET, CLICK_SECRET_KEY: 'clicksecret', CLICK_SERVICE_ID: '777', PAYME_KEY: 'paymekey' };
+const relayed = [];
 globalThis.fetch = async (url, opts) => {
+  if (String(url).startsWith(env.GAS_URL + '?tg=')) { relayed.push([url, opts.body]); return { ok: true }; }
   if (url !== env.GAS_URL) throw new Error('unexpected fetch ' + url);
   return { json: async () => g.call(JSON.parse(opts.body)) };
 };
@@ -93,6 +95,14 @@ r = await payme('PerformTransaction', { id: 'tx1' });
 t('payme perform cancelled → -31008', r.error && r.error.code === -31008);
 r = await payme('PerformTransaction', { id: 'unknown' });
 t('payme unknown tx → -31003', r.error && r.error.code === -31003);
+
+// Telegram relay
+const waits = [];
+r = await worker.fetch(new Request('https://w.test/tg?tg=' + 'k'.repeat(32), { method: 'POST', body: '{"update_id":5}' }), env, { waitUntil: p => waits.push(p) });
+await Promise.all(waits);
+t('tg relay: 200 at once, update forwarded to GAS', (await r.text()) === 'ok' && relayed.length === 1 && relayed[0][0] === env.GAS_URL + '?tg=' + 'k'.repeat(32) && relayed[0][1] === '{"update_id":5}');
+r = await worker.fetch(new Request('https://w.test/tg?tg=bad!', { method: 'POST', body: '{}' }), env, { waitUntil: () => {} });
+t('tg relay: bad key not forwarded', r.status === 200 && relayed.length === 1);
 
 fs.unlinkSync(tmp);
 console.log(`\n${pass} passed, ${fails.length} failed`, fails);

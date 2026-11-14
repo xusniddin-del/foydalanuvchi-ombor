@@ -10,6 +10,8 @@ const PORT = Number(process.env.PORT || 8787);
 const g = createGas();
 g.ctx.setup();
 g.ctx.setAdminPasswordValue('admin-parol-123');
+// Telegram bot taqlidi (o'chirish: NOTG=1). Bot xabarlari: GET /dev/tg-out, botga yozish: POST /dev/tg {chat, text | phone}
+if (!process.env.NOTG) g.ctx.connectTelegramValue('123456:' + 'A'.repeat(35), 'https://script.google.com/macros/s/TEST/exec');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.json': 'application/json' };
 
 http.createServer((req, res) => {
@@ -22,6 +24,17 @@ http.createServer((req, res) => {
       const out = g.ctx.doPost({ postData: { contents: body } }).content;
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(out);
+    });
+    return;
+  }
+  if (url.pathname === '/dev/tg-out') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(g.tgOut.slice(-20))); }
+  if (url.pathname === '/dev/tg' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      const b = JSON.parse(body || '{}');
+      if (b.phone) g.tgContact(b.chat, b.phone); else g.tgMsg(b.chat, b.text);
+      res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(g.tgOut.slice(-3)));
     });
     return;
   }

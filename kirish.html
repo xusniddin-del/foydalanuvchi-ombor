@@ -54,6 +54,23 @@
   .reg .msg { color: #fff; background: rgba(220,38,38,.85); }
   .reg .tip { display: flex; gap: 10px; align-items: flex-start; background: rgba(255,255,255,.12); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.5; }
   @media (max-width: 420px) { .reg .g2 { grid-template-columns: 1fr; } }
+  /* telegram bosqichi */
+  .tg-steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; counter-reset: s; }
+  .tg-steps > li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; font-size: 15px; line-height: 1.45; }
+  .tg-steps > li::before { counter-increment: s; content: counter(s); width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; font-weight: 700; }
+  .tg-steps > li.done::before { content: '✓'; background: #22C55E; }
+  .tg-steps > li.now::before { background: #FF8A00; }
+  .b-tg { height: 46px; border: 0; border-radius: 999px; background: #2AABEE; color: #fff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; transition: background .2s, transform .2s; }
+  .b-tg:hover { background: #229ED9; color: #fff; transform: translateY(-1px); }
+  .b-tg svg { width: 22px; height: 22px; }
+  .reg .code { height: 56px; text-align: center; font-size: 26px; font-weight: 800; letter-spacing: .4em; padding-left: .4em; }
+  .tg-state { font-size: 14px; color: rgba(255,255,255,.85); margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+  .tg-state .dot { width: 8px; height: 8px; border-radius: 50%; background: #FFB259; animation: pulse 1.2s infinite; flex: none; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .reg .back2 { background: none; border: 0; color: rgba(255,255,255,.8); cursor: pointer; font-size: 14px; font-weight: 600; align-self: center; }
+  .reg .back2:hover { color: #fff; }
+  .login .b-tg { margin-top: 0; }
+  .login .steps2 { margin: 0; padding-left: 18px; color: #475569; font-size: 14px; line-height: 1.55; }
 </style>
 </head>
 <body>
@@ -71,30 +88,47 @@
       <label>Paro'l ni kiriting<span class="pw"><input name="password" type="password" autocomplete="current-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
       <p class="msg" role="alert" hidden></p>
       <button class="b-main" type="submit">Davom etish</button>
-      <a class="b-line" id="forgot" href="https://t.me/vectoradminn" target="_blank" rel="noopener">Paro'l esimdan chiqdi</a>
-      <p class="msg info" id="forgotInfo" hidden>Parolni tiklash uchun Telegram orqali adminga yozing — u sizga yangi vaqtinchalik parol beradi.</p>
+      <a class="b-line" id="forgot" href="?mode=reset" data-mode="reset">Paro'l esimdan chiqdi</a>
       <p style="margin:0;font-size:13px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:12px">Akkauntingiz yo'qmi? <a href="?mode=register" data-mode="register" style="font-weight:600">Ro'yxatdan o'tish</a></p>
     </form>
 
     <form class="reg" id="register" novalidate hidden>
       <h1>Ro'yxatdan o'tish</h1>
-      <div class="tip"><span class="ms" style="font-size:20px;color:#FFB259">cake</span><span>Tug'ilgan sanangizni kiriting — tug'ilgan kuningizda <b>sovg'a coinlar</b> beriladi!</span></div>
-      <label>Telefon raqamni kiriting<span class="ph"><span>+998</span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00" required></span></label>
+      <div class="tip"><span class="ms" style="font-size:20px;color:#FFB259">send</span><span>Telefon raqamingiz <b>Telegram bot</b> orqali tasdiqlanadi. Parolni unutsangiz ham shu bot yordam beradi.</span></div>
+      <label id="phRow" hidden>Telefon raqamni kiriting<span class="ph"><span>+998</span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00"></span></label>
       <label>Ism familiyangiz<input name="name" autocomplete="name" required></label>
-      <div class="g2">
-        <label>Viloyatingiz<select name="region" required><option value=""></option></select></label>
-        <label>Shahar yoki tumani yozing<input name="city" required></label>
-        <label>Maktabingiz raqami<input name="school" inputmode="numeric" required></label>
-        <label>Sinfingizni<select name="grade" required><option value=""></option></select></label>
-        <label>Tug'ilgan sanangiz<input name="birthday" type="date" min="1950-01-01" required></label>
-        <span></span>
-        <label>Paro'l<span class="pw"><input name="password" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
-        <label>Paro'lni qayta kiriting<span class="pw"><input name="password2" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
-      </div>
+      <label>Paro'l<span class="pw"><input name="password" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
+      <label>Paro'lni qayta kiriting<span class="pw"><input name="password2" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
       <p class="msg" role="alert" hidden></p>
       <button class="b-w or" type="submit" style="margin-top:12px">Davom etish</button>
       <p class="note">Agar akauntingiz bo'lsa kirish tugmasini bosing</p>
       <a class="b-w" href="?mode=login" data-mode="login">Kirish</a>
+    </form>
+
+    <form class="reg" id="tgStep" novalidate hidden>
+      <h1>Telegram orqali tasdiqlash</h1>
+      <ol class="tg-steps">
+        <li class="now" id="st1"><div>Telegram botimizga o'ting va <b>Start</b> ni bosing.<a class="b-tg" id="tgLink" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.2c.4-.4-.1-.6-.6-.2L6.3 12.9l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.6.2 1.4 1.5z"/></svg>Telegramga o'tish</a></div></li>
+        <li id="st2"><div>Botda <b>«📱 Telefon raqamni yuborish»</b> tugmasini bosing.<div class="tg-state" id="tgState"><span class="dot"></span><span>Bot kutilmoqda…</span></div></div></li>
+        <li id="st3"><div>Botdan kelgan <b>6 xonali kodni</b> kiriting. Kod 1 daqiqa amal qiladi.</div></li>
+      </ol>
+      <input class="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="Tasdiqlash kodi">
+      <p class="msg" role="alert" hidden></p>
+      <button class="b-w or" type="submit">Tasdiqlash</button>
+      <button class="back2" type="button" id="tgBack">← Orqaga</button>
+    </form>
+
+    <form class="login" id="reset" novalidate hidden>
+      <h1>Parolni tiklash</h1>
+      <ol class="steps2"><li>Telegram botni oching va telefon raqamingizni yuboring.</li><li>Bot bergan kodni va yangi parolni kiriting.</li></ol>
+      <a class="b-tg" id="resetLink" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.2c.4-.4-.1-.6-.6-.2L6.3 12.9l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.6.2 1.4 1.5z"/></svg>Botdan kod olish</a>
+      <label>Telefon raqam<input name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="+998 (00) 000-00-00" required></label>
+      <label>Botdan kelgan kod<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+      <label>Yangi parol<span class="pw"><input name="password" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
+      <p class="msg" role="alert" hidden></p>
+      <button class="b-main" type="submit">Parolni yangilash</button>
+      <p class="msg info" id="noBot" hidden>Parolni tiklash uchun Telegram orqali adminga yozing: <a id="adminTg" href="https://t.me/vectoradminn" target="_blank" rel="noopener">@vectoradminn</a></p>
+      <p style="margin:0;font-size:13px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:12px"><a href="?mode=login" data-mode="login" style="font-weight:600">← Kirishga qaytish</a></p>
     </form>
   </section>
 </div>
@@ -103,31 +137,40 @@
 <script>
 (function () {
   if (VX.token()) { location.replace('kabinet.html'); return; }
-  const REG = ['Toshkent sh.', 'Toshkent vil.', 'Andijon', 'Buxoro', "Farg'ona", 'Jizzax', 'Xorazm', 'Namangan', 'Navoiy', 'Qashqadaryo', "Qoraqalpog'iston", 'Samarqand', 'Sirdaryo', 'Surxondaryo'];
-  const log = document.getElementById('login'), reg = document.getElementById('register');
-  reg.region.innerHTML += REG.map(r => `<option>${VX.esc(r)}</option>`).join('');
-  reg.grade.innerHTML += Array.from({ length: 11 }, (_, i) => `<option value="${i + 1}-sinf">${i + 1}-sinf</option>`).join('') + '<option value="Talaba">Talaba</option>';
-  reg.birthday.max = new Date().toISOString().slice(0, 10);
-
-  const setTg = t => { if (t) document.getElementById('forgot').href = 'https://t.me/' + String(t).replace(/^@/, ''); };
-  const pub = VX.cachedPublic(); setTg(pub && pub.settings && pub.settings.telegram);
-  VX.publicData().then(d => setTg(d.settings && d.settings.telegram)).catch(() => {});
-  document.getElementById('forgot').addEventListener('click', () => { document.getElementById('forgotInfo').hidden = false; });
+  const log = document.getElementById('login'), reg = document.getElementById('register'), tgf = document.getElementById('tgStep'), rst = document.getElementById('reset');
+  const FORMS = { login: log, register: reg, tg: tgf, reset: rst };
+  let BOT = '', TG = '', known = false, RID = '', timer = 0, polls = 0;
+  function applyPub(d) {
+    if (!d || !d.settings) return;
+    known = true; BOT = d.settings.tg_bot || ''; TG = String(d.settings.telegram || 'vectoradminn').replace(/^@/, '');
+    document.getElementById('phRow').hidden = !!BOT;
+    reg.phone.required = !BOT;
+    document.getElementById('resetLink').hidden = !BOT;
+    document.getElementById('noBot').hidden = !!BOT;
+    rst.querySelectorAll('label, .b-main, .steps2').forEach(x => { x.hidden = !BOT; });
+    document.getElementById('adminTg').href = 'https://t.me/' + TG; document.getElementById('adminTg').textContent = '@' + TG;
+    if (BOT) document.getElementById('resetLink').href = 'https://t.me/' + BOT + '?start=reset';
+  }
+  applyPub(VX.cachedPublic());
+  const fresh = VX.publicData(true).then(d => { applyPub(d); return d; }).catch(() => null);
 
   function mode(m, push) {
-    const r = m === 'register';
-    reg.hidden = !r; log.hidden = r;
-    if (push) history.replaceState(null, '', r ? '?mode=register' : '?mode=login');
-    const f = (r ? reg : log).querySelector('input'); if (f && push) f.focus();
+    if (!FORMS[m]) m = 'login';
+    Object.keys(FORMS).forEach(k => { FORMS[k].hidden = k !== m; });
+    if (push) history.replaceState(null, '', '?mode=' + (m === 'tg' ? 'register' : m));
+    const f = FORMS[m].querySelector('input:not([hidden])'); if (f && push) f.focus();
+    if (m !== 'tg') stopPoll();
   }
   document.querySelectorAll('[data-mode]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); mode(a.dataset.mode, true); }));
-  mode(new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login');
+  const q0 = new URLSearchParams(location.search).get('mode');
+  mode(q0 === 'register' || q0 === 'reset' ? q0 : 'login');
 
   // telefon raqam: faqat 9 ta raqam, 90 123 45 67 ko'rinishida
   document.querySelectorAll('input[name=phone]').forEach(inp => inp.addEventListener('input', () => {
     let d = inp.value.replace(/\D/g, ''); if (d.startsWith('998') && d.length > 9) d = d.slice(3); d = d.slice(0, 9);
     inp.value = [d.slice(0, 2), d.slice(2, 5), d.slice(5, 7), d.slice(7, 9)].filter(Boolean).join(' ');
   }));
+  document.querySelectorAll('input[name=code]').forEach(inp => inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); }));
   document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => {
     const show = b.textContent === 'visibility';
     document.querySelectorAll('[data-eye]').forEach(x => { if (x.closest('form') === b.closest('form')) { x.previousElementSibling.type = show ? 'text' : 'password'; x.textContent = show ? 'visibility_off' : 'visibility'; x.setAttribute('aria-label', show ? 'Parolni yashirish' : "Parolni ko'rsatish"); } });
@@ -143,19 +186,68 @@
     if (!password) return err(log, 'Parolni kiriting.');
     VX.busy(log.querySelector('[type=submit]'), () => VX.call('login', { phone, password }).then(done).catch(x => err(log, x.message)));
   });
+
+  // ---- ro'yxatdan o'tish: 1-qadam ----
   reg.addEventListener('submit', e => {
     e.preventDefault(); err(reg);
-    const f = reg, phone = f.phone.value.replace(/\D/g, '');
-    if (phone.length !== 9) return err(reg, "Telefon raqamni to'liq kiriting.");
-    if (f.name.value.trim().length < 3) return err(reg, 'Ism va familiyangizni kiriting.');
-    for (const [k, m] of [['region', 'Viloyatingizni tanlang.'], ['city', 'Shahar yoki tumanni yozing.'], ['school', 'Maktabingiz raqamini yozing.'], ['grade', 'Sinfingizni tanlang.'], ['birthday', "Tug'ilgan sanangizni kiriting."]])
-      if (!String(f[k].value).trim()) return err(reg, m);
-    if (f.password.value.length < 6) return err(reg, "Parol kamida 6 ta belgidan iborat bo'lsin.");
-    if (f.password.value !== f.password2.value) return err(reg, 'Parollar bir xil emas.');
-    VX.busy(f.querySelector('[type=submit]'), () => VX.call('register', {
-      phone, name: f.name.value.trim(), region: f.region.value + (f.city.value.trim() ? ', ' + f.city.value.trim() : ''),
-      school: f.school.value.trim(), grade: f.grade.value, birthday: f.birthday.value, password: f.password.value
-    }).then(done).catch(x => err(reg, x.message)));
+    const f = reg, name = f.name.value.trim();
+    VX.busy(f.querySelector('[type=submit]'), async () => {
+      if (!known) await fresh;
+      if (name.length < 3) return err(reg, 'Ism va familiyangizni kiriting.');
+      if (f.password.value.length < 6) return err(reg, "Parol kamida 6 ta belgidan iborat bo'lsin.");
+      if (f.password.value !== f.password2.value) return err(reg, 'Parollar bir xil emas.');
+      if (!BOT) {
+        const phone = f.phone.value.replace(/\D/g, '');
+        if (phone.length !== 9) return err(reg, "Telefon raqamni to'liq kiriting.");
+        return VX.call('register', { phone, name, password: f.password.value }).then(done);
+      }
+      const r = await VX.call('reg.start', { name, password: f.password.value });
+      RID = r.rid;
+      document.getElementById('tgLink').href = r.link;
+      setStep(1, ''); tgf.code.value = ''; err(tgf);
+      mode('tg', true); startPoll();
+    }).catch(x => err(reg, x.message));
+  });
+
+  // ---- 2-qadam: Telegram ----
+  function setStep(n, phone) {
+    ['st1', 'st2', 'st3'].forEach((id, i) => { const li = document.getElementById(id); li.classList.toggle('done', i + 1 < n); li.classList.toggle('now', i + 1 === n); });
+    const s = document.getElementById('tgState');
+    s.innerHTML = n === 1 ? '<span class="dot"></span><span>Bot kutilmoqda…</span>' : n === 2 ? '<span class="dot"></span><span>Telefon raqam kutilmoqda…</span>'
+      : `<span>✅</span><span>Kod ${VX.esc(phone)} raqamli Telegramingizga yuborildi</span>`;
+  }
+  document.getElementById('tgLink').addEventListener('click', () => { if (document.getElementById('st1').classList.contains('now')) setStep(2, ''); });
+  function stopPoll() { clearTimeout(timer); timer = 0; }
+  function startPoll() {
+    stopPoll(); polls = 0;
+    const tick = async () => {
+      if (tgf.hidden || !RID) return;
+      try {
+        const r = await VX.call('reg.status', { rid: RID });
+        if (r.state === 'expired') { err(tgf, "Vaqt tugadi. «Orqaga» ni bosib, qaytadan boshlang."); return; }
+        if (r.state === 'bot') setStep(2, '');
+        if (r.state === 'code') { setStep(3, r.phone); if (!tgf.code.value) tgf.code.focus(); }
+      } catch (_) {}
+      if (++polls < 120) timer = setTimeout(tick, document.hidden ? 6000 : 3000);
+    };
+    timer = setTimeout(tick, 2000);
+  }
+  document.getElementById('tgBack').onclick = () => { stopPoll(); mode('register', true); };
+  tgf.addEventListener('submit', e => {
+    e.preventDefault(); err(tgf);
+    const code = tgf.code.value.replace(/\D/g, '');
+    if (code.length !== 6) return err(tgf, 'Botdan kelgan 6 xonali kodni kiriting.');
+    VX.busy(tgf.querySelector('[type=submit]'), () => VX.call('reg.verify', { rid: RID, code }).then(r => { stopPoll(); done(r); })).catch(x => err(tgf, x.message));
+  });
+
+  // ---- parolni tiklash ----
+  rst.addEventListener('submit', e => {
+    e.preventDefault(); err(rst);
+    const phone = rst.phone.value.replace(/\D/g, ''), code = rst.code.value.replace(/\D/g, ''), password = rst.password.value;
+    if (phone.length !== 9) return err(rst, "Telefon raqamni to'liq kiriting.");
+    if (code.length !== 6) return err(rst, 'Botdan kelgan 6 xonali kodni kiriting.');
+    if (password.length < 6) return err(rst, "Parol kamida 6 ta belgidan iborat bo'lsin.");
+    VX.busy(rst.querySelector('[type=submit]'), () => VX.call('pw.reset', { phone, code, password }).then(done)).catch(x => err(rst, x.message));
   });
 })();
 </script>

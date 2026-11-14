@@ -54,33 +54,54 @@ function createGas(opts = {}) {
       .formatToParts(d).map(x => [x.type, x.value]));
     return fmt.replace('yyyy', p.year).replace('MM', p.month).replace('dd', p.day).replace('HH', p.hour).replace('mm', p.minute).replace('ss', p.second);
   };
+  // Telegram API taqlidi: yuborilgan xabarlar tgOut ga yoziladi
+  const tgOut = [];
+  const fakeTg = (url, o) => {
+    const m = String(url).match(/api\.telegram\.org\/bot([^/]+)\/(\w+)/);
+    const body = o && o.payload ? JSON.parse(o.payload) : {};
+    let res = { ok: true, result: true };
+    if (!m || m[1] === 'bad') res = { ok: false, description: 'Unauthorized' };
+    else if (m[2] === 'getMe') res = { ok: true, result: { id: 1, username: 'vector_test_bot' } };
+    else tgOut.push({ method: m[2], ...body });
+    return { getContentText: () => JSON.stringify(res), getResponseCode: () => (res.ok ? 200 : 401) };
+  };
   const ctx = {
     console,
     SpreadsheetApp: { getActive: () => book, getUi: () => { if (opts.ui) return opts.ui; throw new Error('No UI'); } },
     CacheService: { getScriptCache: () => cacheObj },
     LockService: { getScriptLock: () => ({ tryLock: () => true, waitLock: () => {}, releaseLock: () => {} }) },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (props.has(k) ? props.get(k) : null), setProperty: (k, v) => props.set(k, String(v)) }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (props.has(k) ? props.get(k) : null), setProperty: (k, v) => props.set(k, String(v)), deleteProperty: k => props.delete(k) }) },
+    UrlFetchApp: {
+      fetch: (url, o) => fakeTg(url, o),
+      fetchAll: (list) => list.map(o => fakeTg(o.url, o))
+    },
     Utilities: {
       getUuid: () => crypto.randomUUID(),
       DigestAlgorithm: { SHA_256: 'sha256' }, Charset: { UTF_8: 'utf8' },
       computeDigest: (alg, s) => Array.from(crypto.createHash(alg).update(String(s), 'utf8').digest()).map(b => (b > 127 ? b - 256 : b)),
       formatDate: tzFmt,
       base64Decode: (s) => Array.from(Buffer.from(s, 'base64')),
-      newBlob: (bytes, type, name) => ({ bytes, type, name })
+      newBlob: (bytes, type, name) => ({ bytes, type, name }),
+      sleep: () => {}
     },
     DriveApp: {
       Access: { ANYONE_WITH_LINK: 'a' }, Permission: { VIEW: 'v' },
       createFolder: () => ({ getId: () => 'folder1', createFile: (b) => { const id = 'f' + files.size; files.set(id, b); return { getId: () => id, setSharing: () => {} }; } }),
       getFolderById: () => ctx.DriveApp.createFolder()
     },
-    ScriptApp: { getProjectTriggers: () => [], deleteTrigger: () => {}, newTrigger: () => { const t = { timeBased: () => t, everyDays: () => t, atHour: () => t, inTimezone: () => t, create: () => t }; return t; } },
+    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => [], deleteTrigger: () => {}, newTrigger: () => { const t = { timeBased: () => t, everyDays: () => t, atHour: () => t, inTimezone: () => t, create: () => t }; return t; } },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ content: s, setMimeType() { return this; } }) },
     Date, JSON, Math, Object, Array, String, Number, isNaN, isFinite, parseInt, Error, RegExp
   };
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'backend', 'Code.gs'), 'utf8'), ctx, { filename: 'Code.gs' });
   const call = (body) => JSON.parse(ctx.doPost({ postData: { contents: JSON.stringify(body) } }).content);
-  return { ctx, sheets, call, props, cache, files };
+  let upd = 1000;
+  /** Telegramdan kelgan yangilanishni taqlid qilish */
+  const tg = (update, key) => JSON.parse(ctx.doPost({ parameter: { tg: key || props.get('TG_HOOK') }, postData: { contents: JSON.stringify({ update_id: ++upd, ...update }) } }).content);
+  const tgMsg = (chatId, text, extra) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, text, ...(extra || {}) } });
+  const tgContact = (chatId, phone, ownerId) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, contact: { phone_number: phone, user_id: ownerId === undefined ? chatId : ownerId } } });
+  return { ctx, sheets, call, props, cache, files, tg, tgMsg, tgContact, tgOut };
 }
 
 module.exports = { createGas };

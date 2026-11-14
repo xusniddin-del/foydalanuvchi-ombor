@@ -79,7 +79,7 @@
 
   // ================= QOBIQ =================
   const NAV = [['panel', 'Bosh panel', 'chart'], ['oquvchilar', "O'quvchilar", 'users'], ['tolovlar', "To'lovlar", 'card'], ['kurslar', 'Kurslar va darslar', 'book'],
-    ['dokon', "Do'kon", 'shop'], ['buyurtmalar', 'Buyurtmalar', 'box'], ['coinlar', 'Coinlar tarixi', 'coin'], ['tariflar', 'Tariflar', 'star'], ['sozlamalar', 'Sozlamalar', 'settings']];
+    ['dokon', "Do'kon", 'shop'], ['buyurtmalar', 'Buyurtmalar', 'box'], ['coinlar', 'Coinlar tarixi', 'coin'], ['xabar', 'Telegram xabar', 'tg'], ['tariflar', 'Tariflar', 'star'], ['sozlamalar', 'Sozlamalar', 'settings']];
   function shell() {
     root.innerHTML = `<div class="mbar"><button class="icon-btn" id="mb" aria-label="Menyu">${icon('menu')}</button><b>Vector Admin</b></div>
       <div class="app"><aside class="side" id="side"><a class="logo" href="index.html" target="_blank"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a>
@@ -91,7 +91,7 @@
     document.getElementById('out').onclick = async e => { e.preventDefault(); try { await call('logout', { token: VX.adminToken() }); } catch (_) {} VX.setAdminToken(null); loginScreen(); };
     window.onhashchange = go; go();
   }
-  const pages = { panel: pPanel, oquvchilar: pUsers, tolovlar: pPayments, kurslar: pCourses, dokon: pProducts, buyurtmalar: pOrders, coinlar: pCoinLog, tariflar: pPlans, sozlamalar: pSettings };
+  const pages = { panel: pPanel, oquvchilar: pUsers, tolovlar: pPayments, kurslar: pCourses, dokon: pProducts, buyurtmalar: pOrders, coinlar: pCoinLog, xabar: pBroadcast, tariflar: pPlans, sozlamalar: pSettings };
   async function go() {
     const name = (location.hash.slice(1) || 'panel').split('/')[0], fn = pages[name] || pPanel;
     document.querySelectorAll('[data-nav]').forEach(a => a.dataset.nav === (pages[name] ? name : 'panel') ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
@@ -132,7 +132,7 @@
       <div class="tools"><input class="input" id="uq" placeholder="Ism, telefon yoki maktab bo'yicha qidirish" value="${esc(uq.q)}">
         <select class="select" id="uf" style="flex:0 1 200px">${[['all', 'Hammasi'], ['active', 'Obunasi faol'], ['inactive', 'Obunasiz'], ['blocked', 'Bloklangan']].map(([v, t]) => `<option value="${v}" ${uq.filter === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
       <div class="table-wrap"><table class="t"><thead><tr><th>O'quvchi</th><th>Telefon</th><th>Maktab / sinf</th><th>Coin</th><th>Obuna</th><th>Ro'yxatdan</th><th></th></tr></thead><tbody>
-      ${r.users.map(u => `<tr><td><div class="row" style="gap:10px">${avatarHtml(u, 34)}<div><b>${esc(u.name)}</b>${u.status === 'blocked' ? ' <span class="badge red">Bloklangan</span>' : ''}${u.birthday ? `<div class="muted" style="font-size:12px">🎂 ${esc(u.birthday)}</div>` : ''}</div></div></td>
+      ${r.users.map(u => `<tr><td><div class="row" style="gap:10px">${avatarHtml(u, 34)}<div><b>${esc(u.name)}</b>${u.tg ? ' <span class="badge" title="Telegram botga ulangan" style="background:#E3F4FD;color:#1C8AD0">TG</span>' : ''}${u.status === 'blocked' ? ' <span class="badge red">Bloklangan</span>' : ''}${u.birthday ? `<div class="muted" style="font-size:12px">🎂 ${esc(u.birthday)}</div>` : ''}</div></div></td>
         <td>+998 ${esc(u.phone)}</td><td>${esc(u.school || '—')}${u.grade ? ' · ' + esc(u.grade) : ''}</td><td><span class="coin">${num(u.coins)}</span></td>
         <td>${u.active ? `<span class="badge green">${date(u.subEnd)} gacha</span>` : '<span class="badge gray">Yo\'q</span>'}</td><td class="muted">${date(u.createdAt)}</td>
         <td><button class="btn btn-soft btn-sm" data-u="${esc(u.id)}">Boshqarish</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted" style="text-align:center;padding:30px">Topilmadi</td></tr>'}</tbody></table></div>
@@ -320,6 +320,33 @@
     content.innerHTML = head('Coinlar tarixi', "Oxirgi 300 ta harakat. Coin berish uchun O'quvchilar → Boshqarish.") + `
       <div class="table-wrap"><table class="t"><thead><tr><th>O'quvchi</th><th>Miqdor</th><th>Turi</th><th>Sabab</th><th>Sana</th></tr></thead><tbody>
       ${r.log.map(c => `<tr><td><b>${esc(c.name)}</b></td><td style="font-weight:800;color:${c.amount > 0 ? 'var(--green)' : 'var(--red)'}">${c.amount > 0 ? '+' : ''}${num(c.amount)}</td><td><span class="badge gray">${esc(T[c.type] || c.type)}</span></td><td>${esc(c.reason)}</td><td class="muted">${dateTime(c.at)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted" style="text-align:center;padding:30px">Hali yo\'q</td></tr>'}</tbody></table></div>`;
+  }
+
+  // ================= TELEGRAM XABAR =================
+  async function pBroadcast() {
+    const s = await call('a.stats', {});
+    if (!s.tgBot) {
+      content.innerHTML = head('Telegram xabar', "O'quvchilarga yangilik va e'lonlar yuborish") + `<div class="card pad stack">
+        <b>Telegram bot hali ulanmagan.</b>
+        <ol class="muted" style="margin:0;padding-left:20px;line-height:1.7"><li>Telegramda <a href="https://t.me/BotFather" target="_blank" rel="noopener">@BotFather</a> → /newbot → bot nomi va username → token oling.</li>
+        <li>Google jadvalda <b>Vector → 4. Telegram botni ulash</b> ni bosib, tokenni kiriting.</li></ol></div>`;
+      return;
+    }
+    content.innerHTML = head('Telegram xabar', `Bot: <a href="https://t.me/${esc(s.tgBot)}" target="_blank" rel="noopener">@${esc(s.tgBot)}</a> · botga ulangan o'quvchilar: <b>${num(s.tgUsers)}</b> / ${num(s.users)}`) + `
+      <form class="card pad stack" id="bc" style="max-width:720px">
+        <label class="field"><span>Kimga</span><select class="select" name="to"><option value="all">Barcha o'quvchilar</option><option value="active">Obunasi faol o'quvchilar</option><option value="inactive">Obunasi yo'q o'quvchilar</option></select></label>
+        <label class="field"><span>Xabar matni</span><textarea class="textarea" name="text" rows="6" maxlength="3500" placeholder="Masalan: Yangi «Python» kursi qo'shildi! Kabinetga kiring va birinchi darsni ko'ring." required></textarea></label>
+        <p class="hint">Xabar Vector boti nomidan yuboriladi. 1000 ta o'quvchiga yuborish taxminan 1 daqiqa oladi.</p>
+        <div><button class="btn btn-primary" type="submit">${icon('tg')} Yuborish</button></div>
+      </form>`;
+    document.getElementById('bc').onsubmit = e => {
+      e.preventDefault(); const f = e.currentTarget, d = form2obj(f);
+      if (String(d.text).trim().length < 3) return toast('Xabar matnini yozing.', 'error');
+      busy(f.querySelector('[type=submit]'), async () => {
+        const r = await call('a.broadcast', d);
+        toast(`Yuborildi: ${r.sent} ta${r.failed ? ', yetib bormadi: ' + r.failed : ''}`, 'success'); f.text.value = '';
+      }).catch(err => toast(err.message, 'error'));
+    };
   }
 
   // ================= TARIFLAR =================

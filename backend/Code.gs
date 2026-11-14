@@ -21,7 +21,7 @@ var CACHE_SECONDS = 300;           // ommaviy ma'lumotlar (kurslar, tariflar, do
 var MAX_PENDING_PAYMENTS = 5;
 
 var SHEETS = {
-  Users: ['id', 'phone', 'name', 'avatar', 'birthday', 'region', 'school', 'grade', 'passHash', 'salt', 'coins', 'plan', 'subEnd', 'status', 'createdAt', 'lastLogin', 'theme', 'bdayYear'],
+  Users: ['id', 'phone', 'name', 'avatar', 'birthday', 'region', 'school', 'grade', 'passHash', 'salt', 'coins', 'plan', 'subEnd', 'status', 'createdAt', 'lastLogin', 'theme', 'bdayYear', 'tgId', 'remindAt', 'remindN', 'subRemind'],
   Sessions: ['token', 'userId', 'role', 'expires'],
   Plans: ['id', 'name', 'months', 'price', 'features', 'popular', 'active', 'order', 'oldPrice'],
   Courses: ['id', 'title', 'desc', 'image', 'teacher', 'level', 'order', 'active', 'price'],
@@ -52,6 +52,7 @@ var DEFAULT_SETTINGS = [
   ['coin_per_correct', '2', "Testdagi har bir to'g'ri javob uchun coin (faqat birinchi urinishda)"],
   ['birthday_coins', '50', "Tug'ilgan kunda avtomatik beriladigan coin (0 = o'chiq)"],
   ['daily_goal', '2', "Kunlik maqsad: kuniga nechta dars yoki test (kabinetda ko'rinadi)"],
+  ['site_url', 'https://xusniddin-del.github.io/foydalanuvchi-ombor/', 'Sayt manzili (bot xabarlaridagi tugmalar uchun)'],
   ['payment_mode', 'test', "test — to'lovni admin tasdiqlaydi; live — Click/Payme avtomatik"],
   ['click_service_id', '', 'Click service_id'],
   ['click_merchant_id', '', 'Click merchant_id'],
@@ -68,10 +69,12 @@ function doGet() {
 }
 
 function doPost(e) {
+  if (e && e.parameter && e.parameter.tg) return out(tgWebhook(e));
   var req;
   try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return out({ ok: false, error: "Noto'g'ri so'rov" }); }
   try {
     var res = route(req || {});
+    tgFlush();
     return out(res);
   } catch (err) {
     if (err && err.userMessage) return out({ ok: false, error: err.userMessage, code: err.code || 'error' });
@@ -90,6 +93,10 @@ function fail(msg, code) { var e = new Error(msg); e.userMessage = msg; e.code =
 var PUBLIC = {
   'public': apiPublic,
   'register': apiRegister,
+  'reg.start': apiRegStart,
+  'reg.status': apiRegStatus,
+  'reg.verify': apiRegVerify,
+  'pw.reset': apiPwReset,
   'login': apiLogin,
   'logout': apiLogout,
   'admin.login': apiAdminLogin
@@ -109,7 +116,8 @@ var USER = {
   'payments': apiMyPayments,
   'profile': apiProfile,
   'password': apiPassword,
-  'avatar': apiAvatar
+  'avatar': apiAvatar,
+  'tg.link': apiTgLink
 };
 var ADMIN = {
   'a.stats': aStats,
@@ -135,7 +143,8 @@ var ADMIN = {
   'a.settings': aSettings,
   'a.settings.save': aSettingsSave,
   'a.image': aImage,
-  'a.coinlog': aCoinLog
+  'a.coinlog': aCoinLog,
+  'a.broadcast': aBroadcast
 };
 var WORKER = {
   'pay.get': wPayGet,
@@ -347,7 +356,7 @@ function isActive(u) { return u.status !== 'blocked' && u.subEnd && Date.parse(u
 function publicUser(u) {
   return {
     id: u.id, phone: u.phone, name: u.name, avatar: u.avatar, birthday: u.birthday, region: u.region, school: u.school, grade: u.grade,
-    coins: num(u.coins), plan: u.plan, subEnd: u.subEnd, active: isActive(u), status: u.status, createdAt: u.createdAt, theme: u.theme || 'light'
+    coins: num(u.coins), plan: u.plan, subEnd: u.subEnd, active: isActive(u), status: u.status, createdAt: u.createdAt, theme: u.theme || 'light', tg: !!u.tgId
   };
 }
 
@@ -360,6 +369,7 @@ function validBirthday(b) {
 }
 
 function apiRegister(req) {
+  if (tgToken()) fail("Ro'yxatdan o'tish Telegram bot orqali tasdiqlanadi. Sahifani yangilang.", 'tg');
   var phone = normPhone(req.phone), name = clip(req.name, 80), pw = String(req.password || '');
   if (!/^\d{9}$/.test(phone)) fail("Telefon raqamni to'liq kiriting (9 ta raqam).");
   if (name.length < 3) fail('Ism va familiyani kiriting.');
@@ -550,6 +560,7 @@ function apiPublic() {
   if (c) return c;
   var st = settings(), pub = {};
   PUBLIC_SETTINGS.forEach(function (k) { pub[k] = st[k]; });
+  pub.tg_bot = tgBot();
   var cat = catalog();
   c = {
     ok: true, settings: pub, plans: plansList(), products: productsList(),
@@ -697,11 +708,13 @@ function birthdayCheck(u) {
       x.bdayYear = year; save('Users', x);
       addCoins(x.id, amount, 'birthday', "Tug'ilgan kuningiz bilan! 🎉", 'tizim');
     });
+    tgNotify(findUserFresh(u.id), "🎂 <b>Tug'ilgan kuningiz bilan, " + tgEsc(String(u.name).split(' ')[0]) + "!</b>\n\nVector jamoasi sizni tabriklaydi. Sovg'a sifatida hisobingizga <b>" + amount + " coin</b> qo'shildi 🎁", siteBtn("Do'konni ochish", 'kabinet.html#dokon'));
   } catch (e) { console.error(e); }
 }
 
 function dailyBirthdays() {
   rows('Users').forEach(function (u) { birthdayCheck(u); });
+  try { dailyReminders(); } catch (e) { console.error(e); }
 }
 
 // ======================= DO'KON =======================
@@ -773,6 +786,7 @@ function markPaid(p, provider, extId) {
   p.status = 'paid'; p.paidAt = iso(); p.provider = provider || p.provider;
   if (extId) p.extId = String(extId);
   save('Payments', p);
+  tgQueue(u, "✅ <b>To'lov qabul qilindi!</b>\n\n" + tgEsc(p.planName) + " obunasi faollashdi. Barcha kurslar " + uzDate(u.subEnd) + " gacha ochiq.", siteBtn("Darslarni boshlash", 'kabinet.html#kurslar'));
   return p;
 }
 
@@ -848,6 +862,7 @@ function aStats() {
     pendingPayments: pays.filter(function (p) { return p.status === 'pending'; }).length,
     newOrders: rows('Orders').filter(function (o) { return o.status === 'yangi'; }).length,
     coinsTotal: users.reduce(function (n, u) { return n + num(u.coins); }, 0),
+    tgBot: tgBot(), tgUsers: users.filter(function (u) { return !!u.tgId; }).length,
     birthdaysToday: users.filter(function (u) { return u.birthday && u.birthday.slice(5) === today.slice(5); }).map(function (u) { return { id: u.id, name: u.name }; })
   };
 }
@@ -904,7 +919,11 @@ function aGiveCoins(req) {
   var ids = Array.isArray(req.ids) ? req.ids : [req.id];
   return withLock(function () {
     var done = 0;
-    ids.slice(0, 500).forEach(function (id) { if (findUser(id)) { addCoins(id, amount, 'admin', reason, 'admin'); done++; } });
+    ids.slice(0, 500).forEach(function (id) {
+      var x = findUser(id); if (!x) return;
+      addCoins(id, amount, 'admin', reason, 'admin'); done++;
+      if (amount > 0) tgQueue(x, '🎁 Sizga <b>' + amount + ' coin</b> berildi!\n' + tgEsc(reason) + '\n\nBalans: ' + x.coins + ' coin');
+    });
     return { ok: true, done: done };
   });
 }
@@ -1025,6 +1044,9 @@ function aOrderStatus(req) {
     }
     o.status = req.status === 'berildi' ? 'berildi' : req.status === 'bekor' ? 'bekor' : 'yangi';
     save('Orders', o);
+    var ou = findUser(o.userId);
+    if (o.status === 'berildi') tgQueue(ou, "🎉 <b>" + tgEsc(o.productName) + "</b> sovg'angiz topshirildi. Yoqimli foydalaning!");
+    if (o.status === 'bekor') tgQueue(ou, "Buyurtma bekor qilindi: " + tgEsc(o.productName) + ". " + o.price + " coin hisobingizga qaytarildi.");
     return { ok: true };
   });
 }
@@ -1091,11 +1113,298 @@ function aSettingsSave(req) {
 }
 
 // ======================= JADVAL MENYUSI VA O'RNATISH =======================
+
+// ======================= TELEGRAM BOT =======================
+// Ro'yxatdan o'tish (telefonni tasdiqlash), parolni tiklash, bildirishnomalar va yangiliklar.
+// Sozlash: Jadvalda Vector → "4. Telegram botni ulash" (BotFather bergan token bilan).
+var TG_CODE_SECONDS = 60;
+function tgProps() { return PropertiesService.getScriptProperties(); }
+function tgToken() { return tgProps().getProperty('TG_TOKEN') || ''; }
+function tgBot() { return tgProps().getProperty('TG_BOT') || ''; }
+function tgEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+var UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+function uzDate(s) { var d = new Date(s); if (isNaN(d)) return ''; var p = Utilities.formatDate(d, TZ, 'yyyy-MM-dd').split('-'); return Number(p[2]) + '-' + UZ_MONTHS[Number(p[1]) - 1] + ', ' + p[0]; }
+function siteBtn(text, path) {
+  var base = String(settings().site_url || '').replace(/\/?$/, '/');
+  return /^https:\/\//.test(base) ? { inline_keyboard: [[{ text: text, url: base + (path || '') }]] } : null;
+}
+function code6() { var b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, Utilities.getUuid(), Utilities.Charset.UTF_8); return String(100000 + ((((b[0] & 255) << 16) | ((b[1] & 255) << 8) | (b[2] & 255)) % 900000)); }
+
+function tgApi(method, payload) {
+  var t = tgToken(); if (!t) return null;
+  try {
+    var r = UrlFetchApp.fetch('https://api.telegram.org/bot' + t + '/' + method, { method: 'post', contentType: 'application/json', payload: JSON.stringify(payload || {}), muteHttpExceptions: true });
+    return JSON.parse(r.getContentText());
+  } catch (e) { console.error('tg ' + method + ': ' + e); return null; }
+}
+function tgSend(chatId, text, markup) {
+  var p = { chat_id: chatId, text: text, parse_mode: 'HTML', disable_web_page_preview: true };
+  if (markup) p.reply_markup = markup;
+  return tgApi('sendMessage', p);
+}
+function tgNotify(u, text, markup) { if (u && u.tgId && tgToken()) tgSend(u.tgId, text, markup); }
+// Lock ichida yuborilmaydi: navbatga qo'yiladi va javobdan oldin yuboriladi
+var TGQ = [];
+function tgQueue(u, text, markup) { if (u && u.tgId) TGQ.push([u.tgId, text, markup]); }
+function tgFlush() { var q = TGQ; TGQ = []; if (!q.length || !tgToken()) return; q.forEach(function (m) { tgSend(m[0], m[1], m[2]); }); }
+
+var CONTACT_KB = { keyboard: [[{ text: '📱 Telefon raqamni yuborish', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true };
+var NO_KB = { remove_keyboard: true };
+
+/** Telegram webhook: https://.../exec?tg=MAXFIY_KALIT */
+function tgWebhook(e) {
+  var key = tgProps().getProperty('TG_HOOK');
+  if (!key || !safeEq(String(e.parameter.tg), key)) return { ok: false };
+  var up; try { up = JSON.parse((e.postData && e.postData.contents) || '{}'); } catch (x) { return { ok: true }; }
+  // Telegram bir xabarni qayta yuborishi mumkin — bir marta ishlaymiz
+  var c = CacheService.getScriptCache();
+  if (up.update_id !== undefined) { if (c.get('U:' + up.update_id)) return { ok: true }; c.put('U:' + up.update_id, '1', 21600); }
+  try { tgUpdate(up); } catch (err) { console.error(err && err.stack || err); }
+  return { ok: true };
+}
+
+function tgUpdate(up) {
+  var c = CacheService.getScriptCache();
+  if (up.callback_query) {
+    var q = up.callback_query, chat = q.message && q.message.chat && q.message.chat.id;
+    tgApi('answerCallbackQuery', { callback_query_id: q.id });
+    if (q.data === 'nc') tgSendRegCode(chat, true);
+    return;
+  }
+  var m = up.message; if (!m || !m.chat || m.chat.type !== 'private') return;
+  var chat = m.chat.id, text = String(m.text || '').trim();
+  if (m.contact) return tgContact(m);
+  if (/^\/start/.test(text)) {
+    var arg = text.split(/\s+/)[1] || '';
+    if (/^r_[A-Za-z0-9]{10,40}$/.test(arg)) {
+      var R = regGet(arg.slice(2));
+      if (!R) return tgSend(chat, "Bu havolaning vaqti tugagan. Saytda ro'yxatdan o'tishni qaytadan boshlang.", siteBtn("Ro'yxatdan o'tish", 'kirish.html?mode=register'));
+      R.chatId = chat; regPut(arg.slice(2), R);
+      c.put('C:' + chat, 'r:' + arg.slice(2), 1200);
+      return tgSend(chat, 'Salom, <b>' + tgEsc(R.name) + "</b>! 👋\n\nRo'yxatdan o'tishni yakunlash uchun pastdagi tugma orqali telefon raqamingizni yuboring.", CONTACT_KB);
+    }
+    if (/^l_[A-Za-z0-9]{10,40}$/.test(arg)) {
+      var uid = c.get('LK:' + arg.slice(2)); c.remove('LK:' + arg.slice(2));
+      if (!uid) return tgSend(chat, "Havolaning vaqti tugagan. Kabinetdagi «Botni ulash» tugmasini qayta bosing.");
+      var nm = withLock(function () { var x = findUser(uid); if (!x) return ''; x.tgId = String(chat); save('Users', x); return x.name; });
+      return tgSend(chat, '✅ Bot ulandi, <b>' + tgEsc(nm) + "</b>!\n\nEndi yangiliklar, to'lovlar, sovg'alar va eslatmalar shu yerga keladi.", NO_KB);
+    }
+    if (arg === 'reset') return tgAskReset(chat);
+    return tgSend(chat, "Salom! Bu <b>Vector</b> ta'lim platformasining rasmiy boti 🤖\n\nBu yerda:\n• ro'yxatdan o'tish kodini olasiz\n• parolni tiklaysiz — /parol\n• yangiliklar va eslatmalarni olasiz", siteBtn('Saytni ochish', ''));
+  }
+  if (/^\/(parol|reset)/i.test(text)) return tgAskReset(chat);
+  tgSend(chat, "Parolni tiklash uchun /parol ni bosing.\nSaytga o'tish uchun pastdagi tugmadan foydalaning.", siteBtn('Saytni ochish', ''));
+}
+
+function tgAskReset(chat) {
+  CacheService.getScriptCache().put('C:' + chat, 'p', 600);
+  return tgSend(chat, "Parolni tiklash uchun akkauntingizdagi telefon raqamni pastdagi tugma orqali yuboring.", CONTACT_KB);
+}
+
+function tgContact(m) {
+  var chat = m.chat.id, c = CacheService.getScriptCache();
+  if (!m.from || m.contact.user_id !== m.from.id) return tgSend(chat, "Iltimos, <b>o'zingizning</b> raqamingizni pastdagi tugma orqali yuboring.", CONTACT_KB);
+  var phone = normPhone(m.contact.phone_number);
+  if (!/^\d{9}$/.test(phone)) return tgSend(chat, "Faqat O'zbekiston raqami (+998) qabul qilinadi.", NO_KB);
+  var ctx = c.get('C:' + chat) || '';
+  if (ctx.indexOf('r:') === 0) {
+    var rid = ctx.slice(2), R = regGet(rid);
+    if (!R) return tgSend(chat, "Ro'yxatdan o'tish vaqti tugadi. Saytda qaytadan boshlang.", NO_KB);
+    if (findByPhone(phone)) {
+      c.remove('C:' + chat);
+      return tgSend(chat, "Bu raqam allaqachon ro'yxatdan o'tgan. Saytda «Kirish» bo'limidan kiring.\nParolni unutgan bo'lsangiz: /parol", NO_KB);
+    }
+    R.phone = phone; R.chatId = chat; R.codes = 0; regPut(rid, R);
+    tgSend(chat, 'Rahmat! ✅', NO_KB);
+    return tgSendRegCode(chat, false);
+  }
+  if (ctx === 'p') {
+    var u = findByPhone(phone);
+    if (!u) return tgSend(chat, "Bu raqam bilan akkaunt topilmadi. Saytda ro'yxatdan o'ting.", NO_KB);
+    if (limited('pwc:' + phone, 5, 3600)) return tgSend(chat, "Juda ko'p urinish. 1 soatdan so'ng qayta urinib ko'ring.", NO_KB);
+    var code = code6();
+    c.put('P:' + phone, JSON.stringify({ code: code, exp: Date.now() + TG_CODE_SECONDS * 1000, tries: 0 }), 300);
+    c.remove('C:' + chat);
+    if (u.tgId !== String(chat)) withLock(function () { var x = findUser(u.id); x.tgId = String(chat); save('Users', x); });
+    return tgSend(chat, "🔐 Parolni tiklash kodi: <code>" + code + "</code>\n\nKod <b>1 daqiqa</b> amal qiladi. Uni saytdagi «Parolni tiklash» oynasiga kiriting.\nAgar buni siz so'ramagan bo'lsangiz, e'tibor bermang.", NO_KB);
+  }
+  tgSend(chat, "Avval saytda ro'yxatdan o'tishni boshlang yoki parolni tiklash uchun /parol ni bosing.", NO_KB);
+}
+
+/** Ro'yxatdan o'tish uchun 1 daqiqalik kod */
+function tgSendRegCode(chat, again) {
+  var ctx = CacheService.getScriptCache().get('C:' + chat) || '';
+  if (ctx.indexOf('r:') !== 0) return tgSend(chat, "Ro'yxatdan o'tish vaqti tugadi. Saytda qaytadan boshlang.");
+  var rid = ctx.slice(2), R = regGet(rid);
+  if (!R || !R.phone) return tgSend(chat, "Avval telefon raqamingizni yuboring.", CONTACT_KB);
+  if (num(R.codes) >= 5) return tgSend(chat, "Kod ko'p marta so'raldi. Saytda ro'yxatdan o'tishni qaytadan boshlang.");
+  R.code = code6(); R.exp = Date.now() + TG_CODE_SECONDS * 1000; R.codes = num(R.codes) + 1; R.tries = 0; regPut(rid, R);
+  return tgSend(chat, (again ? 'Yangi kod' : 'Tasdiqlash kodingiz') + ': <code>' + R.code + "</code>\n\nKod <b>1 daqiqa</b> amal qiladi. Uni saytdagi oynaga kiriting.",
+    { inline_keyboard: [[{ text: '🔄 Yangi kod olish', callback_data: 'nc' }]] });
+}
+
+// --- vaqtinchalik ro'yxatdan o'tish ma'lumoti (20 daqiqa) ---
+function regGet(rid) { var v = CacheService.getScriptCache().get('R:' + rid); return v ? JSON.parse(v) : null; }
+function regPut(rid, R) { CacheService.getScriptCache().put('R:' + rid, JSON.stringify(R), 1200); }
+
+function apiRegStart(req) {
+  if (!tgToken() || !tgBot()) fail("Telegram bot hali ulanmagan. Admin bilan bog'laning.", 'tg');
+  var name = clip(req.name, 80), pw = String(req.password || '');
+  if (name.length < 3) fail('Ism va familiyani kiriting.');
+  if (pw.length < 6) fail("Parol kamida 6 ta belgidan iborat bo'lsin.");
+  if (limited('regstart', 300, 600)) fail("Hozir so'rovlar juda ko'p. Bir daqiqadan so'ng qayta urinib ko'ring.");
+  var rid = newToken().slice(0, 24), salt = newToken().slice(0, 16);
+  regPut(rid, { name: name, salt: salt, hash: hash(pw, salt), at: Date.now() });
+  return { ok: true, rid: rid, bot: tgBot(), link: 'https://t.me/' + tgBot() + '?start=r_' + rid };
+}
+
+function apiRegStatus(req) {
+  var R = regGet(String(req.rid || ''));
+  if (!R) return { ok: true, state: 'expired' };
+  return { ok: true, state: R.code ? 'code' : R.chatId ? 'bot' : 'wait', phone: R.phone ? '+998 ' + R.phone.slice(0, 2) + ' *** ** ' + R.phone.slice(7) : '' };
+}
+
+function apiRegVerify(req) {
+  var rid = String(req.rid || ''), code = String(req.code || '').replace(/\D/g, '');
+  var R = regGet(rid);
+  if (!R) fail("Ro'yxatdan o'tish vaqti tugadi. Qaytadan boshlang.", 'expired');
+  if (!R.code) fail("Avval Telegram botga o'ting va telefon raqamingizni yuboring.");
+  R.tries = num(R.tries) + 1; regPut(rid, R);
+  if (R.tries > 5) fail("Urinishlar ko'p. Botda «Yangi kod olish» tugmasini bosing.");
+  if (Date.now() > num(R.exp)) fail("Kodning vaqti tugadi. Botda «Yangi kod olish» tugmasini bosing.");
+  if (!safeEq(code, String(R.code))) fail("Kod noto'g'ri. Botdagi 6 xonali kodni kiriting.");
+  var u = withLock(function () {
+    if (findByPhone(R.phone)) fail("Bu raqam allaqachon ro'yxatdan o'tgan. Kirish bo'limidan foydalaning.");
+    return insert('Users', {
+      id: newId('U'), phone: R.phone, name: R.name, avatar: '', birthday: '', region: '', school: '', grade: '', passHash: R.hash, salt: R.salt,
+      coins: '0', plan: '', subEnd: '', status: 'active', createdAt: iso(), lastLogin: iso(), theme: 'light', bdayYear: '', tgId: String(R.chatId), remindAt: iso(), remindN: '0', subRemind: ''
+    });
+  });
+  CacheService.getScriptCache().remove('R:' + rid);
+  var s = createSession(u.id, 'user');
+  tgSend(R.chatId, "🎉 <b>Tabriklaymiz, " + tgEsc(R.name.split(' ')[0]) + "!</b> Siz Vector'da ro'yxatdan o'tdingiz.\n\nKabinetda viloyat, maktab, sinf va tug'ilgan sanangizni kiriting — tug'ilgan kuningizda coin sovg'a qilamiz 🎁\n\nYangiliklar, to'lovlar va parolni tiklash shu botga keladi.", siteBtn('Kabinetni ochish', 'kabinet.html'));
+  return { ok: true, token: s.token, user: publicUser(findUserFresh(u.id)) };
+}
+
+function apiPwReset(req) {
+  var phone = normPhone(req.phone), code = String(req.code || '').replace(/\D/g, ''), pw = String(req.password || '');
+  if (!/^\d{9}$/.test(phone)) fail("Telefon raqamni to'liq kiriting.");
+  if (pw.length < 6) fail("Parol kamida 6 ta belgidan iborat bo'lsin.");
+  var c = CacheService.getScriptCache(), raw = c.get('P:' + phone);
+  if (!raw) fail("Kod topilmadi yoki vaqti tugagan. Botda /parol ni bosib yangi kod oling.");
+  var P = JSON.parse(raw); P.tries = num(P.tries) + 1; c.put('P:' + phone, JSON.stringify(P), 300);
+  if (P.tries > 5) { c.remove('P:' + phone); fail("Urinishlar ko'p. Botda /parol ni bosib yangi kod oling."); }
+  if (Date.now() > num(P.exp)) fail("Kodning vaqti tugadi. Botda /parol ni bosib yangi kod oling.");
+  if (!safeEq(code, String(P.code))) fail("Kod noto'g'ri.");
+  var u = withLock(function () {
+    var x = findByPhone(phone); if (!x) fail("Akkaunt topilmadi.");
+    x.salt = newToken().slice(0, 16); x.passHash = hash(pw, x.salt); save('Users', x); return x;
+  });
+  c.remove('P:' + phone);
+  dropSessions(u.id);
+  var s = createSession(u.id, 'user');
+  tgNotify(u, "🔐 Parolingiz yangilandi. Agar buni siz qilmagan bo'lsangiz, darhol admin bilan bog'laning.");
+  return { ok: true, token: s.token };
+}
+
+function apiTgLink(req, u) {
+  if (!tgToken() || !tgBot()) fail("Telegram bot hali ulanmagan.");
+  var k = newToken().slice(0, 24);
+  CacheService.getScriptCache().put('LK:' + k, u.id, 900);
+  return { ok: true, link: 'https://t.me/' + tgBot() + '?start=l_' + k };
+}
+
+/** Admin: barcha (yoki tanlangan) o'quvchilarga xabar */
+function aBroadcast(req) {
+  var text = clip(req.text, 3500);
+  if (text.length < 3) fail('Xabar matnini yozing.');
+  if (!tgToken()) fail("Telegram bot ulanmagan. Jadvalda Vector → \"4. Telegram botni ulash\" ni bosing.");
+  var list = rows('Users').filter(function (u) {
+    if (!u.tgId || u.status === 'blocked') return false;
+    return req.to === 'active' ? isActive(u) : req.to === 'inactive' ? !isActive(u) : true;
+  });
+  var seen = {}, chats = [];
+  list.forEach(function (u) { if (!seen[u.tgId]) { seen[u.tgId] = 1; chats.push(u.tgId); } });
+  var t = tgToken(), sent = 0, failed = 0, body = '📢 <b>Vector</b>\n\n' + tgEsc(text);
+  for (var i = 0; i < chats.length; i += 25) {
+    var reqs = chats.slice(i, i + 25).map(function (id) {
+      return { url: 'https://api.telegram.org/bot' + t + '/sendMessage', method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+        payload: JSON.stringify({ chat_id: id, text: body, parse_mode: 'HTML', disable_web_page_preview: true }) };
+    });
+    UrlFetchApp.fetchAll(reqs).forEach(function (r) { if (r.getResponseCode() === 200) sent++; else failed++; });
+    if (i + 25 < chats.length) Utilities.sleep(1100); // Telegram: soniyasiga ~30 ta xabar
+  }
+  return { ok: true, total: chats.length, sent: sent, failed: failed };
+}
+
+/** Har kuni: profilni to'ldirish va obuna tugashi haqida eslatma */
+function dailyReminders() {
+  if (!tgToken()) return;
+  var nowMs = Date.now(), done = [];
+  rows('Users').forEach(function (u) {
+    if (!u.tgId || u.status === 'blocked') return;
+    var missing = !u.region || !u.school || !u.grade || !u.birthday;
+    if (missing && num(u.remindN) < 3 && nowMs - (Date.parse(u.remindAt) || 0) > 2 * 864e5) {
+      tgSend(u.tgId, "📝 <b>" + tgEsc(String(u.name).split(' ')[0]) + "</b>, profilingizni to'ldiring: viloyat, maktab, sinf va tug'ilgan sana.\n\nTug'ilgan kuningizda <b>" + num(settings().birthday_coins, 0) + " coin</b> sovg'a qilamiz 🎁", siteBtn("Profilni to'ldirish", 'kabinet.html#profil'));
+      done.push([u.id, 'remind']);
+    }
+    var left = (Date.parse(u.subEnd) || 0) - nowMs;
+    if (left > 0 && left < 3 * 864e5 && u.subRemind !== u.subEnd) {
+      tgSend(u.tgId, "⏳ Obunangiz <b>" + uzDate(u.subEnd) + "</b> kuni tugaydi. Darslar to'xtab qolmasligi uchun uni uzaytiring.", siteBtn('Obunani uzaytirish', 'kabinet.html#obuna'));
+      done.push([u.id, 'sub']);
+    }
+  });
+  if (done.length) withLock(function () {
+    done.forEach(function (d) {
+      var x = findUser(d[0]); if (!x) return;
+      if (d[1] === 'remind') { x.remindAt = iso(); x.remindN = String(num(x.remindN) + 1); } else x.subRemind = x.subEnd;
+      save('Users', x);
+    });
+  });
+}
+
+/** Jadval menyusi: botni ulash */
+function connectTelegram() {
+  var ui = SpreadsheetApp.getUi();
+  var r = ui.prompt('Telegram bot', "@BotFather bergan bot tokenini kiriting (masalan 123456789:AA...):", ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  var url = ScriptApp.getService().getUrl();
+  if (!url || !/\/exec$/.test(url)) {
+    var u2 = ui.prompt('Sayt manzili', "Apps Script veb-ilova manzilini kiriting (https://script.google.com/macros/s/.../exec):", ui.ButtonSet.OK_CANCEL);
+    if (u2.getSelectedButton() !== ui.Button.OK) return;
+    url = u2.getResponseText().trim();
+  }
+  var w = ui.prompt("To'lov serveri (ixtiyoriy)", "Cloudflare Worker manzili bo'lsa kiriting (https://vector-payments....workers.dev).\nBot shu orqali tezroq va ishonchli ishlaydi. Bo'lmasa bo'sh qoldirib OK ni bosing.", ui.ButtonSet.OK_CANCEL);
+  if (w.getSelectedButton() !== ui.Button.OK) return;
+  var res = connectTelegramValue(r.getResponseText().trim(), url, w.getResponseText().trim());
+  ui.alert(res.ok ? "Tayyor! Bot ulandi: @" + res.bot + (res.via === 'worker' ? ' (Worker orqali)' : '') + "\n\nEndi saytda ro'yxatdan o'tish Telegram orqali tasdiqlanadi." : 'Xatolik: ' + res.error);
+}
+
+function connectTelegramValue(token, execUrl, workerUrl) {
+  if (!/^\d+:[\w-]{30,}$/.test(token)) return { ok: false, error: "Token noto'g'ri ko'rinishda." };
+  workerUrl = String(workerUrl || '').trim().replace(/\/+$/, '');
+  if (workerUrl && !/^https:\/\/[\w.-]+\.workers\.dev$|^https:\/\/[\w.-]+\.[a-z]{2,}$/.test(workerUrl)) return { ok: false, error: "Worker manzili noto'g'ri. Masalan: https://vector-payments.nom.workers.dev" };
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(execUrl)) return { ok: false, error: "Veb-ilova manzili noto'g'ri. Avval Deploy → New deployment qiling." };
+  var p = tgProps(), old = p.getProperty('TG_TOKEN');
+  p.setProperty('TG_TOKEN', token);
+  var me = tgApi('getMe', {});
+  if (!me || !me.ok) { if (old) p.setProperty('TG_TOKEN', old); else p.deleteProperty('TG_TOKEN'); return { ok: false, error: 'Token ishlamadi. BotFather bergan tokenni tekshiring.' }; }
+  var hook = newToken().slice(0, 32);
+  p.setProperty('TG_HOOK', hook);
+  p.setProperty('TG_BOT', me.result.username);
+  var wh = tgApi('setWebhook', { url: (workerUrl ? workerUrl + '/tg' : execUrl) + '?tg=' + hook, allowed_updates: ['message', 'callback_query'], drop_pending_updates: true });
+  if (!wh || !wh.ok) return { ok: false, error: 'Webhook o\'rnatilmadi: ' + (wh && wh.description) };
+  tgApi('setMyCommands', { commands: [{ command: 'start', description: 'Boshlash' }, { command: 'parol', description: 'Parolni tiklash' }] });
+  cacheClear();
+  return { ok: true, bot: me.result.username, via: workerUrl ? 'worker' : 'direct' };
+}
+
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Vector')
     .addItem('1. Jadvalni tayyorlash', 'setup')
     .addItem("2. Admin parolini o'rnatish", 'setAdminPassword')
     .addItem("3. To'lov serveri kalitini yaratish", 'makeWorkerSecret')
+    .addItem('4. Telegram botni ulash', 'connectTelegram')
     .addSeparator()
     .addItem('Keshni tozalash', 'cacheClear')
     .addToUi();
