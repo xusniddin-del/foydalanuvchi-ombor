@@ -23,8 +23,8 @@ http.createServer((req, res) => {
     req.on('data', c => { body += c; });
     req.on('end', () => {
       const out = g.ctx.doPost({ postData: { contents: body } }).content;
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(out);
+      // LAG=1200 — Google Apps Script kabi sekin javobni taqlid qilish (tezlikni o'lchash uchun)
+      setTimeout(() => { res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); res.end(out); }, Number(process.env.LAG || 0));
     });
     return;
   }

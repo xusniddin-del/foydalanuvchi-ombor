@@ -53,7 +53,7 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
     markActive(); window.addEventListener('hashchange', markActive);
     // kabinetdan tashqarida ism va coinlarni yangilab olamiz
-    if (here !== 'kabinet.html' && window.VX) VX.call('me').then(r => { try { localStorage.setItem('vx_me', JSON.stringify({ name: r.user.name, coins: r.user.coins, avatar: r.user.avatar })); } catch (_) {} paintMe(r.user); }).catch(() => {});
+    if (here !== 'kabinet.html' && window.VX) VX.call('me', { lite: 1 }).then(r => { try { localStorage.setItem('vx_me', JSON.stringify({ name: r.user.name, coins: r.user.coins, avatar: r.user.avatar })); } catch (_) {} paintMe(r.user); }).catch(() => {});
   }
 
   function header() {

@@ -444,6 +444,8 @@ function apiAdminLogin(req) {
 function apiMe(req, u) {
   birthdayCheck(u);
   u = findUserFresh(u.id);
+  // tezkor variant: faqat profil (kabinet uchun yetarli, Progress/Coins/reyting o'qilmaydi)
+  if (req.lite) return { ok: true, user: publicUser(u), birthdayToday: !!(u.birthday && u.birthday.slice(5) === Utilities.formatDate(now(), TZ, 'MM-dd')) };
   var prog = rows('Progress').filter(function (p) { return p.userId === u.id; });
   var today = Utilities.formatDate(now(), TZ, 'MM-dd');
   // faollik kunlari (dars ko'rish, test ishlash, coin olish)

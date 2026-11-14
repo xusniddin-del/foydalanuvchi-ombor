@@ -43,10 +43,10 @@
   async function publicData(force) {
     const raw = store.get(PUB);
     if (raw && !force) { try { const j = JSON.parse(raw); if (Date.now() - j.t < 600000) return j.d; } catch (_) {} }
-    const d = await call('public');
-    store.set(PUB, JSON.stringify({ t: Date.now(), d }));
-    return d;
+    if (!pubJob) pubJob = call('public').then(d => { store.set(PUB, JSON.stringify({ t: Date.now(), d })); return d; }).finally(() => { pubJob = null; });
+    return pubJob;
   }
+  let pubJob = null;
   function cachedPublic() { try { return JSON.parse(store.get(PUB)).d; } catch (_) { return null; } }
 
   // ---------- yordamchilar ----------

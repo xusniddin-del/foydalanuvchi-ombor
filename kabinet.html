@@ -334,18 +334,36 @@
   const av = (u, cls, bg) => `<span class="${cls || 'k-av'}" style="background:${bg || avColor(u && u.name)}">${safeUrl(u && u.avatar) ? `<img src="${esc(u.avatar)}" alt="">` : esc((first(u && u.name)[0] || '?').toUpperCase())}</span>`;
   const TG_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.2c.4-.4-.1-.6-.6-.2L6.3 12.9l-4.8-1.5c-1-.3-1.1-1 .2-1.5L20.5 2.8c.9-.3 1.6.2 1.4 1.5z"/></svg>';
 
+  // ---- tezkor kesh: avval saqlangan ma'lumot darhol ko'rsatiladi, yangisi orqada keladi ----
+  const KP = 'vx_c_' + String(VX.token() || '').slice(-10) + '_', FRESH = {}, TTL = 20000;
+  const ckey = (a, p) => KP + a + (p ? ':' + JSON.stringify(p) : '');
+  const cget = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
+  const cput = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  function drop() { const pre = [...arguments]; try { Object.keys(localStorage).forEach(k => { if (k.startsWith(KP) && pre.some(a => k.startsWith(KP + a))) { localStorage.removeItem(k); delete FRESH[k]; } }); } catch (_) {} }
+  function clearCache() { try { Object.keys(localStorage).forEach(k => { if (k.startsWith('vx_c_')) localStorage.removeItem(k); }); } catch (_) {} }
+  let ROUTE_ID = 0;
+  /** Kesh bo'lsa darhol qaytaradi va orqada yangilaydi; yangisi farq qilsa sahifani jimgina qayta chizadi */
+  function swr(action, params) {
+    const k = ckey(action, params), old = cget(k), rid = ROUTE_ID;
+    const fetchIt = () => call(action, params).then(r => { FRESH[k] = Date.now(); const changed = JSON.stringify(r) !== JSON.stringify(old); cput(k, r); return { r, changed }; });
+    if (old && FRESH[k] && Date.now() - FRESH[k] < TTL) return Promise.resolve(old);
+    if (old) { fetchIt().then(x => { if (x.changed && rid === ROUTE_ID) go(true); }).catch(() => {}); return Promise.resolve(old); }
+    return fetchIt().then(x => x.r);
+  }
+  function prefetch() { ['courses', 'shop', 'plans'].forEach(a => { const k = ckey(a); if (!FRESH[k]) call(a).then(r => { FRESH[k] = Date.now(); cput(k, r); }).catch(() => {}); }); }
+
   function renderMe() {
     if (!ME) return;
     try { localStorage.setItem('vx_me', JSON.stringify({ name: ME.name, coins: ME.coins, avatar: ME.avatar })); } catch (_) {}
     if (window.VSite && VSite.paintMe) VSite.paintMe(ME);
   }
   async function loadMe() {
-    const r = await call('me');
-    ME = r.user; STATS = r.stats || STATS; VX.applyTheme(ME.theme); renderMe();
+    const r = await swr('me', { lite: 1 });
+    ME = r.user; VX.applyTheme(ME.theme); renderMe();
     return r;
   }
-  function setCoins(c) { if (ME && c !== undefined) { ME.coins = c; renderMe(); } }
-  async function logout() { try { await call('logout'); } catch (_) {} VX.setToken(null); try { localStorage.removeItem('vx_me'); } catch (_) {} location.replace('index.html'); }
+  function setCoins(c) { if (ME && c !== undefined && ME.coins !== c) { ME.coins = c; renderMe(); drop('me'); } }
+  async function logout() { clearCache(); try { await call('logout'); } catch (_) {} VX.setToken(null); try { localStorage.removeItem('vx_me'); } catch (_) {} location.replace('index.html'); }
   function authFail(e) { if (e && (e.code === 'auth' || e.code === 'blocked')) { VX.setToken(null); toast(e.message, 'error'); setTimeout(() => location.replace('kirish.html'), 1200); return true; } return false; }
 
   // ================= PROFIL MA'LUMOTLARINI TO'LDIRISH OYNASI =================
@@ -382,7 +400,7 @@
       let data; try { data = readPlace(f); } catch (x) { er.textContent = x.message; er.hidden = false; return; }
       if (!data.region || !data.school || !data.grade || !data.birthday) { er.textContent = "Iltimos, barcha maydonlarni to'ldiring."; er.hidden = false; return; }
       busy(f.querySelector('[type=submit]'), async () => {
-        const r = await call('profile', data);
+        const r = await call('profile', data); drop('me');
         ME = r.user; renderMe(); m.close(); toast("Rahmat! Ma'lumotlar saqlandi", 'success');
       }).catch(x => { er.textContent = x.message; er.hidden = false; });
     };
@@ -391,10 +409,12 @@
   // ================= MARSHRUTLAR =================
   const ALIAS = { bosh: 'kurslar', obuna: 'premium', coin: 'bildirishnoma' };
   const routes = { kurslar: pCourses, kurs: pCourse, dars: pLesson, premium: pPremium, dokon: pShop, liderlar: pLeaders, bildirishnoma: pNotif, profil: pProfile };
-  async function go() {
+  async function go(silent) {
     let [name, id] = (location.hash.replace('#', '') || 'kurslar').split('/');
     if (ALIAS[name]) { location.replace('#' + ALIAS[name]); return; }
     const fn = routes[name] || pCourses;
+    if (silent === true) { if (name === 'dars' || document.querySelector('.modal-bg')) return; const y = scrollY; try { await fn(id); } catch (_) {} window.scrollTo(0, y); return; }
+    ROUTE_ID++;
     view.innerHTML = '<div class="skeleton" style="height:90px;border-radius:22px"></div><div class="skeleton" style="height:340px;margin-top:24px;border-radius:22px"></div>';
     window.scrollTo(0, 0);
     try { await fn(id); } catch (e) {
@@ -403,7 +423,7 @@
     }
     view.focus({ preventScroll: true });
   }
-  window.addEventListener('hashchange', go);
+  window.addEventListener('hashchange', () => go());
   window.addEventListener('vector-lang', () => go());
 
   // ================= KURSLAR =================
@@ -419,7 +439,7 @@
       ${btn}</a>`;
   }
   async function pCourses() {
-    const c = await call('courses');
+    const c = await swr('courses');
     view.innerHTML = `<div class="k-card k-top"><span class="ico">${ms('school', 1)}</span><div><h1>Barcha kurslar</h1><small>${c.courses.length} ta kurs</small></div>
         <label class="k-search">${ms('search')}<input id="cq" type="search" placeholder="Kurs qidirish" aria-label="Kurs qidirish" value="${esc(Q)}"></label></div>
       ${c.active ? '' : `<div class="k-lockbar">${ms('lock', 1)}<p>Kurslarni ko'rish uchun Premium obuna kerak.</p><a class="k-btn or sm" href="#premium">Tarif tanlash</a></div>`}
@@ -433,7 +453,7 @@
   }
 
   async function pCourse(id) {
-    const c = await call('courses'), co = c.courses.find(x => x.id === id);
+    const c = await swr('courses'), co = c.courses.find(x => x.id === id);
     if (!co) { location.hash = '#kurslar'; return; }
     view.innerHTML = `<a class="k-back" href="#kurslar">${ms('arrow_back')} Barcha kurslar</a>
       <div class="k-card k-chead"><div class="img">${safeUrl(co.image) ? `<img src="${esc(co.image)}" alt="">` : ''}</div>
@@ -470,7 +490,7 @@
     if (!L.quiz.length) {
       if (!L.watched) {
         box.innerHTML = `<button class="k-btn or" id="doneBtn">${ms('check')} Darsni tugatdim</button>`;
-        $('#doneBtn').onclick = e => busy(e.currentTarget, async () => { await call('watched', { id }); toast('Ajoyib! Dars tugatildi.', 'success'); box.innerHTML = '<span class="k-badge gn">✓ Tugatilgan</span>'; showNext(); }).catch(err => toast(err.message, 'error'));
+        $('#doneBtn').onclick = e => busy(e.currentTarget, async () => { await call('watched', { id }); drop('courses'); toast('Ajoyib! Dars tugatildi.', 'success'); box.innerHTML = '<span class="k-badge gn">✓ Tugatilgan</span>'; showNext(); }).catch(err => toast(err.message, 'error'));
       }
       return;
     }
@@ -486,7 +506,7 @@
       const f = e.currentTarget, answers = L.quiz.map((_, i) => { const c = f.querySelector(`input[name=q${i}]:checked`); return c ? Number(c.value) : null; });
       if (answers.some(a => a === null)) { const er = f.querySelector('.err'); er.textContent = 'Barcha savollarga javob bering.'; er.hidden = false; return; }
       busy(f.querySelector('[type=submit]'), async () => {
-        const res = await call('quiz', { id, answers });
+        const res = await call('quiz', { id, answers }); drop('courses', 'coins', 'leaders', 'me');
         setCoins(res.coins);
         f.querySelectorAll('fieldset').forEach((fs, i) => fs.classList.add(res.result[i] ? 'good' : 'bad'));
         const perfect = res.correct === res.total;
@@ -505,8 +525,8 @@
   // ================= PREMIUM (OBUNA) =================
   let PERIOD = 1;
   async function pPremium() {
-    const r = await call('plans');
-    PUB = await VX.publicData().catch(() => PUB) || PUB;
+    const r = await swr('plans');
+    if (!PUB) PUB = await VX.publicData().catch(() => PUB) || PUB;
     const u = r.user, left = u.active ? daysLeft(u.subEnd) : 0;
     const names = [...new Set(r.plans.map(p => p.name))];
     const hasYear = r.plans.some(p => p.months > 1);
@@ -557,6 +577,7 @@
         if (method === 'card' && hasCard) return cardStep(p);
         busy(e.currentTarget, async () => {
           const res = await call('pay.create', { planId: p.id, provider: method });
+          drop('payments');
           if (res.mode !== 'live') { m.close(); toast("So'rov yuborildi. Admin tasdiqlashini kuting.", 'success'); return; }
           const pay = res.payment, ret = st.return_url || (location.origin + location.pathname + '#premium');
           if (pay.provider === 'click') location.href = `https://my.click.uz/services/pay?service_id=${encodeURIComponent(st.click_service_id)}&merchant_id=${encodeURIComponent(st.click_merchant_id)}&amount=${pay.amount}&transaction_param=${encodeURIComponent(pay.id)}&return_url=${encodeURIComponent(ret)}`;
@@ -585,7 +606,7 @@
         if (!img) return toast("Avval to'lov chekining rasmini yuklang.", 'error');
         busy(e.currentTarget, async () => {
           const res = await call('pay.create', { planId: p.id, provider: 'test' });
-          await call('pay.receipt', { id: res.payment.id, image: img });
+          await call('pay.receipt', { id: res.payment.id, image: img }); drop('payments');
           m.close();
           modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px"><img src="assets/img/cat-happy.png" alt="" style="width:140px"><h2>Rahmat! Chek qabul qilindi</h2><p class="muted">Admin to'lovni tekshirib tasdiqlagach, Premium darhol ochiladi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button></div>`);
         }).catch(err => toast(err.message, 'error'));
@@ -597,7 +618,7 @@
   // ================= DO'KON =================
   let TAB = 'sovga', SQ = '';
   async function pShop() {
-    const s = await call('shop');
+    const s = await swr('shop');
     setCoins(s.coins);
     view.innerHTML = `<div class="k-card k-shoptop"><div class="k-bal"><i></i><div><small>Sizning balansingiz</small><b>${sum(s.coins)} <span>coin</span></b></div></div>
         <div class="k-tabs" role="tablist">${[['sovga', "Sovg'a"], ['oshxona', 'Oshxona'], ['markaz', 'Markaz']].map(([k, t]) => `<button role="tab" data-t="${k}" aria-selected="${k === TAB}">${t}</button>`).join('')}</div>
@@ -628,14 +649,14 @@
     const q = m.el.querySelector('#qty');
     q.oninput = () => { m.el.querySelector('#tot').innerHTML = coin(p.price * Math.max(1, Math.min(max, Number(q.value) || 1))); };
     m.el.querySelector('#okBuy').onclick = e => busy(e.currentTarget, async () => {
-      const r = await call('buy', { id: p.id, qty: Math.max(1, Math.min(max, Number(q.value) || 1)) });
+      const r = await call('buy', { id: p.id, qty: Math.max(1, Math.min(max, Number(q.value) || 1)) }); drop('shop', 'orders', 'coins', 'me');
       setCoins(r.coins); m.close(); toast('Tabriklaymiz! Buyurtma qabul qilindi 🎁', 'success'); pShop();
     }).catch(err => toast(err.message, 'error'));
   }
   const OST = { yangi: ['or', 'Tayyorlanmoqda'], berildi: ['gn', 'Topshirildi'], bekor: ['rd', 'Bekor qilindi'] };
   const orderRows = list => list.map(x => `<div class="k-row"><div><b>${esc(x.product)} × ${x.qty}</b><div class="muted" style="font-size:13px">${dateTime(x.at)}</div></div><div style="display:flex;gap:10px;align-items:center">${coin(x.price)}<span class="k-badge ${(OST[x.status] || OST.yangi)[0]}">${(OST[x.status] || OST.yangi)[1]}</span></div></div>`).join('');
   async function ordersModal() {
-    const o = await call('orders').catch(e => { toast(e.message, 'error'); return null; }); if (!o) return;
+    const o = await swr('orders').catch(e => { toast(e.message, 'error'); return null; }); if (!o) return;
     const m = modal(`<div class="k-mh"><h2>Buyurtmalarim</h2><button class="k-x" type="button" data-close aria-label="Yopish">${ms('close')}</button></div>
       <div class="k-card" style="padding:4px 18px">${orderRows(o.orders) || '<p class="muted" style="padding:14px 0">Hozircha buyurtmalar yo\'q.</p>'}</div>`);
     m.el.classList.add('k-mod');
@@ -644,7 +665,7 @@
   // ================= LIDERLAR =================
   let LP = 'all';
   async function pLeaders() {
-    const r = await call('leaders', { period: LP });
+    const r = await swr('leaders', { period: LP });
     const [a, b, c] = r.top, pod = (x, k) => x ? `<div class="k-pod p${k}">${k === 1 ? '<span style="font-size:30px">👑</span>' : ''}${av(x, 'av', k === 1 ? '#1E63F0' : k === 2 ? '#FF8A00' : '#0B1E4F')}<b>${x.me ? 'Siz' : esc(x.name)}</b><span class="chip k-coin">${sum(x.coins)}</span><div class="blk">${k}</div></div>` : `<div class="k-pod p${k}"><div class="blk">${k}</div></div>`;
     const rest = r.top.slice(3);
     view.innerHTML = `<div class="k-lead"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap"><div><h1 class="k-h1">Liderlar</h1><p class="k-sub">Eng ko'p Vector Coin to'plagan o'quvchilar</p></div>
@@ -657,7 +678,7 @@
 
   // ================= BILDIRISHNOMALAR =================
   async function pNotif() {
-    const [c, o, p] = await Promise.all([call('coins'), call('orders'), call('payments')]);
+    const [c, o, p] = await Promise.all([swr('coins'), swr('orders'), swr('payments')]);
     setCoins(c.coins);
     const T = { quiz: ['quiz', "Test uchun coin"], birthday: ['cake', "Tug'ilgan kun sovg'asi 🎂"], admin: ['military_tech', 'Ustozdan coin'], order: ['shopping_bag', 'Xarid'], refund: ['undo', 'Coin qaytarildi'] };
     const PS = { pending: "kutilmoqda", paid: "qabul qilindi ✅", cancelled: "bekor qilindi" };
@@ -676,7 +697,7 @@
     ['#premium', 'Premium olish', 'diamond'], ['haqida', 'Ilova haqida', 'info'], ['taklif', 'Bizga taklif', 'lightbulb'], ['yordam', 'Yordam', 'help'], ['qoida', 'Foydalanish qoidasi', 'gavel']];
   async function pProfile(sec) {
     sec = PSECS.some(s => s[0] === sec) ? sec : 'malumot';
-    const m = await loadMe(); PUB = await VX.publicData().catch(() => PUB) || PUB;
+    const m = await loadMe(); if (!PUB) PUB = await VX.publicData().catch(() => PUB) || PUB;
     const LN = { uz: "O'zbek", ru: 'Русский', en: 'English' }, dark = (ME.theme || '') === 'dark';
     view.innerHTML = `<div class="k-prof"><nav class="k-card k-side" aria-label="Profil menyusi"><h2>Profil</h2>
         ${PSECS.map(([k, t, i]) => `<a href="${k[0] === '#' ? k : '#profil/' + k}" ${k === sec ? 'aria-current="page"' : ''}>${ms(i)}${t}</a>`).join('')}
@@ -690,7 +711,7 @@
       lm.el.classList.add('k-mod');
       lm.el.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { lm.close(); if (window.vectorSetLang) vectorSetLang(b.dataset.l); });
     };
-    $('#darkRow').onclick = () => { const t = (ME.theme || '') === 'dark' ? 'light' : 'dark'; ME.theme = t; VX.applyTheme(t); const b = $('#darkRow'); b.setAttribute('aria-pressed', t === 'dark'); b.querySelector('.k-sw').classList.toggle('on', t === 'dark'); call('profile', { theme: t }).catch(() => {}); };
+    $('#darkRow').onclick = () => { const t = (ME.theme || '') === 'dark' ? 'light' : 'dark'; ME.theme = t; VX.applyTheme(t); const b = $('#darkRow'); b.setAttribute('aria-pressed', t === 'dark'); b.querySelector('.k-sw').classList.toggle('on', t === 'dark'); call('profile', { theme: t }).then(() => drop('me')).catch(() => {}); };
     const box = $('#psec');
     await ({ malumot: secInfo, obuna: secSub, sertifikat: secCert, buyurtma: secOrders, haqida: secAbout, taklif: secIdea, yordam: secHelp, qoida: secRules }[sec])(box, m);
   }
@@ -718,7 +739,7 @@
       let place; try { place = readPlace(f); } catch (x) { return toast(x.message, 'error'); }
       const name = (f.fn.value.trim() + ' ' + f.ln.value.trim()).trim();
       if (name.length < 2) return toast('Ismingizni kiriting.', 'error');
-      busy(f.querySelector('[type=submit]'), async () => { const r = await call('profile', Object.assign({ name }, place)); ME = r.user; renderMe(); toast('Saqlandi', 'success'); pProfile('malumot'); }).catch(err => toast(err.message, 'error'));
+      busy(f.querySelector('[type=submit]'), async () => { const r = await call('profile', Object.assign({ name }, place)); drop('me', 'leaders'); ME = r.user; renderMe(); toast('Saqlandi', 'success'); pProfile('malumot'); }).catch(err => toast(err.message, 'error'));
     };
     $('#pw').onsubmit = e => {
       e.preventDefault(); const f = e.currentTarget;
@@ -729,13 +750,13 @@
     if (tb) tb.onclick = () => busy(tb, async () => { const r = await call('tg.link'); window.open(r.link, '_blank', 'noopener'); toast("Botda «Start» ni bosing, so'ng shu sahifani yangilang."); }).catch(err => toast(err.message, 'error'));
     $('#avaFile').onchange = async e => {
       const file = e.target.files[0]; if (!file) return;
-      try { toast('Rasm yuklanmoqda…'); const data = await VX.resizeImage(file, 320, 0.85); const r = await call('avatar', { image: data }); ME.avatar = r.avatar; renderMe(); toast('Rasm yangilandi', 'success'); pProfile('malumot'); }
+      try { toast('Rasm yuklanmoqda…'); const data = await VX.resizeImage(file, 320, 0.85); const r = await call('avatar', { image: data }); drop('me', 'leaders'); ME.avatar = r.avatar; renderMe(); toast('Rasm yangilandi', 'success'); pProfile('malumot'); }
       catch (err) { toast(err.message, 'error'); }
     };
   }
 
   async function secSub(box, m) {
-    const u = m.user, p = await call('payments'), paid = p.payments.filter(x => x.status === 'paid');
+    const u = m.user, p = await swr('payments'), paid = p.payments.filter(x => x.status === 'paid');
     const PS = { pending: ['or', 'Kutilmoqda'], paid: ['gn', "To'langan"], cancelled: ['gy', 'Bekor qilingan'] };
     const start = paid.length ? paid[0].paidAt : '';
     box.innerHTML = `<h1 class="k-h1" style="margin-bottom:18px">Mening obunam</h1>
@@ -750,14 +771,14 @@
   }
 
   async function secCert(box) {
-    const c = await call('courses'), done = c.courses.filter(x => x.lessons.length && x.percent >= 100);
+    const c = await swr('courses'), done = c.courses.filter(x => x.lessons.length && x.percent >= 100);
     box.innerHTML = `<h1 class="k-h1" style="margin-bottom:18px">Sertifikatlarim</h1>
       <div class="k-card ${done.length ? 'k-pad' : ''}">${done.length ? done.map(x => `<div class="k-cert"><i>${ms('workspace_premium', 1)}</i><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><div class="muted" style="font-size:14px">Kurs to'liq yakunlandi · ${x.lessons.length} ta dars</div></div><a class="k-btn bl sm" href="https://t.me/${esc(tgName())}" target="_blank" rel="noopener">Sertifikat olish</a></div>`).join('') + '<p class="k-sub" style="margin-top:14px">Sertifikatni olish uchun adminga yozing: kurs nomi va ism-familiyangizni yuboring.</p>'
         : `<div class="k-empty"><img src="assets/img/cat-empty.png" alt=""><b>Hozircha sertifikat yo'q</b><span>Kursning barcha darslarini tugatsangiz, sertifikat shu yerda paydo bo'ladi.</span></div>`}</div>`;
   }
 
   async function secOrders(box) {
-    const o = await call('orders');
+    const o = await swr('orders');
     box.innerHTML = `<div class="k-card k-pad"><h2 style="margin:0 0 8px;font-size:22px;font-weight:800">Buyurtmalar</h2>${orderRows(o.orders) || '<p class="k-sub">Hozircha buyurtmalar yo\'q.</p>'}</div>`;
   }
 
@@ -818,11 +839,12 @@
   }
 
   // ishga tushirish
+  go();
   loadMe().then(() => {
-    go();
+    setTimeout(prefetch, 1500);
     let later = false; try { later = !!sessionStorage.getItem('vx_pf_later'); } catch (_) {}
     if (missing(ME) && !later) setTimeout(askProfile, 900);
-  }).catch(e => { if (!authFail(e)) go(); });
+  }).catch(e => { authFail(e); });
   VX.publicData().then(d => { PUB = d; }).catch(() => {});
 })();
 </script>
