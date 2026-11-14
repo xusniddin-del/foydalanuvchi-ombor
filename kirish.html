@@ -95,7 +95,7 @@
     <form class="reg" id="register" novalidate hidden>
       <h1>Ro'yxatdan o'tish</h1>
       <div class="tip"><span class="ms" style="font-size:20px;color:#FFB259">send</span><span>Telefon raqamingiz <b>Telegram bot</b> orqali tasdiqlanadi. Parolni unutsangiz ham shu bot yordam beradi.</span></div>
-      <label id="phRow" hidden>Telefon raqamni kiriting<span class="ph"><span>+998</span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00"></span></label>
+      <label id="phRow">Telefon raqamni kiriting<span class="ph"><span>+998</span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00"></span></label>
       <label>Ism familiyangiz<input name="name" autocomplete="name" required></label>
       <label>Paro'l<span class="pw"><input name="password" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
       <label>Paro'lni qayta kiriting<span class="pw"><input name="password2" type="password" autocomplete="new-password" required><button type="button" class="ms" data-eye aria-label="Parolni ko'rsatish">visibility</button></span></label>
@@ -197,6 +197,8 @@
       if (f.password.value.length < 6) return err(reg, "Parol kamida 6 ta belgidan iborat bo'lsin.");
       if (f.password.value !== f.password2.value) return err(reg, 'Parollar bir xil emas.');
       if (!BOT) {
+        const row = document.getElementById('phRow');
+        if (row.hidden) { row.hidden = false; f.phone.required = true; f.phone.focus(); return err(reg, 'Telefon raqamingizni kiriting.'); }
         const phone = f.phone.value.replace(/\D/g, '');
         if (phone.length !== 9) return err(reg, "Telefon raqamni to'liq kiriting.");
         return VX.call('register', { phone, name, password: f.password.value }).then(done);
