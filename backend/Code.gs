@@ -54,7 +54,7 @@ var DEFAULT_SETTINGS = [
   ['coin_per_correct', '2', "Testdagi har bir to'g'ri javob uchun coin (faqat birinchi urinishda)"],
   ['birthday_coins', '50', "Tug'ilgan kunda avtomatik beriladigan coin (0 = o'chiq)"],
   ['daily_goal', '2', "Kunlik maqsad: kuniga nechta dars yoki test (kabinetda ko'rinadi)"],
-  ['site_url', 'https://xusniddin-del.github.io/foydalanuvchi-ombor/', 'Sayt manzili (bot xabarlaridagi tugmalar uchun)'],
+  ['site_url', 'https://vectortalim.uz/', 'Sayt manzili (bot xabarlaridagi tugmalar uchun)'],
   ['payment_mode', 'test', "test — to'lovni admin tasdiqlaydi; live — Click/Payme avtomatik"],
   ['click_service_id', '', 'Click service_id'],
   ['click_merchant_id', '', 'Click merchant_id'],
