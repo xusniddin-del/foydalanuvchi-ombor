@@ -30,7 +30,7 @@ var SHEETS = {
   Coins: ['id', 'userId', 'amount', 'type', 'reason', 'at', 'by'],
   Products: ['id', 'name', 'desc', 'image', 'price', 'stock', 'active', 'order', 'category'],
   Orders: ['id', 'userId', 'userName', 'phone', 'productId', 'productName', 'qty', 'price', 'status', 'at'],
-  Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason', 'receipt'],
+  Payments: ['id', 'userId', 'userName', 'phone', 'planId', 'planName', 'months', 'amount', 'provider', 'status', 'createdAt', 'paidAt', 'extId', 'extState', 'extCreate', 'extPerform', 'extCancel', 'extReason', 'receipt', 'payUrl'],
   Settings: ['key', 'value', 'izoh'],
   Applications: ['id', 'userId', 'name', 'phone', 'region', 'school', 'grade', 'telegram', 'why', 'experience', 'photo', 'status', 'at', 'note'],
   Donations: ['id', 'userId', 'name', 'phone', 'amount', 'receipt', 'status', 'at']
@@ -55,7 +55,7 @@ var DEFAULT_SETTINGS = [
   ['birthday_coins', '50', "Tug'ilgan kunda avtomatik beriladigan coin (0 = o'chiq)"],
   ['daily_goal', '2', "Kunlik maqsad: kuniga nechta dars yoki test (kabinetda ko'rinadi)"],
   ['site_url', 'https://vectortalim.uz/', 'Sayt manzili (bot xabarlaridagi tugmalar uchun)'],
-  ['payment_mode', 'test', "test — to'lovni admin tasdiqlaydi; live — Click/Payme avtomatik"],
+  ['payment_mode', 'test', "test — to'lovni admin tasdiqlaydi; tezcheck — Click, Payme, Uzum, karta (TezCheck orqali avtomatik); live — Click/Payme to'g'ridan-to'g'ri"],
   ['click_service_id', '', 'Click service_id'],
   ['click_merchant_id', '', 'Click merchant_id'],
   ['payme_merchant_id', '', 'Payme merchant (kassa) ID'],
@@ -82,6 +82,7 @@ function doPost(e) {
   if (e && e.parameter && e.parameter.tg) return out(tgWebhook(e));
   var req;
   try { req = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return out({ ok: false, error: "Noto'g'ri so'rov" }); }
+  if (req && !req.action && req.data && req.data.bill_id) return out(tcWebhook(req));
   try {
     var res = route(req || {});
     tgFlush();
@@ -129,6 +130,7 @@ var USER = {
   'avatar': apiAvatar,
   'tg.link': apiTgLink,
   'pay.receipt': apiPayReceipt,
+  'pay.check': apiPayCheck,
   'leaders': apiLeaders,
   'ref': apiRef,
   'ref.apply': apiRefApply,
@@ -809,30 +811,50 @@ function apiMyOrders(req, u) {
 }
 
 // ======================= OBUNA VA TO'LOV =======================
-function apiPlans(req, u) { return { ok: true, plans: plansList(), user: publicUser(findUser(u.id)), mode: settings().payment_mode }; }
+function payMode(st) { var m = (st || settings()).payment_mode; return m === 'live' || m === 'tezcheck' ? m : 'test'; }
+function apiPlans(req, u) { return { ok: true, plans: plansList(), user: publicUser(findUser(u.id)), mode: payMode(), tezcheck: tcOn() }; }
 
 function apiPayCreate(req, u) {
-  var st = settings(), mode = st.payment_mode === 'live' ? 'live' : 'test';
-  var provider = mode === 'test' ? 'test' : (req.provider === 'payme' ? 'payme' : 'click');
+  var st = settings(), mode = payMode(st);
+  var provider = mode === 'test' ? 'test' : mode === 'tezcheck' ? (req.provider === 'test' && String(st.card_number || '').replace(/\D/g, '') ? 'test' : 'tezcheck') : (req.provider === 'payme' ? 'payme' : 'click');
+  if (provider === 'tezcheck' && !tcOn()) fail("Onlayn to'lov hali ulanmagan. Admin bilan bog'laning.");
   if (mode === 'live' && provider === 'click' && !(st.click_service_id && st.click_merchant_id)) fail("Click hali ulanmagan. Payme'ni tanlang yoki admin bilan bog'laning.");
   if (mode === 'live' && provider === 'payme' && !st.payme_merchant_id) fail("Payme hali ulanmagan. Click'ni tanlang yoki admin bilan bog'laning.");
   var plan = null;
   plansList().forEach(function (p) { if (p.id === String(req.planId)) plan = p; });
   if (!plan) fail('Tarif topilmadi.');
   if (limited('pay:' + u.id, 15, 3600)) fail("Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring.");
-  return withLock(function () {
+  var res = withLock(function () {
     var mine = rows('Payments').filter(function (p) { return p.userId === u.id && p.status === 'pending'; });
     var x = findUser(u.id);
     // taklif kodi bilan kelgan o'quvchi: birinchi to'lovidagi oylik obunaga chegirma
     var off = num(st.ref_discount, 0);
     if (x.refBy && off > 0 && plan.months === 1 && !rows('Payments').some(function (q) { return q.userId === x.id && q.status === 'paid'; }))
       plan = { id: plan.id, name: plan.name, months: plan.months, price: Math.round(plan.price * (100 - Math.min(off, 90)) / 100 / 100) * 100 };
-    var same = mine.filter(function (q) { return q.planId === plan.id && q.provider === provider && num(q.amount) === plan.price && !q.extId; })[0];
-    if (same) return { ok: true, payment: payView(same), mode: mode };
+    var same = mine.filter(function (q) {
+      if (q.planId !== plan.id || q.provider !== provider || num(q.amount) !== plan.price) return false;
+      // TezCheck cheki 12 soat ichida qayta ishlatiladi (har bosishda yangi chek ochilmasin)
+      return provider === 'tezcheck' ? !!q.payUrl && Date.now() - (Date.parse(q.createdAt) || 0) < 12 * 36e5 : !q.extId;
+    })[0];
+    if (same) return { ok: true, payment: payView(same), mode: mode, url: same.payUrl || '' };
     if (mine.length >= MAX_PENDING_PAYMENTS) fail("Sizda tugallanmagan to'lovlar ko'p. Admin bilan bog'laning.");
     var p = insert('Payments', { id: newId('P'), userId: x.id, userName: x.name, phone: x.phone, planId: plan.id, planName: plan.name, months: String(plan.months),
       amount: String(plan.price), provider: provider, status: 'pending', createdAt: iso(), paidAt: '', extId: '', extState: '', extCreate: '', extPerform: '', extCancel: '', extReason: '' });
-    return { ok: true, payment: payView(p), mode: mode };
+    return { ok: true, payment: payView(p), mode: mode, fresh: provider === 'tezcheck' };
+  });
+  if (!res.fresh) { delete res.fresh; return res; }
+  // TezCheck'da chek ochamiz (Lock'dan tashqarida — tashqi so'rov sekin bo'lishi mumkin)
+  var bill;
+  try { bill = tcCreateBill(res.payment.id, res.payment.amount, plan, findUser(u.id), st, req.from === 'app' ? 'app.html#obuna/' : 'kabinet.html#premium/'); }
+  catch (err) {
+    withLock(function () { var q = byId('Payments', res.payment.id); if (q && q.status === 'pending') { q.status = 'cancelled'; q.extReason = clip(err.userMessage || err.message, 300); save('Payments', q); } });
+    throw err;
+  }
+  return withLock(function () {
+    var q = byId('Payments', res.payment.id);
+    q.extId = bill.id; q.extState = bill.state; q.extCreate = String(Date.now()); q.payUrl = bill.url;
+    save('Payments', q);
+    return { ok: true, payment: payView(q), mode: mode, url: bill.url };
   });
 }
 
@@ -881,6 +903,139 @@ function revokePaid(p) {
     u.subEnd = iso(new Date(Math.max(end, Date.now() - 1000)));
     save('Users', u);
   }
+}
+
+// ======================= TEZCHECK (Click, Payme, Uzum, karta) =======================
+// Kalitlar Script Properties'da saqlanadi (jadvalda emas): TEZCHECK_KEY = maxfiy API kalit (aps_…), TEZCHECK_DESK = kassa kodi (cdk_…).
+// Ulash: Google jadval → Vector → "5. TezCheck to'lovini ulash".
+var TC_API = 'https://api.tezcheck.uz/api/merchant/v1';
+var TC_DEAD = ['expired', 'revoked', 'exhausted', 'cancelled', 'canceled'];
+function tcOn() { var p = PropertiesService.getScriptProperties(); return !!(p.getProperty('TEZCHECK_KEY') && p.getProperty('TEZCHECK_DESK')); }
+
+function tcCall(path, body, idem) {
+  var p = PropertiesService.getScriptProperties(), key = p.getProperty('TEZCHECK_KEY'), desk = p.getProperty('TEZCHECK_DESK');
+  if (!key || !desk) fail("Onlayn to'lov hali ulanmagan. Admin bilan bog'laning.");
+  var headers = { Authorization: 'Bearer ' + key, 'X-Cash-Desk-Code': desk, Accept: 'application/json' };
+  if (idem) headers['Idempotency-Key'] = idem;
+  var r = UrlFetchApp.fetch(TC_API + path, { method: 'post', contentType: 'application/json', headers: headers, payload: JSON.stringify(body || {}), muteHttpExceptions: true });
+  var code = r.getResponseCode(), j = {};
+  try { j = JSON.parse(r.getContentText()); } catch (e) {}
+  if (code < 200 || code >= 300) {
+    var er = j.error || {};
+    var e2 = new Error('TezCheck ' + code + ': ' + (er.code || '') + ' ' + (er.message || j.message || ''));
+    e2.userMessage = "To'lov tizimi javob bermadi" + (er.code ? ' (' + er.code + ')' : '') + ". Birozdan so'ng qayta urinib ko'ring.";
+    e2.tc = j; throw e2;
+  }
+  return j.data || {};
+}
+
+/** TezCheck'da chek ochadi → { id, url, state } */
+function tcCreateBill(payId, amount, plan, u, st, back) {
+  var site = String(st.site_url || 'https://vectortalim.uz/').replace(/\/*$/, '/');
+  var body = { amount_minor: Math.round(num(amount) * 100), title: 'Vector — ' + plan.name + ' obuna (' + (num(plan.months) > 1 ? num(plan.months) + ' oy' : '1 oy') + ')',
+    description: (u ? u.name + ' · +998 ' + u.phone : '') + ' · ' + payId, external_reference: payId };
+  var d;
+  try { d = tcCall('/bills', Object.assign({ return_url: site + (back || 'kabinet.html#premium/') + payId }, body), payId); }
+  catch (e) {
+    // kassada return_url ruxsat etilmagan bo'lsa — usiz qayta urinamiz
+    if (/return|url|allow|domain/i.test(e.message + JSON.stringify(e.tc || {}))) d = tcCall('/bills', body, payId + '-n'); else throw e;
+  }
+  var b = d.bill || {}, url = d.payment_url || b.payment_url;
+  if (!b.id || !url) fail("To'lov havolasini olib bo'lmadi. Birozdan so'ng qayta urinib ko'ring.");
+  return { id: String(b.id), url: String(url), state: String(b.state || '') };
+}
+
+/** Chekni TezCheck'dan so'rab tekshiradi. To'langan bo'lsa obuna ochiladi (bir marta). → yangilangan to'lov */
+function tcVerify(payId) {
+  var p = byId('Payments', payId);
+  if (!p || p.provider !== 'tezcheck' || p.status !== 'pending' || !p.extId) return p;
+  var d = tcCall('/bills/' + encodeURIComponent(p.extId), {});
+  var b = d.bill || {}, pm = d.payment || {};
+  var paid = d.paid === true || b.paid === true || pm.state === 'succeeded';
+  var env = String(d.environment || b.environment || pm.environment || (d.livemode === false || b.livemode === false ? 'test' : 'live'));
+  var amountOk = !pm.amount_minor || num(pm.amount_minor) >= num(p.amount) * 100;
+  var testOk = env !== 'test' || PropertiesService.getScriptProperties().getProperty('TEZCHECK_TEST') === 'ha';
+  return withLock(function () {
+    var q = byId('Payments', payId);
+    if (!q || q.status !== 'pending') return q;
+    q.extState = String(b.state || pm.state || '') + (env === 'test' ? ' (test)' : '');
+    if (paid && amountOk && testOk) {
+      q.extPerform = String(Date.now());
+      if (pm.provider_code) q.extReason = String(pm.provider_code);
+      markPaid(q, 'tezcheck', q.extId);
+    } else if (paid) {
+      q.extReason = !amountOk ? "Summa kam to'langan: " + num(pm.amount_minor) / 100 : "Test to'lovi — obuna ochilmadi (TEZCHECK_TEST=ha bo'lsa ochiladi)";
+      save('Payments', q);
+    } else if (TC_DEAD.indexOf(String(b.state)) >= 0) {
+      q.status = 'cancelled'; q.extCancel = String(Date.now()); q.extReason = 'Chek: ' + b.state;
+      save('Payments', q);
+    } else save('Payments', q);
+    return q;
+  });
+}
+
+/** O'quvchi to'lov sahifasidan qaytganda: to'lov holatini so'raydi */
+function apiPayCheck(req, u) {
+  var p = byId('Payments', req.id);
+  if (!p || p.userId !== u.id) fail("To'lov topilmadi.");
+  if (p.provider === 'tezcheck' && p.status === 'pending' && !limited('pchk:' + u.id, 40, 600)) {
+    try { p = tcVerify(p.id) || p; } catch (e) { console.error(e); }
+  }
+  return { ok: true, payment: payView(p), user: publicUser(findUser(u.id)) };
+}
+
+/** TezCheck webhook: xabarga ishonmaymiz — chekni TezCheck'ning o'zidan so'rab tekshiramiz */
+function tcWebhook(req) {
+  try {
+    var bill = String(req.data.bill_id), list = rows('Payments');
+    for (var i = 0; i < list.length; i++) if (list[i].extId === bill && list[i].provider === 'tezcheck') { tcVerify(list[i].id); break; }
+    tgFlush();
+  } catch (e) { console.error(e); }
+  return { ok: true };
+}
+
+/** Taymer (har 10 daqiqada): o'quvchi to'lov sahifasidan qaytmasa ham to'lov hisobga olinadi */
+function tcSweep() {
+  if (!tcOn()) return;
+  var t = Date.now(), n = 0;
+  rows('Payments').filter(function (p) { return p.provider === 'tezcheck' && p.status === 'pending' && p.extId; }).forEach(function (p) {
+    if (n >= 25) return;
+    var age = t - (Date.parse(p.createdAt) || 0);
+    if (age > 3 * 864e5) {
+      withLock(function () { var q = byId('Payments', p.id); if (q && q.status === 'pending') { q.status = 'cancelled'; q.extReason = "Muddati o'tdi (3 kun)"; save('Payments', q); } });
+      return;
+    }
+    n++;
+    try { tcVerify(p.id); } catch (e) { console.error(e); }
+  });
+  tgFlush();
+}
+
+/** Jadval menyusi: TezCheck kalitlarini kiritish */
+function connectTezcheck() {
+  var ui = SpreadsheetApp.getUi();
+  var k = ui.prompt("TezCheck — 1/2", "TezCheck kabinetidagi maxfiy API kalitni kiriting (aps_ bilan boshlanadi):", ui.ButtonSet.OK_CANCEL);
+  if (k.getSelectedButton() !== ui.Button.OK) return;
+  var d = ui.prompt("TezCheck — 2/2", "Kassa kodini kiriting (cdk_ bilan boshlanadi):", ui.ButtonSet.OK_CANCEL);
+  if (d.getSelectedButton() !== ui.Button.OK) return;
+  var res = connectTezcheckValue(k.getResponseText(), d.getResponseText());
+  ui.alert(res.ok ? "Tayyor! TezCheck ulandi.\n\nTo'lov rejimi «tezcheck» ga o'tkazildi: o'quvchilar Click, Payme, Uzum yoki karta bilan to'laydi, obuna o'zi ochiladi.\n\nTezCheck kabinetida Webhook URL sifatida Apps Script /exec manzilini yozib qo'ying (ixtiyoriy, lekin tezroq ishlaydi)." : 'Xatolik: ' + res.error);
+}
+
+function connectTezcheckValue(key, desk) {
+  key = String(key || '').trim(); desk = String(desk || '').trim();
+  if (!/^aps_[\w-]{8,}$/.test(key)) return { ok: false, error: "API kalit noto'g'ri ko'rinishda (aps_… bo'lishi kerak)." };
+  if (!/^cdk_[\w-]{4,}$/.test(desk)) return { ok: false, error: "Kassa kodi noto'g'ri ko'rinishda (cdk_… bo'lishi kerak)." };
+  var p = PropertiesService.getScriptProperties();
+  p.setProperty('TEZCHECK_KEY', key); p.setProperty('TEZCHECK_DESK', desk);
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'tcSweep') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('tcSweep').timeBased().everyMinutes(10).create();
+  withLock(function () {
+    var row = rows('Settings').filter(function (r) { return r.key === 'payment_mode'; })[0];
+    if (row) { row.value = 'tezcheck'; save('Settings', row); } else insert('Settings', { key: 'payment_mode', value: 'tezcheck', izoh: DEFAULT_SETTINGS.filter(function (r) { return r[0] === 'payment_mode'; })[0][2] });
+  });
+  cacheClear();
+  return { ok: true };
 }
 
 // --- to'lov serveri (Cloudflare Worker) uchun ---
@@ -1140,12 +1295,19 @@ function aPayments(req) {
     .map(function (p) { var v = payView(p); v.name = p.userName; v.phone = p.phone; v.extId = p.extId; v.receipt = /^https:\/\//.test(p.receipt || '') ? p.receipt : ''; return v; }) };
 }
 function aPaymentAction(req) {
+  if (req.op === 'check') {
+    var c = byId('Payments', req.id);
+    if (!c || c.provider !== 'tezcheck') fail("Bu to'lov TezCheck orqali emas.");
+    c = tcVerify(c.id);
+    tgFlush();
+    return { ok: true, status: c.status, state: c.extState };
+  }
   return withLock(function () {
     var p = byId('Payments', req.id);
     if (!p) fail("To'lov topilmadi.");
     if (req.op === 'confirm') markPaid(p, p.provider === 'test' ? 'test' : 'manual');
     else if (req.op === 'cancel') { if (p.status === 'paid') revokePaid(p); p.status = 'cancelled'; save('Payments', p); }
-    else fail("Noma'lum amal.");
+    else if (req.op !== 'check') fail("Noma'lum amal.");
     return { ok: true };
   });
 }
@@ -1176,7 +1338,7 @@ function aPlanDelete(req) {
 function aSettings() {
   var st = settings();
   return { ok: true, settings: DEFAULT_SETTINGS.map(function (r) { return { key: r[0], value: st[r[0]], note: r[2] }; }),
-    worker: !!PropertiesService.getScriptProperties().getProperty('WORKER_SECRET') };
+    worker: !!PropertiesService.getScriptProperties().getProperty('WORKER_SECRET'), tezcheck: tcOn() };
 }
 function aSettingsSave(req) {
   var allowed = {}; DEFAULT_SETTINGS.forEach(function (r) { allowed[r[0]] = r[2]; });
@@ -1185,7 +1347,8 @@ function aSettingsSave(req) {
     Object.keys(vals).forEach(function (k) {
       if (!(k in allowed)) return;
       var v = clip(vals[k], 1000);
-      if (k === 'payment_mode' && v !== 'live') v = 'test';
+      if (k === 'payment_mode' && v !== 'live' && v !== 'tezcheck') v = 'test';
+      if (k === 'payment_mode' && v === 'tezcheck' && !tcOn()) fail("Avval TezCheck'ni ulang: Google jadval → Vector → \"5. TezCheck to'lovini ulash\".");
       var row = null;
       for (var i = 0; i < list.length; i++) if (list[i].key === k) row = list[i];
       if (row) { row.value = v; save('Settings', row); } else insert('Settings', { key: k, value: v, izoh: allowed[k] });
@@ -1626,6 +1789,7 @@ function onOpen() {
     .addItem("2. Admin parolini o'rnatish", 'setAdminPassword')
     .addItem("3. To'lov serveri kalitini yaratish", 'makeWorkerSecret')
     .addItem('4. Telegram botni ulash', 'connectTelegram')
+    .addItem("5. TezCheck to'lovini ulash", 'connectTezcheck')
     .addSeparator()
     .addItem('Keshni tozalash', 'cacheClear')
     .addToUi();

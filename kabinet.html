@@ -142,6 +142,13 @@
   .k-pm button { height: 56px; border-radius: 14px; border: 1.5px solid var(--k-line); background: var(--k-card); cursor: pointer; font: 800 18px Inter, system-ui; }
   .k-pm button[aria-pressed="true"] { border-color: var(--k-blue); box-shadow: 0 0 0 1px var(--k-blue); }
   .k-pm .payme { color: #00BAC1; } .k-pm .click { color: #0A6CFF; } .k-pm .card { color: var(--k-ink); font-size: 15px; }
+  .k-pm .tezcheck { grid-column: 1 / -1; height: auto; min-height: 64px; padding: 10px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--k-blue); font-size: 16px; }
+  .k-pm .tezcheck ~ .card { grid-column: 1 / -1; height: 48px; }
+  .k-pm .tezcheck small { font: 500 12.5px Inter, system-ui; color: var(--k-ink2); }
+  .k-paywait { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0; }
+  .k-paywait img { width: 140px; }
+  .k-paywait .k-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--k-line); border-top-color: var(--k-blue); animation: kspin .8s linear infinite; }
+  @keyframes kspin { to { transform: rotate(360deg); } }
   .k-mact { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
   .k-mact .k-btn { width: 100%; }
   .k-bank { padding: 18px 20px; border-radius: 18px; background: linear-gradient(120deg, #1E63F0, #0B2A7A); color: #fff; display: flex; flex-direction: column; gap: 6px; }
@@ -524,7 +531,8 @@
 
   // ================= PREMIUM (OBUNA) =================
   let PERIOD = 1;
-  async function pPremium() {
+  async function pPremium(payId) {
+    if (payId) { history.replaceState(null, '', '#premium'); payReturn(payId); }
     const r = await swr('plans');
     if (!PUB) PUB = await VX.publicData().catch(() => PUB) || PUB;
     const u = r.user, left = u.active ? daysLeft(u.subEnd) : 0;
@@ -552,16 +560,41 @@
     draw();
   }
 
+  // TezCheck to'lov sahifasidan qaytganda: to'lov tushganini tekshiramiz (bir necha marta, chunki bank tasdig'i kechikishi mumkin)
+  async function payReturn(id) {
+    const m = modal(`<div class="k-paywait" id="pw"><span class="k-spin"></span><h2>To'lov tekshirilmoqda…</h2><p class="muted">Bir necha soniya kuting.</p></div>`);
+    const box = m.el.querySelector('#pw'), wait = ms => new Promise(f => setTimeout(f, ms));
+    let res = null;
+    for (let i = 0; i < 5; i++) {
+      try { res = await call('pay.check', { id }); } catch (e) { if (authFail(e)) return m.close(); }
+      if (!res || res.payment.status !== 'pending' || i === 4) break;
+      await wait(i < 2 ? 2000 : 3000);
+    }
+    if (!box.isConnected) return;
+    const st = res && res.payment.status;
+    if (st === 'paid') {
+      drop('plans', 'payments', 'courses', 'me');
+      if (res.user) { ME = res.user; renderMe(); }
+      box.innerHTML = `<img src="assets/img/cat-happy.png" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><a class="k-btn bl sm" href="#kurslar" data-close>Darslarni boshlash</a>`;
+    } else if (st === 'cancelled') {
+      box.innerHTML = `<img src="assets/img/cat-sad.png" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted">Chek bekor qilingan yoki muddati o'tgan. Tarifni qayta tanlab, yana urinib ko'ring.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
+    } else {
+      box.innerHTML = `<img src="assets/img/cat-empty.png" alt=""><h2>To'lov hali tushmadi</h2><p class="muted">Agar pulni to'lagan bo'lsangiz, xavotir olmang — tizim uni bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
+    }
+    box.querySelectorAll('[data-close]').forEach(b => b.onclick = () => m.close());
+  }
+
   function checkout(r, name, pick) {
-    const st = set(), live = r.mode === 'live', hasCard = !!String(st.card_number || '').replace(/\D/g, '');
-    let months = PERIOD, method = live ? (st.payme_merchant_id ? 'payme' : 'click') : 'card';
+    const st = set(), tc = r.mode === 'tezcheck', live = r.mode === 'live', hasCard = !!String(st.card_number || '').replace(/\D/g, '');
+    let months = PERIOD, method = tc ? 'tezcheck' : live ? (st.payme_merchant_id ? 'payme' : 'click') : 'card';
     const m = modal(`<div class="k-mh"><h2>Obunani rasmiylashtirish</h2><button class="k-x" type="button" data-close aria-label="Yopish">${ms('close')}</button></div><div id="ck"></div>`);
     m.el.classList.add('k-mod');
     const box = m.el.querySelector('#ck');
     const draw = () => {
       const p = pick(name, months), yearly = r.plans.some(x => x.name === name && x.months > 1) && r.plans.some(x => x.name === name && x.months === 1);
       const disc = p.oldPrice > p.price ? p.oldPrice - p.price : 0;
-      const methods = live ? [st.payme_merchant_id && ['payme', 'Payme'], st.click_service_id && ['click', 'click']].filter(Boolean) : [['card', hasCard ? 'Kartaga o\'tkazma' : 'Admin orqali']];
+      const methods = tc ? [['tezcheck', 'Onlayn to\'lov<small>Click · Payme · Uzum · Uzcard/Humo</small>'], hasCard && ['card', 'Kartaga o\'tkazma']].filter(Boolean)
+        : live ? [st.payme_merchant_id && ['payme', 'Payme'], st.click_service_id && ['click', 'click']].filter(Boolean) : [['card', hasCard ? 'Kartaga o\'tkazma' : 'Admin orqali']];
       if (!methods.some(x => x[0] === method)) method = methods[0] ? methods[0][0] : '';
       box.innerHTML = `<div class="k-sel"><i><img src="assets/img/vector-logo-white.png" alt=""></i><div><b>Siz ${esc(p.name)} tarifini sotib olyapsiz</b><small>Tarif amal qilish muddati: ${p.months} oy</small></div></div>
         ${yearly ? `<div class="k-seg2"><button type="button" data-m="1" aria-pressed="${p.months === 1}">Oylik</button><button type="button" data-m="12" aria-pressed="${p.months > 1}">Yillik</button></div>` : ''}
@@ -578,6 +611,7 @@
         busy(e.currentTarget, async () => {
           const res = await call('pay.create', { planId: p.id, provider: method });
           drop('payments');
+          if (res.payment.provider === 'tezcheck') { if (!res.url) throw new Error("To'lov havolasi olinmadi. Qayta urinib ko'ring."); location.href = res.url; return; }
           if (res.mode !== 'live') { m.close(); toast("So'rov yuborildi. Admin tasdiqlashini kuting.", 'success'); return; }
           const pay = res.payment, ret = st.return_url || (location.origin + location.pathname + '#premium');
           if (pay.provider === 'click') location.href = `https://my.click.uz/services/pay?service_id=${encodeURIComponent(st.click_service_id)}&merchant_id=${encodeURIComponent(st.click_merchant_id)}&amount=${pay.amount}&transaction_param=${encodeURIComponent(pay.id)}&return_url=${encodeURIComponent(ret)}`;

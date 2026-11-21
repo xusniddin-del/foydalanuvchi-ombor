@@ -323,6 +323,13 @@
   .pm button { height: 50px; border-radius: 12px; border: 1.5px solid #ddd; background: #fff; font-weight: 800; font-size: 16px; cursor: pointer; }
   .pm button[aria-pressed="true"] { border-color: var(--a-blue); }
   .pm .payme { color: #00BAC1; } .pm .click { color: #0A6CFF; }
+  .pm .tezcheck { grid-column: 1 / -1; height: auto; min-height: 58px; padding: 8px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--a-blue); }
+  .pm .tezcheck small { font-weight: 500; font-size: 12px; color: #666; }
+  .pm .tezcheck ~ .card { grid-column: 1 / -1; height: 46px; font-size: 15px; }
+  .paywait { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+  .paywait img { width: 140px; }
+  .paywait .spn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #e5e7eb; border-top-color: var(--a-blue); animation: pwspin .8s linear infinite; }
+  @keyframes pwspin { to { transform: rotate(360deg); } }
 
   /* boshqa ekranlar */
   .nf { display: flex; gap: 12px; padding: 14px; background: #fff; border-top: 1px solid #f2f2f2; }
@@ -841,7 +848,8 @@
   };
 
   // ================= OBUNA =================
-  R.obuna = async () => {
+  R.obuna = async (payId, silent) => {
+    if (payId && !silent) { history.replaceState(null, '', '#obuna'); payReturn(payId); }
     const r = await swr('plans'), u = r.user, st = set();
     const benefits = ['Barcha kurslar va darslar', 'Har bir test uchun Vector Coin', "Sovg'alar do'koni", 'Sertifikatlar', 'Liderlar reytingi'];
     let sel = (r.plans.find(p => p.popular) || r.plans[0] || {}).id;
@@ -865,9 +873,29 @@
     $('#go').onclick = () => checkout(r, r.plans.find(x => x.id === sel));
     draw();
   };
+  // TezCheck sahifasidan qaytganda to'lovni tekshirish
+  async function payReturn(id) {
+    const m = modal(`<div class="paywait" id="pw"><span class="spn"></span><h2>To'lov tekshirilmoqda…</h2><p class="muted" style="margin:0">Bir necha soniya kuting.</p></div>`);
+    const box = m.el.querySelector('#pw'), wait = t => new Promise(f => setTimeout(f, t));
+    let res = null;
+    for (let i = 0; i < 5; i++) {
+      try { res = await VX.call('pay.check', { id }); } catch (_) {}
+      if (!res || res.payment.status !== 'pending' || i === 4) break;
+      await wait(i < 2 ? 2000 : 3000);
+    }
+    if (!box.isConnected) return;
+    const s = res && res.payment.status;
+    if (s === 'paid') { drop('plans', 'payments', 'courses', 'me'); if (res.user) setMe(res.user); }
+    box.innerHTML = s === 'paid' ? `<img src="assets/img/cat-happy.png" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted" style="margin:0">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><button class="btn" data-go="kurslar" style="margin-top:8px">Darslarni boshlash</button>`
+      : s === 'cancelled' ? `<img src="assets/img/cat-sad.png" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted" style="margin:0">Chek bekor qilingan yoki muddati o'tgan. Qayta urinib ko'ring.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`
+      : `<img src="assets/img/cat-empty.png" alt=""><h2>To'lov hali tushmadi</h2><p class="muted" style="margin:0">To'lagan bo'lsangiz, xavotir olmang — tizim bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va botga xabar keladi' : ''}.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`;
+    box.querySelector('[data-go]').onclick = e => { m.close(); if (e.currentTarget.dataset.go) go(e.currentTarget.dataset.go); else route(); };
+  }
+
   function checkout(r, p) {
-    const st = set(), live = r.mode === 'live', card = String(st.card_number || '').replace(/\D/g, '');
-    const methods = live ? [st.payme_merchant_id && ['payme', 'Payme'], st.click_service_id && ['click', 'click']].filter(Boolean) : [];
+    const st = set(), tc = r.mode === 'tezcheck', live = r.mode === 'live' || tc, card = String(st.card_number || '').replace(/\D/g, '');
+    const methods = tc ? [['tezcheck', "Onlayn to'lov<small>Click · Payme · Uzum · Uzcard/Humo</small>"], card && ['card', "Kartaga o'tkazma"]].filter(Boolean)
+      : live ? [st.payme_merchant_id && ['payme', 'Payme'], st.click_service_id && ['click', 'click']].filter(Boolean) : [];
     let pv = methods[0] && methods[0][0];
     const m = modal(`<div class="mh"><h2>Obunani rasmiylashtirish</h2><button class="mx" data-close aria-label="Yopish">${ic('x')}</button></div><div id="ck"></div>`);
     const box = m.el.querySelector('#ck');
@@ -879,8 +907,9 @@
       box.querySelectorAll('[data-close]').forEach(b => b.onclick = m.close);
       box.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { pv = b.dataset.v; box.querySelectorAll('[data-v]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
       box.querySelector('#pay').onclick = e => busy(e.currentTarget, async () => {
-        const res = await VX.call('pay.create', { planId: p.id, provider: live ? pv : 'test' }); drop('payments');
+        const res = await VX.call('pay.create', { planId: p.id, provider: live ? (pv === 'card' ? 'test' : pv) : 'test', from: 'app' }); drop('payments');
         const pay = res.payment;
+        if (pay.provider === 'tezcheck') { if (!res.url) throw new Error("To'lov havolasi olinmadi. Qayta urinib ko'ring."); location.href = res.url; return; }
         if (res.mode === 'live') { const ret = st.return_url || (location.origin + location.pathname.replace(/[^/]*$/, '') + 'app.html#obuna');
           if (pay.provider === 'click') location.href = `https://my.click.uz/services/pay?service_id=${encodeURIComponent(st.click_service_id)}&merchant_id=${encodeURIComponent(st.click_merchant_id)}&amount=${pay.amount}&transaction_param=${encodeURIComponent(pay.id)}&return_url=${encodeURIComponent(ret)}`;
           else location.href = 'https://checkout.paycom.uz/' + btoa(`m=${st.payme_merchant_id};ac.order_id=${pay.id};a=${pay.amount * 100};c=${ret}`); return; }

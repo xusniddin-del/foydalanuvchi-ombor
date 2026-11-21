@@ -59,7 +59,29 @@ function createGas(opts = {}) {
   };
   // Telegram API taqlidi: yuborilgan xabarlar tgOut ga yoziladi
   const tgOut = [];
+  // TezCheck API taqlidi: tc.bills — ochilgan cheklar, tc.calls — barcha so'rovlar
+  const tc = { bills: new Map(), calls: [], n: 0, fail: null };
+  const fakeTc = (url, o) => {
+    const path = String(url).replace('https://api.tezcheck.uz/api/merchant/v1', '');
+    const body = o && o.payload ? JSON.parse(o.payload) : {};
+    tc.calls.push({ path, body, headers: o.headers });
+    let code = 200, res;
+    if (!o.headers || !/^Bearer aps_/.test(o.headers.Authorization || '') || !o.headers['X-Cash-Desk-Code']) { code = 401; res = { error: { code: 'unauthorized' } }; }
+    else if (tc.fail) { code = tc.fail.code; res = { error: tc.fail.error }; tc.fail = tc.fail.once ? null : tc.fail; }
+    else if (path === '/bills') {
+      const id = 'bill_' + (++tc.n);
+      const bill = { id, state: 'active', paid: false, amount_minor: body.amount_minor, external_reference: body.external_reference, return_url: body.return_url, environment: 'live' };
+      tc.bills.set(id, bill);
+      res = { data: { bill, payment_url: 'https://pay.tezcheck.uz/b/' + id } };
+    } else {
+      const m = path.match(/^\/bills\/(.+)$/), bill = m && tc.bills.get(decodeURIComponent(m[1]));
+      if (!bill) { code = 404; res = { error: { code: 'not_found' } }; }
+      else res = { data: { bill, payment: bill.paid ? { state: 'succeeded', amount_minor: bill.paidMinor || bill.amount_minor, environment: bill.environment, provider_code: 'click' } : null } };
+    }
+    return { getContentText: () => JSON.stringify(res), getResponseCode: () => code };
+  };
   const fakeTg = (url, o) => {
+    if (/api\.tezcheck\.uz/.test(String(url))) return fakeTc(url, o);
     const m = String(url).match(/api\.telegram\.org\/bot([^/]+)\/(\w+)/);
     const body = o && o.payload ? JSON.parse(o.payload) : {};
     let res = { ok: true, result: true };
@@ -92,7 +114,7 @@ function createGas(opts = {}) {
       createFolder: () => ({ getId: () => 'folder1', createFile: (b) => { const id = 'f' + files.size; files.set(id, b); return { getId: () => id, setSharing: () => {} }; } }),
       getFolderById: () => ctx.DriveApp.createFolder()
     },
-    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => [], deleteTrigger: () => {}, newTrigger: () => { const t = { timeBased: () => t, everyDays: () => t, atHour: () => t, inTimezone: () => t, create: () => t }; return t; } },
+    ScriptApp: { getService: () => ({ getUrl: () => 'https://script.google.com/macros/s/TEST/exec' }), getProjectTriggers: () => [], deleteTrigger: () => {}, newTrigger: () => { const t = { timeBased: () => t, everyDays: () => t, everyMinutes: () => t, atHour: () => t, inTimezone: () => t, create: () => t }; return t; } },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => ({ content: s, setMimeType() { return this; } }) },
     Date, JSON, Math, Object, Array, String, Number, isNaN, isFinite, parseInt, Error, RegExp
   };
@@ -104,7 +126,8 @@ function createGas(opts = {}) {
   const tg = (update, key) => JSON.parse(ctx.doPost({ parameter: { tg: key || props.get('TG_HOOK') }, postData: { contents: JSON.stringify({ update_id: ++upd, ...update }) } }).content);
   const tgMsg = (chatId, text, extra) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, text, ...(extra || {}) } });
   const tgContact = (chatId, phone, ownerId) => tg({ message: { message_id: upd, chat: { id: chatId, type: 'private' }, from: { id: chatId }, contact: { phone_number: phone, user_id: ownerId === undefined ? chatId : ownerId } } });
-  return { ctx, sheets, call, props, cache, files, tg, tgMsg, tgContact, tgOut, FORMULA_HITS };
+  const post = (body) => JSON.parse(ctx.doPost({ postData: { contents: JSON.stringify(body) } }).content);
+  return { ctx, sheets, call, post, props, cache, files, tg, tgMsg, tgContact, tgOut, tc, FORMULA_HITS };
 }
 
 module.exports = { createGas };

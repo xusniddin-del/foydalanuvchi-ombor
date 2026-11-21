@@ -79,7 +79,27 @@ Coinlarni faqat server hisoblaydi: o'quvchi o'zi oshira olmaydi, test javoblari 
 ### Test rejimi (standart)
 O'quvchi tarifni tanlab **"To'lov so'rovini yuborish"** ni bosadi. Siz pul tushganini tekshirib, **Admin → To'lovlar → Tasdiqlash** ni bosasiz — obuna darhol ochiladi.
 
-### Live rejim — Click / Payme avtomatik
+### TezCheck rejimi — Click, Payme, Uzum, Uzcard/Humo (tavsiya etiladi)
+Bitta ulanish bilan barcha to'lov usullari ishlaydi, Cloudflare Worker kerak emas. To'lovdan keyin obuna **o'zi ochiladi** va botga xabar boradi.
+
+1. Yangi `backend/Code.gs` ni Apps Script'ga qo'ying → **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**.
+2. Google jadvalni yangilang (F5) → **Vector → 5. TezCheck to'lovini ulash**:
+   - TezCheck kabinetidagi **maxfiy API kalit** (`aps_…`)
+   - **kassa kodi** (`cdk_…`)
+
+   Google tashqi saytga so'rov yuborish uchun ruxsat so'raydi — **Allow**. Kalitlar jadvalda emas, yashirin Script Properties'da saqlanadi. To'lov rejimi o'zi **tezcheck** ga o'tadi.
+3. TezCheck kabinetida (ixtiyoriy, lekin tavsiya etiladi) **Webhook URL** = Apps Script `/exec` manzili. Bo'lmasa ham ishlaydi: o'quvchi to'lov sahifasidan qaytganda va har 10 daqiqada tizim cheklarni o'zi tekshiradi.
+4. Kassada IP cheklovi (allowlist) yoqilgan bo'lsa, o'chiring — Google serverlarining IP manzili doimiy emas.
+
+Qanday ishlaydi: o'quvchi tarifni tanlaydi → **Onlayn to'lov** → TezCheck sahifasida Click, Payme, Uzum yoki karta bilan to'laydi → `kabinet.html#premium/<to'lov ID>` ga qaytadi → sayt to'lovni tekshiradi va Premium darhol ochiladi.
+
+- Server to'lovni har doim **TezCheck'ning o'zidan so'rab** tasdiqlaydi (webhook'ga ko'r-ko'rona ishonmaydi). Summa kam to'langan bo'lsa obuna ochilmaydi.
+- TezCheck **test** to'lovlari obunani ochmaydi. Sinov uchun Script Properties'ga `TEZCHECK_TEST` = `ha` qo'shing, sinovdan keyin o'chiring.
+- 3 kun ichida to'lanmagan cheklar avtomatik bekor qilinadi.
+- **Admin → To'lovlar** da kutilayotgan TezCheck to'lovi yonida **Tekshirish** tugmasi bor.
+- Kartaga o'tkazma (`card_number`) to'ldirilgan bo'lsa, u ham zaxira usul sifatida ko'rinadi.
+
+### Live rejim — Click / Payme to'g'ridan-to'g'ri (Cloudflare Worker orqali)
 1. Click ([click.uz](https://click.uz) → biznes uchun) va/yoki Payme ([business.payme.uz](https://business.payme.uz)) bilan shartnoma tuzing (YaTT yoki MChJ). Ular sizga beradi:
    - Click: `service_id`, `merchant_id`, `secret_key`
    - Payme: kassa ID (merchant id) va kalit (key). Hisob parametri nomi: **`order_id`**.
@@ -145,8 +165,8 @@ Ulash:
 ## Kompyuterda sinash (dasturchilar uchun)
 
 ```bash
-node tests/api.test.js        # server testlari (88 ta)
+node tests/api.test.js        # server testlari (134 ta)
 node tests/worker.test.mjs    # Click/Payme va Telegram testlari (25 ta)
-node tests/server.js          # http://127.0.0.1:8787 — taqlid qilingan baza bilan sayt (admin paroli: admin-parol-123)
+node tests/server.js          # http://127.0.0.1:8787 — taqlid qilingan baza bilan sayt (admin paroli: admin-parol-123; TC=1 — TezCheck rejimi)
 python3 tests/e2e.py          # brauzer testi (server ishlab turgan bo'lishi kerak)
 ```
