@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="uz">
+<html lang="uz" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,23 +10,99 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 <style>
-  .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
-  .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: #0B1430; color: #C7D2E6; padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; }
-  .side .logo { color: #fff; padding: 4px 8px 18px; }
-  .side a.nv { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; color: #C7D2E6; font-weight: 500; font-size: 15px; }
+  /* ===== Admin: qorong'i shisha uslubi ===== */
+  :root[data-theme="dark"] {
+    --bg: #070B18; --card: rgba(255,255,255,.045); --soft: rgba(255,255,255,.06); --line: rgba(255,255,255,.09);
+    --ink: #EEF2FA; --ink-2: #C5CEE0; --muted: #8E9AB5; --blue: #5B9BFF; --blue-600: #4C8DFF; --blue-50: rgba(91,155,255,.14); --blue-100: rgba(91,155,255,.24);
+    --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 10px 30px rgba(0,0,0,.25);
+  }
+  body { min-height: 100vh; background:
+      radial-gradient(900px 520px at 12% -8%, rgba(46,104,240,.30), transparent 60%),
+      radial-gradient(700px 480px at 100% 0%, rgba(255,138,0,.20), transparent 60%),
+      radial-gradient(800px 600px at 60% 110%, rgba(122,90,248,.18), transparent 60%), #070B18;
+    background-attachment: fixed; }
+  .card, .table-wrap { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  table.t th { background: rgba(255,255,255,.035); }
+  table.t tr:hover td { background: rgba(255,255,255,.03); }
+  .input, .select, .textarea { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); }
+  .select option { background: #111729; }
+  .modal { background: #10172B; border: 1px solid rgba(255,255,255,.1); }
+  .modal-bg { background: rgba(3,6,15,.6); }
+  .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 75%); background-size: 200% 100%; }
+
+  .app { display: grid; grid-template-columns: 256px 1fr; min-height: 100vh; }
+  .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: rgba(4,7,16,.72); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-right: 1px solid rgba(255,255,255,.07); color: #AEB9D0; padding: 22px 14px; display: flex; flex-direction: column; gap: 3px; scrollbar-width: thin; }
+  .side .logo { color: #fff; padding: 2px 10px 22px; }
+  .side .grp { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #5F6B86; padding: 14px 12px 6px; }
+  .side a.nv { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; color: #AEB9D0; font-weight: 500; font-size: 14.5px; transition: background .15s, color .15s; }
+  .side a.nv .ic { opacity: .85; }
   .side a.nv:hover { background: rgba(255,255,255,.06); color: #fff; }
-  .side a.nv[aria-current="page"] { background: var(--blue); color: #fff; }
+  .side a.nv[aria-current="page"] { background: linear-gradient(135deg, #4C8DFF, #79B0FF); color: #fff; font-weight: 600; box-shadow: 0 8px 24px rgba(76,141,255,.35); }
   .side .cnt { margin-left: auto; background: var(--orange); color: #fff; border-radius: 999px; font-size: 12px; padding: 1px 8px; font-weight: 700; }
   .content { padding: clamp(16px, 3vw, 32px); min-width: 0; }
+  .topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+  .topbar h1 { font-size: clamp(24px, 2.6vw, 30px); font-weight: 800; margin-right: auto; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: var(--ink-2); }
+  .chip.warm { background: linear-gradient(135deg, #FFE2B8, #FFC98A); color: #4A2A00; border-color: transparent; }
+  a.chip:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .me { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #1E63F0, #0B2A7A); border: 2px solid rgba(255,255,255,.18); }
+  .me img { width: 24px; height: 24px; }
   .mbar { display: none; }
   @media (max-width: 900px) {
     .app { grid-template-columns: 1fr; }
-    .side { position: fixed; inset: 0 auto 0 0; width: 260px; z-index: 60; transform: translateX(-100%); transition: transform .25s; }
+    .side { position: fixed; inset: 0 auto 0 0; width: 270px; z-index: 60; transform: translateX(-100%); transition: transform .25s; background: #070B18; }
     .side.open { transform: none; box-shadow: var(--shadow-lg); }
-    .mbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #0B1430; color: #fff; position: sticky; top: 0; z-index: 50; }
+    .mbar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(7,11,24,.85); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); color: #fff; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid rgba(255,255,255,.07); }
     .mbar .icon-btn { background: rgba(255,255,255,.1); color: #fff; }
   }
-  .page-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+
+  /* bosh panel */
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .kpi { position: relative; overflow: hidden; border-radius: 22px; padding: 18px 20px; color: #fff; display: flex; flex-direction: column; gap: 4px; min-height: 132px; box-shadow: 0 16px 40px rgba(0,0,0,.28); }
+  .kpi::after { content: ''; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.12); }
+  .kpi .h { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; opacity: .95; }
+  .kpi .h i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.2); }
+  .kpi .h i .ic { width: 18px; height: 18px; }
+  .kpi b { font-size: clamp(24px, 2.4vw, 30px); font-weight: 800; letter-spacing: -.02em; margin-top: 8px; }
+  .kpi small { font-size: 13px; opacity: .88; }
+  .kpi a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+  .k1 { background: linear-gradient(135deg, #2A5BD7, #4C8DFF); }
+  .k2 { background: linear-gradient(135deg, #5B3FD0, #8B6BFF); }
+  .k3 { background: linear-gradient(135deg, #B0336B, #E5578C); }
+  .k4 { background: linear-gradient(135deg, #C25B0E, #F08A2B); }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .kpis { grid-template-columns: 1fr; } }
+  .dash { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .dash .wide { grid-column: 1 / -1; }
+  @media (max-width: 1000px) { .dash { grid-template-columns: 1fr; } }
+  .panel { border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .panel .ph { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .panel h2 { font-size: 16px; font-weight: 700; }
+  .panel .big { font-size: clamp(22px, 2.2vw, 26px); white-space: nowrap; font-weight: 800; letter-spacing: -.02em; }
+  .pill { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,.07); color: var(--ink-2); white-space: nowrap; }
+  /* ustunli grafik */
+  .bars { position: relative; display: grid; grid-template-columns: 44px 1fr; grid-template-rows: 210px auto; gap: 8px; margin-top: 14px; }
+  .bars .ya { position: relative; font-size: 11.5px; color: var(--muted); }
+  .bars .ya span { position: absolute; right: 0; transform: translateY(50%); }
+  .bars .plot { position: relative; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid rgba(255,255,255,.14); }
+  .bars .gl { position: absolute; left: 0; right: 0; height: 1px; background: rgba(255,255,255,.06); pointer-events: none; }
+  .bars .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; cursor: default; }
+  .bars .col i { display: block; width: min(24px, 70%); border-radius: 4px 4px 0 0; background: var(--c); min-height: 2px; transition: filter .15s; }
+  .bars .col:hover i { filter: brightness(1.25); }
+  .bars .col .v { font-size: 11.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; white-space: nowrap; }
+  .bars .xa { grid-column: 2; display: flex; gap: 2px; font-size: 11.5px; color: var(--muted); }
+  .bars .xa span { flex: 1; text-align: center; white-space: nowrap; overflow: hidden; }
+  .tip { position: fixed; z-index: 90; pointer-events: none; background: #1A2340; border: 1px solid rgba(255,255,255,.12); color: #fff; border-radius: 10px; padding: 8px 10px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.4); transform: translate(-50%, calc(-100% - 10px)); white-space: nowrap; }
+  .tip small { display: block; color: #A9B4CC; font-size: 12px; }
+  /* gorizontal ro'yxat */
+  .hrow { display: grid; grid-template-columns: minmax(70px, auto) 1fr auto; align-items: center; gap: 10px; font-size: 14px; padding: 6px 0; }
+  .hrow .tr { height: 10px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+  .hrow .tr i { display: block; height: 100%; border-radius: 999px; background: #4C8DFF; }
+  .mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+  .mini > div { border-radius: 16px; padding: 12px 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); display: flex; flex-direction: column; gap: 2px; }
+  .mini span { font-size: 13px; color: var(--muted); }
+  .mini b { font-size: 20px; font-weight: 800; }
+  .page-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
   .page-h h1 { font-size: clamp(22px, 2.6vw, 28px); font-weight: 800; }
   .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 22px; }
   .stat { padding: 18px; display: flex; flex-direction: column; gap: 6px; }
@@ -35,7 +111,8 @@
   .tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .tools .input, .tools .select { min-height: 42px; width: auto; flex: 1 1 200px; }
   .acts { display: flex; gap: 6px; flex-wrap: wrap; }
-  .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; background: radial-gradient(800px 400px at 80% 0%, color-mix(in srgb, var(--blue) 20%, transparent), transparent 60%), var(--bg); }
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+  .login .logo { color: #fff; }
   .login form { width: min(400px, 100%); display: flex; flex-direction: column; gap: 14px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
@@ -58,6 +135,7 @@
   'use strict';
   const { esc, money, num, icon, date, dateTime, safeUrl, avatarHtml, toast, modal, busy, confirmBox } = VX;
   const call = (a, d) => VX.call(a, d, { admin: true });
+  document.documentElement.setAttribute('data-theme', 'dark'); // admin panel doim qorong'i uslubda
   const root = document.getElementById('root');
   let content;
 
@@ -80,11 +158,12 @@
   // ================= QOBIQ =================
   const NAV = [['panel', 'Bosh panel', 'chart'], ['oquvchilar', "O'quvchilar", 'users'], ['tolovlar', "To'lovlar", 'card'], ['kurslar', 'Kurslar va darslar', 'book'],
     ['dokon', "Do'kon", 'shop'], ['buyurtmalar', 'Buyurtmalar', 'box'], ['coinlar', 'Coinlar tarixi', 'coin'], ['arizalar', 'Sardor arizalari', 'users'], ['donatlar', 'Donatlar', 'coin'], ['takliflar', 'Takliflar (promokod)', 'star'], ['xabar', 'Telegram xabar', 'tg'], ['tariflar', 'Tariflar', 'star'], ['sozlamalar', 'Sozlamalar', 'settings']];
+  const GRP = { 0: 'Asosiy', 3: "Ta'lim va do'kon", 7: 'Jamoa', 10: 'Sozlash' };
   function shell() {
     root.innerHTML = `<div class="mbar"><button class="icon-btn" id="mb" aria-label="Menyu">${icon('menu')}</button><b>Vector Admin</b></div>
       <div class="app"><aside class="side" id="side"><a class="logo" href="index.html" target="_blank"><img src="assets/img/vector-logo.png" alt=""><span>VECTOR</span></a>
-      ${NAV.map(([id, t, ic]) => `<a class="nv" href="#${id}" data-nav="${id}">${icon(ic)}<span>${t}</span><span class="cnt" data-cnt="${id}" hidden></span></a>`).join('')}
-      <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px"><a class="nv" href="kabinet.html" target="_blank">${icon('user')} O'quvchi kabineti</a><a class="nv" href="#" id="out">${icon('logout')} Chiqish</a></div></aside>
+      ${NAV.map(([id, t, ic], i) => `${GRP[i] ? `<div class="grp">${GRP[i]}</div>` : ''}<a class="nv" href="#${id}" data-nav="${id}">${icon(ic)}<span>${t}</span><span class="cnt" data-cnt="${id}" hidden></span></a>`).join('')}
+      <div style="margin-top:auto;padding-top:16px;display:flex;flex-direction:column;gap:3px"><a class="nv" href="kabinet.html" target="_blank">${icon('user')} O'quvchi kabineti</a><a class="nv" href="#" id="out">${icon('logout')} Chiqish</a></div></aside>
       <main class="content" id="content"></main></div>`;
     content = document.getElementById('content');
     document.getElementById('mb').onclick = () => document.getElementById('side').classList.toggle('open');
@@ -96,6 +175,7 @@
     const name = (location.hash.slice(1) || 'panel').split('/')[0], fn = pages[name] || pPanel;
     document.querySelectorAll('[data-nav]').forEach(a => a.dataset.nav === (pages[name] ? name : 'panel') ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
     document.getElementById('side').classList.remove('open');
+    document.querySelectorAll('.tip').forEach(t => t.remove());
     content.innerHTML = '<div class="skeleton" style="height:120px;margin-bottom:14px"></div><div class="skeleton" style="height:320px"></div>';
     try { await fn(); } catch (e) {
       if (e.code === 'auth') return loginScreen(e.message);
@@ -107,21 +187,66 @@
     set('tolovlar', s.pendingPayments); set('buyurtmalar', s.newOrders);
   }
   const head = (t, sub, right) => `<div class="page-h"><div><h1>${t}</h1>${sub ? `<p class="muted">${sub}</p>` : ''}</div>${right || ''}</div>`;
+  const MONTHS = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+  const short = n => n >= 1e6 ? (Math.round(n / 1e5) / 10 + ' mln').replace('.', ',') : n >= 1e3 ? Math.round(n / 1e3) + ' ming' : String(n);
+  const nice = x => { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))); return [1, 2, 2.5, 5, 10].map(k => k * p).find(v => v >= x); };
+  /** Bitta qatorli ustunli grafik: data = [{label, value, tip}] */
+  function barChart(data, color, fmtAxis, integer) {
+    const max = Math.max(0, ...data.map(d => d.value)), step = Math.max(nice(max / 4), integer ? 1 : 0), top = step * 4;
+    const ticks = [0, 1, 2, 3, 4].map(i => i * step);
+    const peak = data.reduce((a, d, i) => d.value > data[a].value ? i : a, 0);
+    return `<div class="bars" style="--c:${color}">
+      <div class="ya">${ticks.map(v => `<span style="bottom:${v / top * 100}%">${fmtAxis(v)}</span>`).join('')}</div>
+      <div class="plot">${ticks.slice(1).map(v => `<div class="gl" style="bottom:${v / top * 100}%"></div>`).join('')}
+        ${data.map((d, i) => `<div class="col" data-tip="${esc(d.tip)}">${i === peak && d.value > 0 ? `<span class="v">${fmtAxis(d.value)}</span>` : ''}<i style="height:${top ? d.value / top * 100 : 0}%"></i></div>`).join('')}</div>
+      <div class="xa">${data.map(d => `<span>${esc(d.label)}</span>`).join('')}</div></div>`;
+  }
+  function bindTips(el) {
+    let tip = null;
+    el.querySelectorAll('[data-tip]').forEach(c => {
+      c.onmouseenter = () => { tip = document.createElement('div'); tip.className = 'tip'; tip.innerHTML = c.dataset.tip; document.body.appendChild(tip); const r = c.querySelector('i').getBoundingClientRect(); tip.style.left = (r.left + r.width / 2) + 'px'; tip.style.top = r.top + 'px'; };
+      c.onmouseleave = () => { if (tip) tip.remove(); tip = null; };
+    });
+  }
   const form2obj = f => Object.fromEntries(new FormData(f).entries());
 
   // ================= BOSH PANEL =================
   async function pPanel() {
     const s = await call('a.stats'); counts(s);
-    content.innerHTML = head('Bosh panel', 'Bugun: ' + date(new Date().toISOString())) + `
-      <div class="stats">
-        <div class="card stat"><span>Jami o'quvchilar</span><b>${num(s.users)}</b><span>Bugun: +${s.todayUsers}</span></div>
-        <div class="card stat"><span>Faol obunachilar</span><b style="color:var(--green)">${num(s.active)}</b></div>
-        <div class="card stat"><span>Shu oy tushum</span><b>${money(s.revenueMonth)}</b><span>${s.paymentsMonth} ta to'lov</span></div>
-        <div class="card stat"><span>Kutilayotgan to'lovlar</span><b style="color:var(--orange-600)">${s.pendingPayments}</b><a href="#tolovlar">Ko'rish →</a></div>
-        <div class="card stat"><span>Yangi buyurtmalar</span><b style="color:var(--orange-600)">${s.newOrders}</b><a href="#buyurtmalar">Ko'rish →</a></div>
-        <div class="card stat"><span>O'quvchilardagi coinlar</span><b class="coin" style="font-size:26px">${num(s.coinsTotal)}</b></div>
+    const S = s.series || null, now = new Date();
+    const prev = S ? S.months[4].revenue : 0, cur = S ? S.months[5].revenue : s.revenueMonth;
+    const diff = prev ? Math.round((cur - prev) / prev * 100) : null;
+    const half = S ? S.months.reduce((n, m) => n + m.revenue, 0) : 0;
+    const newUsers = S ? S.days.reduce((n, d) => n + d.users, 0) : 0;
+    const plansTot = S ? S.plans.reduce((n, p) => n + p.revenue, 0) : 0;
+    content.innerHTML = `<div class="topbar"><h1>Bosh panel</h1>
+        <span class="chip warm">${icon('cake')} ${now.getDate()} ${MONTHS[now.getMonth()].toLowerCase()}, ${now.getFullYear()}</span>
+        <a class="chip" href="index.html" target="_blank" rel="noopener">${icon('home')} Saytni ochish</a>
+        ${s.tgBot ? `<a class="chip" href="https://t.me/${esc(s.tgBot)}" target="_blank" rel="noopener">${icon('tg')} @${esc(s.tgBot)}</a>` : ''}
+        <span class="me" title="Admin"><img src="assets/img/vector-logo-white.png" alt=""></span></div>
+      <div class="kpis">
+        <div class="kpi k1"><div class="h"><i>${icon('users')}</i>Jami o'quvchilar</div><b>${num(s.users)}</b><small>Bugun: +${s.todayUsers}</small></div>
+        <div class="kpi k2"><div class="h"><i>${icon('crown')}</i>Faol obunachilar</div><b>${num(s.active)}</b><small>${s.users ? Math.round(s.active / s.users * 100) : 0}% o'quvchilardan</small></div>
+        <div class="kpi k3"><div class="h"><i>${icon('card')}</i>Shu oy tushum</div><b>${money(s.revenueMonth)}</b><small>${s.paymentsMonth} ta to'lov${diff === null ? '' : ` · o'tgan oyga nisbatan ${diff >= 0 ? '+' : ''}${diff}%`}</small></div>
+        <div class="kpi k4"><div class="h"><i>${icon('refresh')}</i>Kutilayotgan to'lovlar</div><b>${s.pendingPayments}</b><small><a href="#tolovlar">Ko'rish →</a></small></div>
       </div>
-      <div class="card pad"><h2 style="font-size:18px;margin-bottom:10px">🎂 Bugun tug'ilgan kun</h2>${s.birthdaysToday.length ? s.birthdaysToday.map(b => `<span class="badge orange" style="margin:0 6px 6px 0">${esc(b.name)}</span>`).join('') + '<p class="hint" style="margin-top:8px">Ularga sozlamalardagi tug\'ilgan kun coini avtomatik beriladi.</p>' : '<p class="muted">Bugun tug\'ilgan kun yo\'q.</p>'}</div>`;
+      <div class="dash">
+        ${S ? `<section class="card panel" id="ch1"><div class="ph"><div><h2>Oylik tushum</h2><div class="big">${money(half)}</div><span class="muted" style="font-size:13px">Oxirgi 6 oy</span></div><span class="pill">${S.months.reduce((n, m) => n + m.count, 0)} ta to'lov</span></div>
+          ${barChart(S.months.map(m => { const [y, mo] = m.m.split('-'); return { label: MONTHS[+mo - 1], value: m.revenue, tip: `<b>${money(m.revenue)}</b><small>${MONTHS[+mo - 1]} ${y} · ${m.count} ta to'lov</small>` }; }), '#4C8DFF', short)}</section>
+        <section class="card panel" id="ch2"><div class="ph"><div><h2>Yangi o'quvchilar</h2><div class="big">+${num(newUsers)}</div><span class="muted" style="font-size:13px">Oxirgi 14 kun</span></div><span class="pill">Bugun +${s.todayUsers}</span></div>
+          ${barChart(S.days.map((d, i) => { const dd = new Date(d.d + 'T12:00:00'); return { label: i % 2 ? '' : String(dd.getDate()), value: d.users, tip: `<b>+${d.users} o'quvchi</b><small>${dd.getDate()} ${MONTHS[dd.getMonth()]}</small>` }; }), '#D2731A', v => String(v), true)}</section>`
+        : `<section class="card panel wide"><h2>Grafiklar</h2><p class="muted">Grafiklar uchun Apps Script'dagi Code.gs ni yangilab, yangi versiya joylang.</p></section>`}
+        <section class="card panel"><div class="ph"><h2>Shu oy tariflar bo'yicha</h2><span class="pill">${MONTHS[now.getMonth()]}</span></div>
+          ${S && S.plans.length ? S.plans.map(p => `<div class="hrow"><b>${esc(p.name)}</b><div class="tr"><i style="width:${plansTot ? p.revenue / plansTot * 100 : 0}%"></i></div><span>${money(p.revenue)} <span class="muted" style="font-size:12px">· ${p.count}</span></span></div>`).join('') : '<p class="muted">Bu oy hali to\'lov yo\'q.</p>'}</section>
+        <section class="card panel"><div class="ph"><h2>Qisqacha</h2></div>
+          <div class="mini">
+            <div><span>Yangi buyurtmalar</span><b style="color:${s.newOrders ? 'var(--orange)' : 'inherit'}">${s.newOrders}</b><a href="#buyurtmalar" style="font-size:13px">Ko'rish →</a></div>
+            <div><span>Coinlar (jami)</span><b class="coin" style="font-size:20px">${num(s.coinsTotal)}</b></div>
+            <div><span>Botga ulangan</span><b>${num(s.tgUsers)}</b><span style="font-size:12px">${s.users ? Math.round(s.tgUsers / s.users * 100) : 0}% o'quvchi</span></div>
+            <div><span>🎂 Bugun tug'ilgan</span><b>${s.birthdaysToday.length}</b>${s.birthdaysToday.length ? `<span style="font-size:12px">${s.birthdaysToday.slice(0, 3).map(b => esc(b.name.split(' ')[0])).join(', ')}${s.birthdaysToday.length > 3 ? '…' : ''}</span>` : ''}</div>
+          </div></section>
+      </div>`;
+    bindTips(content);
   }
 
   // ================= O'QUVCHILAR =================

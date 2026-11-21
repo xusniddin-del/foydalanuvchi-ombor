@@ -99,7 +99,7 @@ with sync_playwright() as p:
     a.fill("[name=p]", "xato"); a.click("[type=submit]"); a.wait_for_timeout(500)
     check("admin wrong password refused", a.locator(".err").is_visible())
     a.fill("[name=p]", "admin-parol-123"); a.click("[type=submit]"); a.wait_for_timeout(1500)
-    check("admin dashboard", a.locator(".stat").count() == 6)
+    check("admin dashboard", a.locator(".kpi").count() == 4 and a.locator(".bars").count() == 2 and a.locator(".mini > div").count() == 4)
     a.screenshot(path=f"{OUT}/05-admin.png", full_page=True)
     a.goto(BASE + "/admin.html#tolovlar"); a.wait_for_timeout(1200)
     a.locator("[data-ok]").first.click(); a.wait_for_timeout(300); a.locator(".modal [data-ok]").click(); a.wait_for_timeout(1500)

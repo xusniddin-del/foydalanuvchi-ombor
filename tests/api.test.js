@@ -287,6 +287,15 @@ t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r
   g.props.delete('TG_TOKEN'); g.props.delete('TG_BOT');
 }
 
+// --- bosh panel grafiklari ---
+{
+  const st = call({ action: 'a.stats', token: call({ action: 'admin.login', password: 'admin-parol-123' }).token });
+  const S = st.series || {};
+  t('stats: series shape', S.months && S.months.length === 6 && S.days && S.days.length === 14 && Array.isArray(S.plans));
+  t('stats: this month revenue matches', S.months[5].revenue === st.revenueMonth && S.months[5].count === st.paymentsMonth);
+  t('stats: today registrations counted', S.days[13].users === st.todayUsers && st.todayUsers > 0);
+}
+
 // --- TezCheck (Click, Payme, Uzum, karta) ---
 {
   const C = g.ctx, AD = call({ action: 'admin.login', password: 'admin-parol-123' }).token;

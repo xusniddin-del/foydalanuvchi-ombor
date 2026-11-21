@@ -1101,8 +1101,38 @@ function aStats() {
     newOrders: rows('Orders').filter(function (o) { return o.status === 'yangi'; }).length,
     coinsTotal: users.reduce(function (n, u) { return n + num(u.coins); }, 0),
     tgBot: tgBot(), tgUsers: users.filter(function (u) { return !!u.tgId; }).length,
-    birthdaysToday: users.filter(function (u) { return u.birthday && u.birthday.slice(5) === today.slice(5); }).map(function (u) { return { id: u.id, name: u.name }; })
+    birthdaysToday: users.filter(function (u) { return u.birthday && u.birthday.slice(5) === today.slice(5); }).map(function (u) { return { id: u.id, name: u.name }; }),
+    series: statSeries(users, pays)
   };
+}
+
+/** Bosh panel grafiklari: oxirgi 6 oy tushumi, oxirgi 14 kun yangi o'quvchilar, shu oy tariflar bo'yicha sotuv */
+function statSeries(users, pays) {
+  var fmt = function (d, f) { return Utilities.formatDate(d, TZ, f); };
+  var months = [], mi = {}, days = [], di = {}, base = now();
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(base.getFullYear(), base.getMonth() - i, 15), k = fmt(d, 'yyyy-MM');
+    mi[k] = months.length; months.push({ m: k, revenue: 0, count: 0 });
+  }
+  for (var j = 13; j >= 0; j--) {
+    var k2 = fmt(new Date(base.getTime() - j * 864e5), 'yyyy-MM-dd');
+    di[k2] = days.length; days.push({ d: k2, users: 0 });
+  }
+  var month = fmt(base, 'yyyy-MM'), plans = {};
+  pays.forEach(function (p) {
+    if (p.status !== 'paid' || !p.paidAt) return;
+    var t = new Date(p.paidAt); if (isNaN(t)) return;
+    var k = fmt(t, 'yyyy-MM');
+    if (k in mi) { months[mi[k]].revenue += num(p.amount); months[mi[k]].count++; }
+    if (k === month) { var n = p.planName || '—'; plans[n] = plans[n] || { name: n, revenue: 0, count: 0 }; plans[n].revenue += num(p.amount); plans[n].count++; }
+  });
+  users.forEach(function (u) {
+    if (!u.createdAt) return;
+    var t = new Date(u.createdAt); if (isNaN(t)) return;
+    var k = fmt(t, 'yyyy-MM-dd');
+    if (k in di) days[di[k]].users++;
+  });
+  return { months: months, days: days, plans: Object.keys(plans).map(function (k) { return plans[k]; }).sort(function (a, b) { return b.revenue - a.revenue; }) };
 }
 
 function aUsers(req) {
