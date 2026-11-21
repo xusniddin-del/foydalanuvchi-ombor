@@ -287,6 +287,58 @@ t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r
   g.props.delete('TG_TOKEN'); g.props.delete('TG_BOT');
 }
 
+// --- TezCheck (Click, Payme, Uzum, karta) ---
+{
+  const C = g.ctx, AD = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
+  const U = call({ action: 'register', phone: '935550001', name: 'Tez Chek', password: 'parol123' }).token;
+  const pl = call({ action: 'plans', token: U }).plans.find(p => p.months === 1);
+  t('tc: mode tezcheck refused before keys', !call({ action: 'a.settings.save', token: AD, settings: { payment_mode: 'tezcheck' } }).ok);
+  t('tc: bad key refused', !C.connectTezcheckValue('xyz', 'cdk_abcd').ok && !C.connectTezcheckValue('aps_abcdefgh123', 'kassa').ok);
+  t('tc: connect ok, mode switched', C.connectTezcheckValue(' aps_testkey12345 ', 'cdk_desk01').ok && call({ action: 'plans', token: U }).mode === 'tezcheck');
+  t('tc: keys not public', !JSON.stringify(call({ action: 'public' })).includes('aps_') && !JSON.stringify(call({ action: 'a.settings', token: AD })).includes('aps_'));
+  let r1 = call({ action: 'pay.create', token: U, planId: pl.id, provider: 'click' });
+  const bill = g.tc.bills.get(r1.payment && g.sheets.Payments.data.find(x => x && x[0] === r1.payment.id)[12]);
+  t('tc: bill created with url', r1.ok && r1.payment.provider === 'tezcheck' && /^https:\/\/pay\.tezcheck\.uz\//.test(r1.url) && bill && bill.amount_minor === pl.price * 100);
+  t('tc: headers + idempotency + return_url', g.tc.calls[0].headers['X-Cash-Desk-Code'] === 'cdk_desk01' && g.tc.calls[0].headers['Idempotency-Key'] === r1.payment.id && /kabinet\.html#premium\//.test(bill.return_url));
+  { const ra = call({ action: 'pay.create', token: U, planId: call({ action: 'plans', token: U }).plans.find(p => p.months === 12).id, from: 'app' }); t('tc: app return url', ra.ok && /app\.html#obuna\//.test(g.tc.bills.get('bill_' + g.tc.n).return_url)); call({ action: 'a.payment', token: AD, id: ra.payment.id, op: 'cancel' }); }
+  const r2 = call({ action: 'pay.create', token: U, planId: pl.id });
+  t('tc: same bill reused', r2.payment.id === r1.payment.id && r2.url === r1.url && g.tc.bills.size === 2);
+  t('tc: check unpaid stays pending', call({ action: 'pay.check', token: U, id: r1.payment.id }).payment.status === 'pending');
+  t('tc: other user cannot check', !call({ action: 'pay.check', token: B, id: r1.payment.id }).ok);
+  bill.paid = true; bill.state = 'paid'; bill.paidMinor = 1000;
+  t('tc: underpaid not accepted', call({ action: 'pay.check', token: U, id: r1.payment.id }).payment.status === 'pending');
+  bill.paidMinor = 0; bill.environment = 'test';
+  t('tc: test-env payment not accepted', call({ action: 'pay.check', token: U, id: r1.payment.id }).payment.status === 'pending');
+  bill.environment = 'live';
+  // soxta webhook: chek to'lanmagan bo'lsa hech narsa o'zgarmaydi; to'langan bo'lsa TezCheck'dan so'rab tasdiqlanadi
+  g.post({ data: { bill_id: bill.id } });
+  let ck = call({ action: 'pay.check', token: U, id: r1.payment.id });
+  t('tc: webhook verifies and opens subscription', ck.payment.status === 'paid' && ck.user.active && ck.user.plan === pl.name);
+  const end1 = call({ action: 'me', token: U }).user.subEnd;
+  g.post({ data: { bill_id: bill.id } }); C.tcSweep();
+  t('tc: paid only once', call({ action: 'me', token: U }).user.subEnd === end1);
+  // to'lov sahifasidan qaytmagan o'quvchi — taymer tekshiradi
+  const r3 = call({ action: 'pay.create', token: U, planId: pl.id });
+  t('tc: new bill after paid', r3.ok && r3.payment.id !== r1.payment.id);
+  const b3 = g.tc.bills.get('bill_' + g.tc.n); b3.paid = true;
+  C.tcSweep();
+  t('tc: sweep marks paid', call({ action: 'payments', token: U }).payments.find(p => p.id === r3.payment.id).status === 'paid');
+  // muddati o'tgan chek
+  const r4 = call({ action: 'pay.create', token: U, planId: pl.id }), b4 = g.tc.bills.get('bill_' + g.tc.n); b4.state = 'expired';
+  t('tc: admin check cancels expired bill', call({ action: 'a.payment', token: AD, id: r4.payment.id, op: 'check' }).status === 'cancelled');
+  // TezCheck xato bersa
+  g.tc.fail = { code: 500, error: { code: 'server_error' }, once: true };
+  const r5 = call({ action: 'pay.create', token: U, planId: pl.id });
+  t('tc: api error -> friendly message, payment cancelled', !r5.ok && /server_error/.test(r5.error) && !call({ action: 'payments', token: U }).payments.some(p => p.status === 'pending'));
+  // return_url rad etilsa — usiz qayta urinadi
+  g.tc.fail = { code: 422, error: { code: 'return_url_not_allowed' }, once: true };
+  const r6 = call({ action: 'pay.create', token: U, planId: pl.id });
+  t('tc: retries without return_url', r6.ok && !g.tc.bills.get('bill_' + g.tc.n).return_url);
+  t('tc: no formula injection', g.FORMULA_HITS.length === 0);
+  call({ action: 'a.settings.save', token: AD, settings: { payment_mode: 'test' } });
+  g.props.delete('TEZCHECK_KEY'); g.props.delete('TEZCHECK_DESK');
+}
+
 // --- parol almashtirish ---
 r = call({ action: 'password', token: A, old: 'parol123', password: 'yangiparol1' });
 t('password change gives new token, old invalid', r.ok && !call({ action: 'me', token: A }).ok && call({ action: 'me', token: r.token }).ok);
