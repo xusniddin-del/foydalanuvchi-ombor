@@ -296,6 +296,11 @@ t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r
   t('missing sheets auto-created', dn.ok && ap.ok && !!g.sheets.Donations && g.sheets.Applications.data[0][0] === 'id');
 }
 
+// --- tezlik: kesh va taymer ---
+t('warmup trigger registered once', g.props.get('WARMUP') === '1');
+g.ctx.warmup();
+t('warmup fills public cache', !!g.cache.get('pub:n') && !!g.cache.get('set:n'));
+
 // --- bosh panel grafiklari ---
 {
   const st = call({ action: 'a.stats', token: call({ action: 'admin.login', password: 'admin-parol-123' }).token });

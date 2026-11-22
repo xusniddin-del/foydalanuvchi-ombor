@@ -1,7 +1,7 @@
 // Vector ilovasi: sahifa va rasmlarni keshlaydi (internet sekin bo'lsa ham tez ochiladi). Server (Google) so'rovlari keshlanmaydi.
-const V = 'vector-app-v2';
+const V = 'vector-app-v3';
 const SHELL = ['app.html', 'assets/js/config.js', 'assets/js/api.js', 'assets/css/app.css', 'assets/js/vector-i18n.js', 'assets/js/vector-i18n-dict.js',
-  'assets/img/vector-logo.png', 'assets/img/app/ob1.jpg', 'assets/img/app/ob2.jpg', 'assets/img/app/ob3.jpg', 'assets/img/cat-happy.png', 'assets/img/cat-sad.png', 'assets/img/cat-empty.png'];
+  'assets/img/vector-logo.png', 'assets/img/app/ob1.jpg', 'assets/img/app/ob2.jpg', 'assets/img/app/ob3.jpg', 'assets/img/cat-happy.webp', 'assets/img/cat-sad.webp', 'assets/img/cat-empty.webp'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/img/vector-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL@24,500,1&icon_names=add_a_photo,android,arrow_back,arrow_back_ios_new,arrow_forward,auto_awesome,badge,balance,block,bug_report,cake,call,campaign,check,check_circle,checkroom,close,cloud,code,content_copy,copyright,credit_card,currency_exchange,dark_mode,description,diamond,done,done_all,download,emoji_events,error,event_available,event_busy,event_repeat,expand_more,face,folder_open,gavel,grade,group,group_add,groups,handshake,help,info,input,language,light,lightbulb,local_shipping,location_on,lock,login,logout,menu,menu_book,military_tech,mode,north_east,note,notifications,orders,paid,password,payments,pending,person,phone,phone_iphone,photo_camera,pill,play_arrow,play_circle,quiz,radio,receipt_long,redeem,road,rocket_launch,savings,schedule,school,search,send,share,shield,shop,shopping_bag,shopping_basket,skeleton,smart_display,smartphone,store,subscriptions,support_agent,tab,tabs,tag,thumb_up,undo,verified,visibility,visibility_off,volunteer_activism,work,workspace_premium&display=block" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 <link rel="stylesheet" href="assets/css/site.css">
 <style>
@@ -396,7 +396,7 @@
   }
   function askProfile() {
     const bc = set().birthday_coins || 50;
-    const m = modal(`<form id="pfAsk"><div class="k-mh"><div style="display:flex;gap:14px;align-items:center"><img src="assets/img/cat-happy.png" alt="" style="width:64px"><div><h2>Ma'lumotlaringizni to'ldiring</h2><p class="muted" style="margin:4px 0 0">Tug'ilgan kuningizda ${coin(bc)} sovg'a qilamiz!</p></div></div></div>
+    const m = modal(`<form id="pfAsk"><div class="k-mh"><div style="display:flex;gap:14px;align-items:center"><img src="assets/img/cat-happy.webp" alt="" style="width:64px"><div><h2>Ma'lumotlaringizni to'ldiring</h2><p class="muted" style="margin:4px 0 0">Tug'ilgan kuningizda ${coin(bc)} sovg'a qilamiz!</p></div></div></div>
         <div class="k-form" style="grid-template-columns:1fr 1fr;margin-top:12px">${placeFields(ME)}</div>
         <p class="err" hidden style="margin-top:12px"></p>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px"><button type="button" class="k-btn gr sm" data-later>Keyinroq</button><button class="k-btn bl sm" type="submit">Saqlash</button></div></form>`);
@@ -426,7 +426,7 @@
     window.scrollTo(0, 0);
     try { await fn(id); } catch (e) {
       if (authFail(e)) return;
-      view.innerHTML = `<div class="k-card k-empty"><img src="assets/img/cat-sad.png" alt=""><b>${esc(e.message)}</b><button class="k-btn bl sm" onclick="location.reload()">Qayta urinish</button></div>`;
+      view.innerHTML = `<div class="k-card k-empty"><img src="assets/img/cat-sad.webp" alt=""><b>${esc(e.message)}</b><button class="k-btn bl sm" onclick="location.reload()">Qayta urinish</button></div>`;
     }
     view.focus({ preventScroll: true });
   }
@@ -453,7 +453,7 @@
       <div class="k-cgrid" id="cgrid"></div>`;
     const draw = () => {
       const q = Q.trim().toLowerCase(), list = c.courses.filter(co => !q || (co.title + ' ' + (co.teacher || '') + ' ' + co.lessons.map(l => l.title).join(' ')).toLowerCase().includes(q));
-      $('#cgrid').innerHTML = list.map(co => courseCard(co, c.active)).join('') || `<div class="k-card k-empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.png" alt=""><b>${q ? 'Hech narsa topilmadi' : "Kurslar hali qo'shilmagan"}</b>${q ? "<span>Boshqa so'z bilan qidirib ko'ring.</span>" : ''}</div>`;
+      $('#cgrid').innerHTML = list.map(co => courseCard(co, c.active)).join('') || `<div class="k-card k-empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.webp" alt=""><b>${q ? 'Hech narsa topilmadi' : "Kurslar hali qo'shilmagan"}</b>${q ? "<span>Boshqa so'z bilan qidirib ko'ring.</span>" : ''}</div>`;
     };
     $('#cq').oninput = e => { Q = e.target.value; draw(); };
     draw();
@@ -575,11 +575,11 @@
     if (st === 'paid') {
       drop('plans', 'payments', 'courses', 'me');
       if (res.user) { ME = res.user; renderMe(); }
-      box.innerHTML = `<img src="assets/img/cat-happy.png" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><a class="k-btn bl sm" href="#kurslar" data-close>Darslarni boshlash</a>`;
+      box.innerHTML = `<img src="assets/img/cat-happy.webp" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><a class="k-btn bl sm" href="#kurslar" data-close>Darslarni boshlash</a>`;
     } else if (st === 'cancelled') {
-      box.innerHTML = `<img src="assets/img/cat-sad.png" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted">Chek bekor qilingan yoki muddati o'tgan. Tarifni qayta tanlab, yana urinib ko'ring.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
+      box.innerHTML = `<img src="assets/img/cat-sad.webp" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted">Chek bekor qilingan yoki muddati o'tgan. Tarifni qayta tanlab, yana urinib ko'ring.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
     } else {
-      box.innerHTML = `<img src="assets/img/cat-empty.png" alt=""><h2>To'lov hali tushmadi</h2><p class="muted">Agar pulni to'lagan bo'lsangiz, xavotir olmang — tizim uni bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
+      box.innerHTML = `<img src="assets/img/cat-empty.webp" alt=""><h2>To'lov hali tushmadi</h2><p class="muted">Agar pulni to'lagan bo'lsangiz, xavotir olmang — tizim uni bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button>`;
     }
     box.querySelectorAll('[data-close]').forEach(b => b.onclick = () => m.close());
   }
@@ -642,7 +642,7 @@
           const res = await call('pay.create', { planId: p.id, provider: 'test' });
           await call('pay.receipt', { id: res.payment.id, image: img }); drop('payments');
           m.close();
-          modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px"><img src="assets/img/cat-happy.png" alt="" style="width:140px"><h2>Rahmat! Chek qabul qilindi</h2><p class="muted">Admin to'lovni tekshirib tasdiqlagach, Premium darhol ochiladi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button></div>`);
+          modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px"><img src="assets/img/cat-happy.webp" alt="" style="width:140px"><h2>Rahmat! Chek qabul qilindi</h2><p class="muted">Admin to'lovni tekshirib tasdiqlagach, Premium darhol ochiladi${ME && ME.tg ? ' va Telegram botga xabar keladi' : ''}.</p><button class="k-btn bl sm" data-close>Yaxshi</button></div>`);
         }).catch(err => toast(err.message, 'error'));
       };
     };
@@ -663,7 +663,7 @@
       const q = SQ.trim().toLowerCase(), list = s.products.filter(p => (p.category || 'sovga') === TAB && (!q || (p.name + ' ' + p.desc).toLowerCase().includes(q)));
       $('#pgrid').innerHTML = list.map(p => `<article class="k-prod"><div class="img">${safeUrl(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : ms('redeem', 1)}<span class="stock">${p.stock > 0 ? p.stock + ' dona qoldi' : 'Tugagan'}</span></div>
           <h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p><div class="row3">${coin(p.price)}<button class="k-btn bl" data-buy="${esc(p.id)}" ${p.stock < 1 ? 'disabled' : ''}>Xarid qilish</button></div></article>`).join('')
-        || `<div class="k-card k-empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.png" alt=""><b>${q ? 'Hech narsa topilmadi' : 'Tez orada'}</b><span>${q ? "Boshqa so'z bilan qidirib ko'ring." : "Bu bo'limga mahsulotlar tez orada qo'shiladi."}</span></div>`;
+        || `<div class="k-card k-empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.webp" alt=""><b>${q ? 'Hech narsa topilmadi' : 'Tez orada'}</b><span>${q ? "Boshqa so'z bilan qidirib ko'ring." : "Bu bo'limga mahsulotlar tez orada qo'shiladi."}</span></div>`;
       view.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => buy(s, s.products.find(x => x.id === b.dataset.buy)));
     };
     view.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { TAB = b.dataset.t; view.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-selected', x === b)); draw(); });
@@ -808,7 +808,7 @@
     const c = await swr('courses'), done = c.courses.filter(x => x.lessons.length && x.percent >= 100);
     box.innerHTML = `<h1 class="k-h1" style="margin-bottom:18px">Sertifikatlarim</h1>
       <div class="k-card ${done.length ? 'k-pad' : ''}">${done.length ? done.map(x => `<div class="k-cert"><i>${ms('workspace_premium', 1)}</i><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><div class="muted" style="font-size:14px">Kurs to'liq yakunlandi · ${x.lessons.length} ta dars</div></div><a class="k-btn bl sm" href="https://t.me/${esc(tgName())}" target="_blank" rel="noopener">Sertifikat olish</a></div>`).join('') + '<p class="k-sub" style="margin-top:14px">Sertifikatni olish uchun adminga yozing: kurs nomi va ism-familiyangizni yuboring.</p>'
-        : `<div class="k-empty"><img src="assets/img/cat-empty.png" alt=""><b>Hozircha sertifikat yo'q</b><span>Kursning barcha darslarini tugatsangiz, sertifikat shu yerda paydo bo'ladi.</span></div>`}</div>`;
+        : `<div class="k-empty"><img src="assets/img/cat-empty.webp" alt=""><b>Hozircha sertifikat yo'q</b><span>Kursning barcha darslarini tugatsangiz, sertifikat shu yerda paydo bo'ladi.</span></div>`}</div>`;
   }
 
   async function secOrders(box) {

@@ -476,7 +476,7 @@
     if (silent !== true) { app.innerHTML = `<div class="scr"><div class="tophead"><div style="flex:1"><div class="sk" style="height:14px;width:40%"></div><div class="sk" style="height:24px;width:60%;margin-top:8px"></div></div></div><div class="body"><div class="sk" style="height:180px"></div><div class="sk" style="height:90px;margin-top:14px"></div><div class="sk" style="height:90px;margin-top:10px"></div></div></div>`; window.scrollTo(0, 0); }
     try { await R[name](id, silent === true); } catch (e) {
       if (e && (e.code === 'auth' || e.code === 'blocked')) { logout(true); toast(e.message, 'error'); return; }
-      app.innerHTML = `<div class="scr"><div class="empty" style="margin-top:20vh"><img src="assets/img/cat-sad.png" alt=""><b>${esc(e.message || 'Xatolik')}</b><button class="btn sm" onclick="location.reload()">Qayta urinish</button></div></div>`;
+      app.innerHTML = `<div class="scr"><div class="empty" style="margin-top:20vh"><img src="assets/img/cat-sad.webp" alt=""><b>${esc(e.message || 'Xatolik')}</b><button class="btn sm" onclick="location.reload()">Qayta urinish</button></div></div>`;
     }
     if (silent === true) window.scrollTo(0, y);
   }
@@ -513,7 +513,7 @@
   const eye = () => app.querySelectorAll('.pw button').forEach(b => b.onclick = () => { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.innerHTML = ic(i.type === 'password' ? 'eye' : 'eye-slash', 1); });
   const terms = `<p class="note">Davom etish uchun <a href="#qoida" style="font-weight:600">Foydalanuvchi shartlariga</a> rozi bo'lishingiz kerak</p>`;
   R.kirish = () => {
-    show(`<div class="scr auth"><div class="hero-in"><div><h1>Xush<br>kelibsiz</h1><p>Akkauntingizga kiring va o'qishni davom ettiring</p></div><img src="assets/img/cat-happy.png" alt=""></div>
+    show(`<div class="scr auth"><div class="hero-in"><div><h1>Xush<br>kelibsiz</h1><p>Akkauntingizga kiring va o'qishni davom ettiring</p></div><img src="assets/img/cat-happy.webp" alt=""></div>
       <div class="panel"><form class="stack" id="f" novalidate>
         <label class="fl"><span>Telefon raqam</span><div class="phone"><span class="cc">+998</span><input class="in" name="phone" inputmode="numeric" autocomplete="tel" placeholder="(00)-000-00-00"></div></label>
         <label class="fl"><span>Parol</span><div class="pw"><input class="in" name="password" type="password" autocomplete="current-password" placeholder="Parolingiz"><button type="button" aria-label="Parolni ko'rsatish">${ic('eye', 1)}</button></div></label>
@@ -651,7 +651,7 @@
   function askProfile() {
     if (!ME || !missing(ME)) return;
     try { if (sessionStorage.getItem('vx_pf_later')) return; } catch (_) {}
-    const m = modal(`<form id="pa" class="stack"><div style="display:flex;gap:12px;align-items:center"><img src="assets/img/cat-happy.png" alt="" style="width:64px"><div><h2>Ma'lumotlaringizni to'ldiring</h2><p class="muted" style="margin:0;font-size:14px">Tug'ilgan kuningizda ${coin(set().birthday_coins || 50)} sovg'a qilamiz!</p></div></div>
+    const m = modal(`<form id="pa" class="stack"><div style="display:flex;gap:12px;align-items:center"><img src="assets/img/cat-happy.webp" alt="" style="width:64px"><div><h2>Ma'lumotlaringizni to'ldiring</h2><p class="muted" style="margin:0;font-size:14px">Tug'ilgan kuningizda ${coin(set().birthday_coins || 50)} sovg'a qilamiz!</p></div></div>
       ${placeFields(ME)}<div class="err" hidden></div><div style="display:flex;gap:10px"><button type="button" class="btn ln" data-l>Keyinroq</button><button class="btn" type="submit">Saqlash</button></div></form>`);
     const f = m.el.querySelector('#pa'), er = f.querySelector('.err');
     f.querySelector('[data-l]').onclick = () => { try { sessionStorage.setItem('vx_pf_later', '1'); } catch (_) {} m.close(); };
@@ -688,7 +688,7 @@
     show(`<div class="scr">${tabHead('Kurslar', "Darslarni ko'ring va testlarni yeching")}<div class="body">
       ${c.active ? '' : `<div class="lockbar">${ic('lock', 1)}<span>Kurslarni ko'rish uchun Premium kerak</span><a href="#obuna">Tarif tanlash</a></div>`}
       ${c.courses.map(x => `<a class="cl" href="#kurs/${esc(x.id)}"><span class="th">${safeUrl(x.image) ? `<img src="${esc(x.image)}" alt="" loading="lazy">` : ''}${c.active ? '' : `<span class="lk">${ic('lock', 1)}</span>`}</span>
-        <span class="tx"><b>${esc(x.title)}</b><small>${esc(x.teacher || 'Xusniddin Sharofiddinov')}</small><small>Darslar soni: ${x.lessons.length} ta</small><span class="bar"><i><b style="width:${x.percent}%"></b></i>${x.percent}%</span></span></a>`).join('') || '<div class="empty"><img src="assets/img/cat-empty.png" alt=""><b>Kurslar hali qo\'shilmagan</b></div>'}
+        <span class="tx"><b>${esc(x.title)}</b><small>${esc(x.teacher || 'Xusniddin Sharofiddinov')}</small><small>Darslar soni: ${x.lessons.length} ta</small><span class="bar"><i><b style="width:${x.percent}%"></b></i>${x.percent}%</span></span></a>`).join('') || '<div class="empty"><img src="assets/img/cat-empty.webp" alt=""><b>Kurslar hali qo\'shilmagan</b></div>'}
     </div></div>`);
   };
   R.kurs = async id => {
@@ -754,14 +754,14 @@
   // ================= LIDERLAR =================
   let LP = 'month';
   R.liderlar = async () => {
-    if (!member()) { show(`<div class="scr">${tabHead("Liderlar ro'yxati", "Eng yaxshi o'quvchilar reytingi")}<div class="body"><div class="empty"><img src="assets/img/cat-empty.png" alt=""><b>Reytingga kirish uchun ro'yxatdan o'ting</b><a class="btn sm" href="#royxat">Ro'yxatdan o'tish</a></div></div></div>`); return; }
+    if (!member()) { show(`<div class="scr">${tabHead("Liderlar ro'yxati", "Eng yaxshi o'quvchilar reytingi")}<div class="body"><div class="empty"><img src="assets/img/cat-empty.webp" alt=""><b>Reytingga kirish uchun ro'yxatdan o'ting</b><a class="btn sm" href="#royxat">Ro'yxatdan o'tish</a></div></div></div>`); return; }
     const r = await swr('leaders', { period: LP });
     const [a, b, c] = r.top, pod = (x, k) => x ? `<div class="pod p${k}">${k === 1 ? '<span style="font-size:22px">👑</span>' : ''}${avatar(x, 'av')}<b>${x.me ? 'Siz' : esc(first(x.name))}</b>${coin(x.coins)}<div class="blk">${k}</div></div>` : `<div class="pod p${k}"><div class="blk">${k}</div></div>`;
     show(`<div class="scr">${tabHead("Liderlar ro'yxati", "Eng yaxshi o'quvchilar reytingi")}<div class="body">
       <div class="seg" role="tablist">${[['month', 'Oy'], ['all', 'Umumiy']].map(([k, t]) => `<button type="button" data-p="${k}" aria-pressed="${k === LP}">${t}</button>`).join('')}</div>
       ${r.top.length ? `<div class="podium">${pod(b, 2)}${pod(a, 1)}${pod(c, 3)}</div>
         <div class="card" style="overflow:hidden;border-radius:0 0 18px 18px">${r.top.slice(3).map(x => `<div class="lrow"><span class="rk">${x.rank}</span>${avatar(x, 'av')}<span class="nm"><b>${x.me ? 'Siz' : esc(x.name)}</b>${x.school ? `<small>${esc(/maktab/i.test(x.school) ? x.school : x.school + '-maktab')}</small>` : ''}</span>${coin(x.coins)}</div>`).join('')}</div>`
-        : `<div class="empty"><img src="assets/img/cat-empty.png" alt=""><b>Liderlar ro'yxati yo'q</b><span>Darslarda faol ishtirok etib birinchi o'ringa chiqing</span></div>`}
+        : `<div class="empty"><img src="assets/img/cat-empty.webp" alt=""><b>Liderlar ro'yxati yo'q</b><span>Darslarda faol ishtirok etib birinchi o'ringa chiqing</span></div>`}
       <div class="merow"><b style="width:22px;text-align:center">${r.me.rank || '—'}</b>${avatar(ME, 'av')}<span class="nm"><b>Siz</b><small>${r.me.rank === 1 ? "Siz birinchi o'rindasiz!" : `Keyingi o'ringa ${sum(r.me.gap)} coin qoldi`}</small></span>${coin(r.me.coins)}</div>
     </div></div>`);
     app.querySelectorAll('[data-p]').forEach(x => x.onclick = () => { LP = x.dataset.p; route(); });
@@ -780,7 +780,7 @@
     const draw = () => {
       const q = SQ.trim().toLowerCase(), list = s.products.filter(p => (p.category || 'sovga') === TAB && (!q || (p.name + ' ' + (p.desc || '')).toLowerCase().includes(q)));
       $('#pg').innerHTML = list.map(p => `<div class="prod"><div class="im">${safeUrl(p.image) ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : ''}<span>${p.stock > 0 ? p.stock + ' dona qoldi' : 'Tugagan'}</span></div><b>${esc(p.name)}</b><p>${esc(p.desc || '')}</p>${coin(p.price)}<button class="btn" type="button" data-b="${esc(p.id)}" ${p.stock < 1 ? 'disabled' : ''}>Xarid qilish</button></div>`).join('')
-        || `<div class="empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.png" alt=""><b>${q ? 'Hech narsa topilmadi' : "Bu bo'lim tez orada ochiladi"}</b></div>`;
+        || `<div class="empty" style="grid-column:1/-1"><img src="assets/img/cat-empty.webp" alt=""><b>${q ? 'Hech narsa topilmadi' : "Bu bo'lim tez orada ochiladi"}</b></div>`;
       app.querySelectorAll('[data-b]').forEach(b => b.onclick = () => member() ? buy(s, s.products.find(x => x.id === b.dataset.b)) : go('kirish'));
     };
     app.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { TAB = b.dataset.t; app.querySelectorAll('[data-t]').forEach(x => x.setAttribute('aria-pressed', x === b)); draw(); });
@@ -796,7 +796,7 @@
       <button class="btn" id="ok" style="margin-top:14px">Tasdiqlash</button>`);
     m.el.querySelector('#ok').onclick = e => busy(e.currentTarget, async () => {
       const r = await VX.call('buy', { id: p.id, qty: 1 }); drop('shop', 'orders', 'coins', 'me'); setMe(Object.assign({}, ME, { coins: r.coins })); m.close();
-      modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><img src="assets/img/cat-happy.png" alt="" style="width:130px"><h2>Xarid qabul qilindi</h2><p class="muted" style="margin:0">Admin siz bilan tez orada bog'lanadi 🎁</p><button class="btn" data-close style="margin-top:8px">Yaxshi</button></div>`);
+      modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><img src="assets/img/cat-happy.webp" alt="" style="width:130px"><h2>Xarid qabul qilindi</h2><p class="muted" style="margin:0">Admin siz bilan tez orada bog'lanadi 🎁</p><button class="btn" data-close style="margin-top:8px">Yaxshi</button></div>`);
       route(true);
     }).catch(x => toast(x.message, 'error'));
   }
@@ -886,9 +886,9 @@
     if (!box.isConnected) return;
     const s = res && res.payment.status;
     if (s === 'paid') { drop('plans', 'payments', 'courses', 'me'); if (res.user) setMe(res.user); }
-    box.innerHTML = s === 'paid' ? `<img src="assets/img/cat-happy.png" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted" style="margin:0">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><button class="btn" data-go="kurslar" style="margin-top:8px">Darslarni boshlash</button>`
-      : s === 'cancelled' ? `<img src="assets/img/cat-sad.png" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted" style="margin:0">Chek bekor qilingan yoki muddati o'tgan. Qayta urinib ko'ring.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`
-      : `<img src="assets/img/cat-empty.png" alt=""><h2>To'lov hali tushmadi</h2><p class="muted" style="margin:0">To'lagan bo'lsangiz, xavotir olmang — tizim bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va botga xabar keladi' : ''}.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`;
+    box.innerHTML = s === 'paid' ? `<img src="assets/img/cat-happy.webp" alt=""><h2>To'lov qabul qilindi! 🎉</h2><p class="muted" style="margin:0">${esc(res.payment.plan)} obunasi faollashdi. Barcha kurslar ochiq.</p><button class="btn" data-go="kurslar" style="margin-top:8px">Darslarni boshlash</button>`
+      : s === 'cancelled' ? `<img src="assets/img/cat-sad.webp" alt=""><h2>To'lov amalga oshmadi</h2><p class="muted" style="margin:0">Chek bekor qilingan yoki muddati o'tgan. Qayta urinib ko'ring.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`
+      : `<img src="assets/img/cat-empty.webp" alt=""><h2>To'lov hali tushmadi</h2><p class="muted" style="margin:0">To'lagan bo'lsangiz, xavotir olmang — tizim bir necha daqiqada o'zi tekshirib, obunani ochadi${ME && ME.tg ? ' va botga xabar keladi' : ''}.</p><button class="btn" data-go="" style="margin-top:8px">Yaxshi</button>`;
     box.querySelector('[data-go]').onclick = e => { m.close(); if (e.currentTarget.dataset.go) go(e.currentTarget.dataset.go); else route(); };
   }
 
@@ -960,7 +960,7 @@
       const list = NOTIF.filter(n => !only || String(n.at) > t);
       const groups = {}; list.forEach(n => { (groups[day(n.at)] = groups[day(n.at)] || []).push(n); });
       $('#nl').innerHTML = Object.keys(groups).map(g => `<div class="grp">${g}</div><div class="card" style="overflow:hidden">${groups[g].map(n => `<a class="nf ${String(n.at) > t ? 'un' : ''}" href="${n.go}" style="color:inherit"><span class="ic">${ic(n.i, 1)}</span><span class="tx"><b>${esc(n.t)}</b>${n.d ? `<p>${esc(n.d)}</p>` : ''}<small>${dt(n.at)}</small></span></a>`).join('')}</div>`).join('')
-        || `<div class="empty"><img src="assets/img/cat-empty.png" alt=""><b>Hozircha bildirishnoma yo'q</b></div>`;
+        || `<div class="empty"><img src="assets/img/cat-empty.webp" alt=""><b>Hozircha bildirishnoma yo'q</b></div>`;
     };
     show(`<div class="scr">${head('Bildirishnomalar', '', '<button type="button" id="all" style="border:0;background:none;color:var(--a-blue);font-weight:600;font-size:14px;cursor:pointer">Hammasini o\'qish</button>')}<div class="body nobar">
       <div class="chips"><button type="button" data-o="0" aria-pressed="true">Barchasi</button><button type="button" data-o="1" aria-pressed="false">O'qilmagan <span class="pill bl" style="padding:1px 7px;margin-left:4px">${unread()}</span></button></div><div id="nl"></div></div></div>`);
@@ -973,7 +973,7 @@
   R.sertifikat = async () => {
     const c = await swr('courses'), done = c.courses.filter(x => x.lessons.length && x.percent >= 100);
     show(`<div class="scr">${head('Sertifikatlarim', 'Kursni tugatib sertifikat oling')}<div class="body nobar">${done.length ? done.map(x => `<div class="card pad" style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><span style="width:46px;height:46px;border-radius:14px;background:var(--a-orange);color:#fff;display:grid;place-items:center;font-size:24px">${ic('seal-check', 1)}</span><div style="flex:1;min-width:0"><b>${esc(x.title)}</b><p class="muted" style="margin:2px 0 0;font-size:13px">Kurs to'liq yakunlandi</p></div><a class="btn sm" href="https://t.me/${esc(tgName())}" target="_blank" rel="noopener">Olish</a></div>`).join('') + '<p class="note">Sertifikatni olish uchun adminga kurs nomi va ism-familiyangizni yozing.</p>'
-      : `<div class="empty" style="margin-top:8vh"><img src="assets/img/cat-happy.png" alt=""><b>Hali sertifikat yo'q</b><span>Kursni 100% tugatsangiz, sertifikat shu yerda paydo bo'ladi.</span></div>`}</div></div>`);
+      : `<div class="empty" style="margin-top:8vh"><img src="assets/img/cat-happy.webp" alt=""><b>Hali sertifikat yo'q</b><span>Kursni 100% tugatsangiz, sertifikat shu yerda paydo bo'ladi.</span></div>`}</div></div>`);
   };
   R.buyurtma = async () => {
     const o = await swr('orders'), S = { yangi: ['', 'Kutilmoqda'], berildi: ['gn', 'Topshirildi'], bekor: ['gy', 'Bekor qilindi'] };
@@ -1003,7 +1003,7 @@
     f.onsubmit = e => { e.preventDefault(); const amount = Number(f.amount.value.replace(/\D/g, ''));
       if (amount < 1000) return toast("Miqdorni kiriting (kamida 1 000 so'm)", 'error'); if (!img) return toast("To'lov chekini yuklang", 'error');
       busy(f.querySelector('[type=submit]'), async () => { await VX.call('donate', { name: f.name.value, amount, image: img });
-        modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><img src="assets/img/cat-happy.png" alt="" style="width:130px"><h2>Rahmat! 💙</h2><p class="muted" style="margin:0">Qo'llab-quvvatlovingiz admin tasdiqlagach qabul qilinadi.</p><button class="btn" data-close style="margin-top:8px">Yaxshi</button></div>`); go('profil'); }).catch(x => toast(x.message, 'error')); };
+        modal(`<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><img src="assets/img/cat-happy.webp" alt="" style="width:130px"><h2>Rahmat! 💙</h2><p class="muted" style="margin:0">Qo'llab-quvvatlovingiz admin tasdiqlagach qabul qilinadi.</p><button class="btn" data-close style="margin-top:8px">Yaxshi</button></div>`); go('profil'); }).catch(x => toast(x.message, 'error')); };
   };
 
   // ================= JAMOA (SARDOR) =================
