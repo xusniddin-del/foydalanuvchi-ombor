@@ -134,7 +134,24 @@
 (function () {
   'use strict';
   const { esc, money, num, icon, date, dateTime, safeUrl, avatarHtml, toast, modal, busy, confirmBox } = VX;
-  const call = (a, d) => VX.call(a, d, { admin: true });
+  // Tezlik: o'qish so'rovlari eslab qolinadi — sahifa qayta ochilganda darhol chiqadi, yangisi orqada yuklanadi.
+  // Har qanday o'zgartirish (saqlash, tasdiqlash...) keshni tozalaydi.
+  const READ = new Set(['a.stats', 'a.users', 'a.payments', 'a.orders', 'a.courses', 'a.products', 'a.plans', 'a.settings', 'a.coinlog', 'a.apps', 'a.donations', 'a.refs']);
+  const RC = new Map();
+  let ROUTE = 0, SILENT = -1;
+  const raw = (a, d) => VX.call(a, d, { admin: true });
+  function call(a, d) {
+    if (!READ.has(a)) { RC.clear(); return raw(a, d); }
+    const k = a + JSON.stringify(d || {}), at = ROUTE, old = RC.get(k);
+    const fresh = raw(a, d).then(r => {
+      const changed = old && JSON.stringify(old) !== JSON.stringify(r);
+      RC.set(k, r);
+      if (changed && at === ROUTE && SILENT !== ROUTE) { SILENT = ROUTE; setTimeout(() => go(true), 0); } // bir sahifaga bir marta
+      return r;
+    });
+    if (old) { fresh.catch(() => {}); return Promise.resolve(old); }
+    return fresh;
+  }
   document.documentElement.setAttribute('data-theme', 'dark'); // admin panel doim qorong'i uslubda
   const root = document.getElementById('root');
   let content;
@@ -171,8 +188,17 @@
     window.onhashchange = go; go();
   }
   const pages = { panel: pPanel, oquvchilar: pUsers, tolovlar: pPayments, kurslar: pCourses, dokon: pProducts, buyurtmalar: pOrders, coinlar: pCoinLog, arizalar: pApps, donatlar: pDonations, takliflar: pRefs, xabar: pBroadcast, tariflar: pPlans, sozlamalar: pSettings };
-  async function go() {
+  async function go(silent) {
     const name = (location.hash.slice(1) || 'panel').split('/')[0], fn = pages[name] || pPanel;
+    if (silent === true) {
+      // orqada yangi ma'lumot keldi: oyna ochiq bo'lsa yoki admin yozayotgan bo'lsa — tegmaymiz
+      const ae = document.activeElement;
+      if (document.querySelector('.modal-bg') || (ae && content.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))) return;
+      const y = scrollY; document.querySelectorAll('.tip').forEach(t => t.remove());
+      try { await fn(); } catch (_) {}
+      window.scrollTo(0, y); return;
+    }
+    ROUTE++;
     document.querySelectorAll('[data-nav]').forEach(a => a.dataset.nav === (pages[name] ? name : 'panel') ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
     document.getElementById('side').classList.remove('open');
     document.querySelectorAll('.tip').forEach(t => t.remove());
@@ -294,7 +320,8 @@
   // ================= TO'LOVLAR =================
   let pf = 'pending';
   async function pPayments() {
-    const [r, s] = await Promise.all([call('a.payments', { status: pf }), call('a.stats')]); counts(s);
+    call('a.stats').then(counts).catch(() => {});
+    const r = await call('a.payments', { status: pf });
     const PS = { pending: ['orange', 'Kutilmoqda'], paid: ['green', "To'langan"], cancelled: ['gray', 'Bekor'] };
     content.innerHTML = head("To'lovlar", "Test rejimida o'quvchi to'lov so'rovini yuboradi — siz pul tushganini tekshirib tasdiqlaysiz. TezCheck rejimida to'lov o'zi tasdiqlanadi va obuna darhol ochiladi.") + `
       <div class="tools"><select class="select" id="pf" style="flex:0 1 220px">${[['pending', 'Kutilayotganlar'], ['paid', "To'langanlar"], ['cancelled', 'Bekor qilinganlar'], ['', 'Hammasi']].map(([v, t]) => `<option value="${v}" ${pf === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
@@ -427,7 +454,8 @@
   // ================= BUYURTMALAR =================
   let of = 'yangi';
   async function pOrders() {
-    const [r, s] = await Promise.all([call('a.orders', { status: of }), call('a.stats')]); counts(s);
+    call('a.stats').then(counts).catch(() => {});
+    const r = await call('a.orders', { status: of });
     const ST = { yangi: ['orange', 'Yangi'], berildi: ['green', 'Topshirildi'], bekor: ['gray', 'Bekor'] };
     content.innerHTML = head('Buyurtmalar', "Sovg'ani topshirgach \"Topshirildi\" ni bosing. Bekor qilinsa coin o'quvchiga qaytariladi.") + `
       <div class="tools"><select class="select" id="of" style="flex:0 1 220px">${[['yangi', 'Yangi'], ['berildi', 'Topshirilgan'], ['bekor', 'Bekor qilingan'], ['', 'Hammasi']].map(([v, t]) => `<option value="${v}" ${of === v ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
