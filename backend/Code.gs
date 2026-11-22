@@ -17,7 +17,7 @@
 var TZ = 'Asia/Tashkent';
 var USER_SESSION_DAYS = 30;
 var ADMIN_SESSION_HOURS = 12;
-var CACHE_SECONDS = 300;           // ommaviy ma'lumotlar (kurslar, tariflar, do'kon) keshda turadigan vaqt
+var CACHE_SECONDS = 600;           // ommaviy ma'lumotlar (kurslar, tariflar, do'kon) keshda turadigan vaqt
 var MAX_PENDING_PAYMENTS = 5;
 
 var SHEETS = {
@@ -86,6 +86,7 @@ function doPost(e) {
   try {
     var res = route(req || {});
     tgFlush();
+    try { ensureWarmup(); } catch (e) {}
     return out(res);
   } catch (err) {
     if (err && err.userMessage) return out({ ok: false, error: err.userMessage, code: err.code || 'error' });
@@ -322,13 +323,37 @@ function cachePut(key, obj, seconds) {
   m[key + ':n'] = String(n);
   try { c.putAll(m, seconds || CACHE_SECONDS); } catch (e) { /* kesh to'lsa — shunchaki keshsiz ishlaydi */ }
 }
-function cacheClear() { CacheService.getScriptCache().removeAll(['pub:n', 'cat:n']); }
+function cacheClear() { CacheService.getScriptCache().removeAll(['pub:n', 'cat:n', 'set:n']); delete MEMO._settings; }
+
+/** Taymer (har 5 daqiqada): keshni issiq ushlaydi — saytga birinchi kirgan odam ham kutib qolmaydi */
+function warmup() {
+  CacheService.getScriptCache().removeAll(['pub:n', 'cat:n', 'set:n']);
+  MEMO = {};
+  apiPublic();
+  settings();
+}
+function ensureWarmup() {
+  var c = CacheService.getScriptCache();
+  if (c.get('warm_ok')) return;
+  c.put('warm_ok', '1', 21600);
+  var p = PropertiesService.getScriptProperties();
+  if (p.getProperty('WARMUP') === '1') return;
+  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'warmup'; });
+  if (!has) ScriptApp.newTrigger('warmup').timeBased().everyMinutes(5).create();
+  p.setProperty('WARMUP', '1');
+}
 
 // ======================= SOZLAMALAR =======================
 function settings() {
-  var o = {};
-  DEFAULT_SETTINGS.forEach(function (r) { o[r[0]] = r[1]; });
-  rows('Settings').forEach(function (r) { if (r.key) o[r.key] = r.value; });
+  if (MEMO._settings) return MEMO._settings;
+  var o = cacheGet('set');   // tezlik: Settings varag'i har so'rovda o'qilmaydi
+  if (!o) {
+    o = {};
+    DEFAULT_SETTINGS.forEach(function (r) { o[r[0]] = r[1]; });
+    rows('Settings').forEach(function (r) { if (r.key) o[r.key] = r.value; });
+    cachePut('set', o);
+  }
+  MEMO._settings = o;
   return o;
 }
 
@@ -470,8 +495,7 @@ function apiAdminLogin(req) {
 }
 
 function apiMe(req, u) {
-  birthdayCheck(u);
-  u = findUserFresh(u.id);
+  if (birthdayCheck(u)) u = findUserFresh(u.id);
   // tezkor variant: faqat profil (kabinet uchun yetarli, Progress/Coins/reyting o'qilmaydi)
   if (req.lite) return { ok: true, user: publicUser(u), birthdayToday: !!(u.birthday && u.birthday.slice(5) === Utilities.formatDate(now(), TZ, 'MM-dd')) };
   var prog = rows('Progress').filter(function (p) { return p.userId === u.id; });
@@ -786,6 +810,7 @@ function birthdayCheck(u) {
       addCoins(x.id, amount, 'birthday', "Tug'ilgan kuningiz bilan! 🎉", 'tizim');
     });
     tgNotify(findUserFresh(u.id), "🎂 <b>Tug'ilgan kuningiz bilan, " + tgEsc(String(u.name).split(' ')[0]) + "!</b>\n\nVector jamoasi sizni tabriklaydi. Sovg'a sifatida hisobingizga <b>" + amount + " coin</b> qo'shildi 🎁", siteBtn("Do'konni ochish", 'kabinet.html#dokon'));
+    return true;
   } catch (e) { console.error(e); }
 }
 
