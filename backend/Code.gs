@@ -209,6 +209,15 @@ function ss() { return SpreadsheetApp.getActive(); }
 var COLS_OK = {};
 function sheet(name) {
   var sh = ss().getSheetByName(name);
+  if (!sh && SHEETS[name] && ss().getSheetByName('Users')) {
+    // yangi versiyada qo'shilgan varaq (masalan Applications, Donations) bo'lmasa — o'zi yaratiladi
+    sh = ss().insertSheet(name);
+    var hd = SHEETS[name];
+    if (sh.getMaxColumns() < hd.length) sh.insertColumnsAfter(sh.getMaxColumns(), hd.length - sh.getMaxColumns());
+    sh.getRange(1, 1, sh.getMaxRows(), hd.length).setNumberFormat('@');
+    sh.getRange(1, 1, 1, hd.length).setValues([hd]).setFontWeight('bold').setBackground('#1E63F0').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+  }
   if (!sh) fail('Jadval tayyorlanmagan: Vector → "1. Jadvalni tayyorlash" ni bosing.', 'setup');
   // yangi versiyada qo'shilgan ustunlar bo'lsa — o'zi qo'shib qo'yadi (jadvalni qayta tayyorlash shart emas)
   if (!COLS_OK[name] && SHEETS[name]) {

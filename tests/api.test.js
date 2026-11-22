@@ -287,6 +287,15 @@ t('leaders top sorted, me marked, no ids/phones', r.leaders.top.length >= 2 && r
   g.props.delete('TG_TOKEN'); g.props.delete('TG_BOT');
 }
 
+// --- yetishmagan varaq o'zi yaratiladi ---
+{
+  const AD0 = call({ action: 'admin.login', password: 'admin-parol-123' }).token;
+  g.ctx.ss().deleteSheet(g.sheets.Donations); g.ctx.ss().deleteSheet(g.sheets.Applications);
+  g.ctx.COLS_OK.Donations = false; g.ctx.COLS_OK.Applications = false; g.ctx.MEMO = {};
+  const dn = call({ action: 'a.donations', token: AD0 }), ap = call({ action: 'a.apps', token: AD0 });
+  t('missing sheets auto-created', dn.ok && ap.ok && !!g.sheets.Donations && g.sheets.Applications.data[0][0] === 'id');
+}
+
 // --- bosh panel grafiklari ---
 {
   const st = call({ action: 'a.stats', token: call({ action: 'admin.login', password: 'admin-parol-123' }).token });
