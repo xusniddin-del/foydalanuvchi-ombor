@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Imzo: GitHub Actions sirlari (SMS_KEYSTORE_B64, SMS_KEYSTORE_PASS) dan. Kalit repoga QO'YILMAYDI.
+def ksFile = file(System.getenv('SMS_KEYSTORE_FILE') ?: 'none')
+def ksPass = System.getenv('SMS_KEYSTORE_PASS') ?: ''
+
+android {
+    namespace 'uz.vectortalim.sms'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'uz.vectortalim.sms'
+        minSdk 21
+        targetSdk 34
+        // Yangi versiya: versionCode ni 1 ga oshiring, versionName ni o'zgartiring va CHANGES.json ga yozing
+        versionCode 1
+        versionName '1.0'
+    }
+    signingConfigs {
+        release {
+            if (ksFile.exists()) {
+                storeFile ksFile
+                storePassword ksPass
+                keyAlias 'vector'
+                keyPassword ksPass
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (ksFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+    lint { abortOnError false; checkReleaseBuilds false }
+}

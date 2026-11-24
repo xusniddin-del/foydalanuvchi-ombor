@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vector SMS</string>
+    <!-- Ulash -->
+    <string name="pair_title">Telefonni ulash</string>
+    <string name="pair_sub">Admin panel → «Avto-SMS» → «Ulash kodini olish». Chiqqan 6 xonali kodni shu yerga yozing.</string>
+    <string name="pair_hint">6 xonali kod</string>
+    <string name="pair_btn">Ulash</string>
+    <string name="pair_wait">Ulanmoqda…</string>
+    <string name="pair_bad">Kod 6 ta raqamdan iborat bo\'lsin</string>
+    <string name="safe_title">🔒 Xavfsiz va shaffof</string>
+    <string name="safe_1">SMS\'laringizni o\'qimaydi</string>
+    <string name="safe_2">Qo\'ng\'iroq, kontakt, rasm va fayllarga kirmaydi</string>
+    <string name="safe_3">Bank kartasi, hisob va pulga hech qanday aloqasi yo\'q</string>
+    <string name="safe_4">Faqat admin panelda siz yozgan xabarlarni yuboradi</string>
+    <string name="safe_5">Har bir SMS ro\'yxatda ko\'rinadi</string>
+    <string name="safe_6">Rasmiy dastur, Vector Studio imzosi bilan</string>
+    <!-- Asosiy -->
+    <string name="on">YONIQ</string>
+    <string name="off">O\'CHIQ</string>
+    <string name="tap_on">Yoqish uchun bosing</string>
+    <string name="tap_off">O\'chirish uchun bosing</string>
+    <string name="today">Bugun yuborildi</string>
+    <string name="sim">SIM</string>
+    <string name="sim_default">Asosiy SIM</string>
+    <string name="recent">Oxirgi SMS\'lar</string>
+    <string name="empty">Hali SMS yuborilmagan</string>
+    <string name="st_sending">yuborilmoqda</string>
+    <string name="st_sent">yuborildi</string>
+    <string name="st_delivered">yetkazildi</string>
+    <string name="st_failed">xato</string>
+    <string name="settings">Sozlamalar</string>
+    <string name="back">Orqaga</string>
+    <string name="online">Server bilan aloqa bor</string>
+    <string name="offline">Internet yo\'q — SMS\'lar navbatda kutib turadi</string>
+    <string name="out_hours">Ish vaqtidan tashqari (%1$s–%2$s)</string>
+    <string name="paused_srv">Admin panelda to\'xtatilgan</string>
+    <string name="limit_reached">Bugungi limit tugadi</string>
+    <!-- Sozlamalar -->
+    <string name="lang">Til</string>
+    <string name="sim_choose">Qaysi SIM\'dan yuborilsin</string>
+    <string name="hours">Ish vaqti</string>
+    <string name="hours_note">Ish vaqti, kunlik limit va SMS oralig\'i admin panelda o\'zgartiriladi.</string>
+    <string name="battery">Batareya tejash</string>
+    <string name="battery_btn">Sozlash</string>
+    <string name="unpair">Telefonni uzish</string>
+    <string name="unpair_q">Telefon uzilsinmi? Qayta ulash uchun yangi kod kerak bo\'ladi.</string>
+    <string name="yes">Ha</string>
+    <string name="no">Yo\'q</string>
+    <string name="version">Versiya</string>
+    <string name="limit">Kunlik limit</string>
+    <string name="gap">SMS oralig\'i</string>
+    <string name="sec">soniya</string>
+    <!-- Ruxsat va batareya -->
+    <string name="perm_need">SMS yuborish uchun ruxsat bering</string>
+    <string name="perm_btn">Ruxsat berish</string>
+    <string name="perm_denied">Ruxsat berilmadi. Sozlamalar → Ilovalar → Vector SMS → Ruxsatlar → SMS.</string>
+    <string name="bat_title">Dastur o\'chib qolmasligi uchun</string>
+    <string name="bat_generic">Sozlamalarda «Vector SMS» uchun batareya tejash rejimini o\'chiring: «Cheklovsiz» yoki «Optimallashtirmaslik» ni tanlang.</string>
+    <string name="bat_xiaomi">Xiaomi / Redmi / POCO:\n1. Sozlamalar → Ilovalar → Vector SMS\n2. «Batareya tejash» → «Cheklovsiz»\n3. «Avtomatik ishga tushirish» ni yoqing\n4. Oxirgi ilovalar ro\'yxatida Vector SMS ni pastga torting va 🔒 qulf qo\'ying</string>
+    <string name="bat_samsung">Samsung:\n1. Sozlamalar → Ilovalar → Vector SMS → Batareya\n2. «Cheklanmagan» ni tanlang\n3. Sozlamalar → Batareya → Fon cheklovlari → «Hech qachon uxlamaydigan ilovalar» ga Vector SMS ni qo\'shing</string>
+    <string name="bat_huawei">Huawei / Honor:\n1. Sozlamalar → Batareya → Ilovalarni ishga tushirish\n2. Vector SMS → «Qo\'lda boshqarish»\n3. Uchala belgini yoqing: avtomatik, ikkilamchi, fonda</string>
+    <string name="bat_open">Sozlamalarni ochish</string>
+    <string name="ok">Tushunarli</string>
+    <!-- Bildirishnomalar -->
+    <string name="ch_service">Ishlash holati</string>
+    <string name="ch_alerts">Muhim xabarlar</string>
+    <string name="n_running">Ishlayapti · bugun %1$d ta SMS</string>
+    <string name="n_waiting">Navbatni kutyapti</string>
+    <string name="n_stopped_title">SMS yuborish to\'xtadi</string>
+    <string name="n_stopped">Ketma-ket 3 ta xato. Balans yoki SIM\'ni tekshiring, keyin dasturda qayta yoqing.</string>
+    <string name="n_unpaired">Telefon uzildi. Admin panelda yangi kod olib qayta ulang.</string>
+    <!-- Yangilanish -->
+    <string name="upd_title">Yangi versiya chiqdi</string>
+    <string name="upd_btn">Yangilash</string>
+    <string name="upd_note">Yangilanganda sozlamalar va ulanish saqlanadi.</string>
+    <string name="err_net">Server bilan aloqa yo\'q. Internetni tekshiring.</string>
+</resources>

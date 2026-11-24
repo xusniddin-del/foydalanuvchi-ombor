@@ -1,0 +1,86 @@
+name: Vector SMS ilova
+run-name: Vector SMS · ${{ github.event.head_commit.message || 'qo''lda' }}
+
+# android-sms/ o'zgarganda yoki qo'lda («Run workflow») ishga tushadi.
+# Sirlar (SMS_KEYSTORE_B64, SMS_KEYSTORE_PASS) bo'lsa — imzolangan ilova yig'iladi va main'da
+# Vector-SMS.apk + sms-version.json repo ildiziga yoziladi (sayt orqali yuklab olinadi).
+# Sirlar bo'lmasa — faqat debug yig'iladi (kompilyatsiya tekshiruvi).
+on:
+  push:
+    paths: ['android-sms/**', '.github/workflows/vector-sms.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vector-sms-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Imzo kaliti
+        id: ks
+        env:
+          KS: ${{ secrets.SMS_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            printf '%s' "$KS" | base64 -d > "$RUNNER_TEMP/vector.jks"
+            echo "SMS_KEYSTORE_FILE=$RUNNER_TEMP/vector.jks" >> "$GITHUB_ENV"
+            echo "signed=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::SMS_KEYSTORE_B64 siri yo'q — faqat debug yig'iladi"
+            echo "signed=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Yig'ish (imzolangan)
+        if: steps.ks.outputs.signed == '1'
+        env:
+          SMS_KEYSTORE_PASS: ${{ secrets.SMS_KEYSTORE_PASS }}
+        run: gradle -p android-sms assembleRelease --no-daemon --stacktrace
+
+      - name: Yig'ish (tekshiruv)
+        if: steps.ks.outputs.signed != '1'
+        run: gradle -p android-sms assembleDebug --no-daemon --stacktrace
+
+      - name: Fayl (Actions sahifasidan yuklab olish uchun)
+        uses: actions/upload-artifact@v4
+        with:
+          name: vector-sms
+          path: android-sms/app/build/outputs/apk/*/*.apk
+          retention-days: 14
+
+      - name: Saytga qo'yish
+        if: steps.ks.outputs.signed == '1' && github.ref == 'refs/heads/main'
+        run: |
+          python3 - <<'PY'
+          import re, json, shutil
+          g = open('android-sms/app/build.gradle', encoding='utf-8').read()
+          code = int(re.search(r'versionCode\s+(\d+)', g).group(1))
+          name = re.search(r"versionName\s+['\"]([^'\"]+)", g).group(1)
+          notes = json.load(open('android-sms/CHANGES.json', encoding='utf-8'))
+          shutil.copy('android-sms/app/build/outputs/apk/release/app-release.apk', 'Vector-SMS.apk')
+          json.dump({'code': code, 'name': name, 'notes': notes, 'url': 'https://vectortalim.uz/Vector-SMS.apk'},
+                    open('sms-version.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+          print('versiya', code, name)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Vector-SMS.apk sms-version.json
+          if git diff --cached --quiet; then echo "o'zgarish yo'q"; exit 0; fi
+          git commit -m "Vector SMS ilovasi: $(python3 -c "import json;print(json.load(open('sms-version.json'))['name'])")"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
